@@ -18,20 +18,21 @@ CERT_PATH="/etc/letsencrypt/live/$DOMAIN"
 DATA_PATH="./certbot_data"  # temporär, wird in Docker-Volume geschrieben
 
 echo "### Erstelle temporäres Dummy-Zertifikat für $DOMAIN ..."
-docker-compose run --rm --entrypoint "\
+docker compose run --rm --entrypoint "\
+  sh -c 'mkdir -p /etc/letsencrypt/live/$DOMAIN && \
   openssl req -x509 -nodes -newkey rsa:4096 -days 1 \
     -keyout /etc/letsencrypt/live/$DOMAIN/privkey.pem \
     -out /etc/letsencrypt/live/$DOMAIN/fullchain.pem \
-    -subj '/CN=localhost'" certbot
+    -subj /CN=localhost'" certbot
 
 echo "### Lade TLS-Parameter (DH params + options) ..."
-docker-compose run --rm --entrypoint "\
+docker compose run --rm --entrypoint "\
   sh -c 'curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf \
     > /etc/letsencrypt/options-ssl-nginx.conf && \
   openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048'" certbot
 
 echo "### Starte nginx mit Dummy-Zertifikat ..."
-docker-compose up -d nginx
+docker compose up -d nginx
 
 echo "### Warte kurz auf nginx ..."
 sleep 3
@@ -42,7 +43,7 @@ if [ "$STAGING" = "1" ]; then
   STAGING_ARG="--staging"
 fi
 
-docker-compose run --rm --entrypoint "\
+docker compose run --rm --entrypoint "\
   certbot certonly --webroot \
     --webroot-path=/var/www/certbot \
     $STAGING_ARG \
@@ -53,7 +54,7 @@ docker-compose run --rm --entrypoint "\
     -d www.$DOMAIN" certbot
 
 echo "### Lade nginx mit echtem Zertifikat neu ..."
-docker-compose exec nginx nginx -s reload
+docker compose exec nginx nginx -s reload
 
 echo ""
 echo "Fertig! Die Website läuft jetzt unter https://$DOMAIN"
