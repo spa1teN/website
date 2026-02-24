@@ -1,0 +1,957 @@
+{% extends "core/base.html" %}
+{% load static l10n %}
+
+{% block title %}{% if editing %}Reise bearbeiten{% else %}Neue Reise{% endif %} - spa1teN{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+.trip-form-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.trip-form-container h1 {
+    margin-bottom: 1.5rem;
+}
+
+.form-section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+textarea.form-control {
+    resize: vertical;
+}
+
+/* Segments */
+.segment-list {
+    margin-bottom: 1rem;
+}
+
+.segment-item {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.segment-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.segment-header select {
+    padding: 0.4rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+}
+
+.waypoint-list {
+    margin-bottom: 0.5rem;
+}
+
+.waypoint-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.waypoint-item .remove-btn {
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 0.25rem;
+}
+
+.add-waypoint-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    position: relative;
+}
+
+.add-waypoint-row input {
+    flex: 1;
+    padding: 0.4rem 0.6rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-size: 0.85rem;
+}
+
+.station-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+}
+
+.station-suggestion {
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.station-suggestion:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-accent);
+}
+
+.map-click-hint {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.segment-map {
+    height: 250px;
+    border-radius: 4px;
+    margin-top: 0.75rem;
+}
+
+.btn-add-segment, .btn-remove-segment {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+/* Images */
+.image-upload-zone {
+    border: 2px dashed var(--color-border);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.image-upload-zone:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+}
+
+.image-preview-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.image-preview {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview .remove-img {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.airport-inputs {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.airport-inputs input {
+    width: 80px;
+    padding: 0.4rem 0.6rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.airport-inputs span {
+    color: var(--color-text-muted);
+}
+
+/* Location picker */
+.set-location-btn {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    border-radius: 4px;
+    padding: 2px 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.loc-dot { opacity: 0.35; }
+.loc-dot.has-location { opacity: 1; }
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal-box {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    width: 540px;
+    max-width: 95vw;
+}
+
+.modal-box h4 { margin: 0 0 0.2rem; }
+.modal-box p { margin: 0 0 0.5rem; }
+
+#location-picker-map {
+    height: 340px;
+    border-radius: 4px;
+    margin: 0.75rem 0;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="trip-form-container">
+    <h1>{% if editing %}Reise bearbeiten{% else %}Neue Reise{% endif %}</h1>
+
+    <form id="trip-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Trip details -->
+        <div class="form-section">
+            <h2>Allgemein</h2>
+            <div class="form-group">
+                <label for="id_title">Titel</label>
+                {{ form.title }}
+            </div>
+            <div class="form-group">
+                <label for="id_description">Beschreibung</label>
+                {{ form.description }}
+            </div>
+        </div>
+
+        <!-- Outbound journey -->
+        <div class="form-section" id="outbound-section">
+            <h2>Hinreise</h2>
+            <div class="form-group">
+                <label>Reisedatum</label>
+                <input type="text" class="form-control" id="outbound-date" name="outbound_date" placeholder="TT.MM.JJJJ" maxlength="10">
+            </div>
+            <div class="segment-list" id="outbound-segments"></div>
+            <button type="button" class="btn btn-secondary btn-add-segment" onclick="addSegment('outbound')">Abschnitt hinzufügen</button>
+        </div>
+
+        <!-- Return journey -->
+        <div class="form-section" id="return-section">
+            <h2>Rückreise</h2>
+            <div class="form-group">
+                <label>Reisedatum</label>
+                <input type="text" class="form-control" id="return-date" name="return_date" placeholder="TT.MM.JJJJ" maxlength="10">
+            </div>
+            <div class="segment-list" id="return-segments"></div>
+            <button type="button" class="btn btn-secondary btn-add-segment" onclick="addSegment('return')">Abschnitt hinzufügen</button>
+        </div>
+
+        <!-- Images -->
+        <div class="form-section">
+            <h2>Bilder</h2>
+
+            {% if existing_images %}
+            <div class="existing-images">
+                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">Vorhandene Bilder</h4>
+                <div class="image-preview-list" id="existing-image-list">
+                    {% for img in existing_images %}
+                    <div class="image-preview" id="existing-img-{{ img.id }}">
+                        <img src="{{ img.image.url }}" alt="{{ img.caption }}">
+                        <button type="button" class="remove-img" onclick="markImageForDeletion({{ img.id }}, this)">&times;</button>
+                        <button type="button" class="set-location-btn"
+                            data-img-id="{{ img.id }}"
+                            data-lat="{% if img.location %}{{ img.location.y|unlocalize }}{% endif %}"
+                            data-lng="{% if img.location %}{{ img.location.x|unlocalize }}{% endif %}"
+                            title="{% if img.location %}Ort ändern{% else %}Ort setzen{% endif %}">
+                            <span class="loc-dot {% if img.location %}has-location{% endif %}">&#x1F4CD;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="image-upload-zone" id="upload-zone" onclick="document.getElementById('image-input').click()">
+                Klicke hier oder ziehe Bilder hierher
+            </div>
+            <input type="file" id="image-input" name="images" multiple accept="image/*" style="display:none">
+            <div class="image-preview-list" id="image-previews"></div>
+        </div>
+
+        <div id="form-error" style="display:none; background:rgba(207,108,108,0.15); border:1px solid var(--color-danger); color:var(--color-danger); padding:0.75rem; border-radius:6px; margin-bottom:1rem;"></div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="submit-btn">{% if editing %}Speichern{% else %}Erstellen{% endif %}</button>
+            <a href="{% url 'diary:dashboard' %}" class="btn btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</div>
+<div id="location-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <h4>Ort auf der Karte wählen</h4>
+        <p style="font-size:0.8rem; color:var(--color-text-muted);">Klick auf die Karte setzt den Ort des Fotos.</p>
+        <div id="location-picker-map"></div>
+        <div class="modal-actions">
+            <button type="button" id="location-save-btn" class="btn btn-primary">Speichern</button>
+            <button type="button" onclick="closeLocationModal()" class="btn btn-secondary">Abbrechen</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function() {
+    "use strict";
+
+    var DARK_TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    var DARK_TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
+    var segmentCounter = 0;
+    var segmentMaps = {};
+    var searchTimeout = null;
+    var csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+    // --- Date helpers (DD.MM.YYYY ↔ YYYY-MM-DD) ---
+
+    function dateToIso(dmy) {
+        var parts = dmy.split(".");
+        if (parts.length !== 3) return dmy;
+        return parts[2] + "-" + parts[1] + "-" + parts[0];
+    }
+
+    function isoToDate(iso) {
+        var parts = iso.split("-");
+        if (parts.length !== 3) return iso;
+        return parts[2] + "." + parts[1] + "." + parts[0];
+    }
+
+    // --- Segment management ---
+
+    window.addSegment = function(journeyType) {
+        var container = document.getElementById(journeyType + "-segments");
+        var id = "seg-" + segmentCounter++;
+
+        var div = document.createElement("div");
+        div.className = "segment-item";
+        div.id = id;
+        div.innerHTML =
+            '<div class="segment-header">' +
+                '<select class="seg-transport" onchange="onTransportChange(\'' + id + '\')">' +
+                    '<option value="train">Zug</option>' +
+                    '<option value="car">Auto</option>' +
+                    '<option value="plane">Flugzeug</option>' +
+                    '<option value="ferry">Fähre</option>' +
+                '</select>' +
+                '<button type="button" class="btn btn-danger btn-sm btn-remove-segment" onclick="removeSegment(\'' + id + '\')">Entfernen</button>' +
+            '</div>' +
+            '<div class="waypoint-section">' +
+                '<div class="waypoint-list" id="' + id + '-waypoints"></div>' +
+                '<div class="add-waypoint-row">' +
+                    '<input type="text" placeholder="Ort suchen..." id="' + id + '-wp-search" autocomplete="off">' +
+                    '<button type="button" class="btn btn-secondary btn-sm" onclick="addWaypointFromSearch(\'' + id + '\')">+</button>' +
+                    '<div class="station-suggestions" id="' + id + '-suggestions"></div>' +
+                '</div>' +
+                '<div class="map-click-hint" id="' + id + '-map-hint">Oder klicke auf die Karte, um einen Wegpunkt zu setzen.</div>' +
+            '</div>' +
+            '<div class="airport-section" style="display:none">' +
+                '<div class="airport-inputs">' +
+                    '<input type="text" placeholder="VON" id="' + id + '-origin" maxlength="4">' +
+                    '<span>&rarr;</span>' +
+                    '<input type="text" placeholder="NACH" id="' + id + '-dest" maxlength="4">' +
+                    '<button type="button" class="btn btn-secondary btn-sm" onclick="resolveAirports(\'' + id + '\')">Auflösen</button>' +
+                '</div>' +
+            '</div>' +
+            '<div class="segment-map" id="' + id + '-map"></div>';
+
+        container.appendChild(div);
+
+        // Initialize mini-map with Dark Matter
+        var miniMap = L.map(id + "-map").setView([51.1657, 10.4515], 5);
+        L.tileLayer(DARK_TILE_URL, {
+            attribution: DARK_TILE_ATTR,
+            subdomains: "abcd",
+            maxZoom: 20,
+        }).addTo(miniMap);
+        segmentMaps[id] = { map: miniMap, routeLayer: null, markerLayer: L.layerGroup().addTo(miniMap) };
+
+        // Click on map to add waypoint
+        miniMap.on("click", function(e) {
+            var el = document.getElementById(id);
+            var type = el.querySelector(".seg-transport").value;
+            if (type === "plane") return;
+            _addWaypointToSegment(id, "Punkt", e.latlng.lat, e.latlng.lng);
+        });
+
+        // Station search with autocomplete
+        var searchInput = document.getElementById(id + "-wp-search");
+        searchInput.addEventListener("input", function() {
+            var query = this.value.trim();
+            var sugBox = document.getElementById(id + "-suggestions");
+            if (searchTimeout) clearTimeout(searchTimeout);
+            if (query.length < 2) {
+                sugBox.style.display = "none";
+                return;
+            }
+            searchTimeout = setTimeout(function() {
+                fetch("{% url 'diary:search_stations' %}?q=" + encodeURIComponent(query))
+                    .then(function(r) { return r.json(); })
+                    .then(function(results) {
+                        sugBox.innerHTML = "";
+                        if (results.length === 0) {
+                            sugBox.style.display = "none";
+                            return;
+                        }
+                        results.forEach(function(st) {
+                            var item = document.createElement("div");
+                            item.className = "station-suggestion";
+                            item.textContent = st.name;
+                            item.addEventListener("click", function() {
+                                _addWaypointToSegment(id, st.name, st.lat, st.lng);
+                                searchInput.value = "";
+                                sugBox.style.display = "none";
+                            });
+                            sugBox.appendChild(item);
+                        });
+                        sugBox.style.display = "block";
+                    });
+            }, 200);
+        });
+
+        // Close suggestions on blur
+        searchInput.addEventListener("blur", function() {
+            setTimeout(function() {
+                document.getElementById(id + "-suggestions").style.display = "none";
+            }, 200);
+        });
+
+        setTimeout(function() { miniMap.invalidateSize(); }, 100);
+    };
+
+    function _addWaypointToSegment(segId, name, lat, lng) {
+        var list = document.getElementById(segId + "-waypoints");
+        var item = document.createElement("div");
+        item.className = "waypoint-item";
+        item.dataset.lat = lat;
+        item.dataset.lng = lng;
+        item.dataset.name = name;
+        item.innerHTML =
+            '<span>' + name + ' (' + lat.toFixed(4) + ', ' + lng.toFixed(4) + ')</span>' +
+            '<button type="button" class="remove-btn" onclick="this.parentElement.remove(); updateSegmentPreview(\'' + segId + '\')">&times;</button>';
+        list.appendChild(item);
+        updateSegmentPreview(segId);
+    }
+
+    window.addWaypointFromSearch = function(segId) {
+        var searchInput = document.getElementById(segId + "-wp-search");
+        var name = searchInput.value.trim();
+        if (!name) return;
+        // If text matches no station, we can't add without coords
+        // The user should use suggestions or click on the map
+        searchInput.value = "";
+    };
+
+    window.removeSegment = function(id) {
+        var el = document.getElementById(id);
+        if (el) el.remove();
+        if (segmentMaps[id]) {
+            segmentMaps[id].map.remove();
+            delete segmentMaps[id];
+        }
+    };
+
+    window.onTransportChange = function(id) {
+        var el = document.getElementById(id);
+        var type = el.querySelector(".seg-transport").value;
+        var wpSection = el.querySelector(".waypoint-section");
+        var apSection = el.querySelector(".airport-section");
+
+        if (type === "plane") {
+            wpSection.style.display = "none";
+            apSection.style.display = "block";
+        } else {
+            wpSection.style.display = "block";
+            apSection.style.display = "none";
+            var searchInput = document.getElementById(id + "-wp-search");
+            if (searchInput) {
+                searchInput.placeholder = type === "ferry" ? "Hafen oder Ort suchen..." : "Ort suchen...";
+            }
+            var hint = document.getElementById(id + "-map-hint");
+            if (hint) {
+                hint.textContent = type === "ferry"
+                    ? "Oder klicke auf die Karte, um einen Hafen zu setzen."
+                    : "Oder klicke auf die Karte, um einen Wegpunkt zu setzen.";
+            }
+        }
+    };
+
+    // --- Airport resolution ---
+
+    window.resolveAirports = function(segId) {
+        var origin = document.getElementById(segId + "-origin").value.trim().toUpperCase();
+        var dest = document.getElementById(segId + "-dest").value.trim().toUpperCase();
+
+        if (!origin || !dest) return;
+
+        Promise.all([
+            fetch("{% url 'diary:resolve_airport' %}?code=" + origin).then(function(r) { return r.json(); }),
+            fetch("{% url 'diary:resolve_airport' %}?code=" + dest).then(function(r) { return r.json(); }),
+        ]).then(function(results) {
+            var o = results[0];
+            var d = results[1];
+            if (o.error || d.error) {
+                alert("Flughafen nicht gefunden: " + (o.error ? origin : dest));
+                return;
+            }
+            var waypoints = [
+                { name: o.name, lat: o.lat, lng: o.lng },
+                { name: d.name, lat: d.lat, lng: d.lng },
+            ];
+            previewRoute(segId, waypoints, "plane");
+        });
+    };
+
+    // --- Route preview ---
+
+    window.updateSegmentPreview = function(segId) {
+        var el = document.getElementById(segId);
+        var type = el.querySelector(".seg-transport").value;
+        var items = el.querySelectorAll(".waypoint-item");
+        var waypoints = [];
+        items.forEach(function(item) {
+            waypoints.push({
+                name: item.dataset.name,
+                lat: parseFloat(item.dataset.lat),
+                lng: parseFloat(item.dataset.lng),
+            });
+        });
+
+        var info = segmentMaps[segId];
+        if (!info) return;
+
+        // Always update markers
+        info.markerLayer.clearLayers();
+        waypoints.forEach(function(wp) {
+            L.marker([wp.lat, wp.lng]).bindPopup(wp.name).addTo(info.markerLayer);
+        });
+
+        if (waypoints.length >= 2) {
+            previewRoute(segId, waypoints, type);
+        } else if (waypoints.length === 1) {
+            info.map.setView([waypoints[0].lat, waypoints[0].lng], 8);
+        }
+    };
+
+    function previewRoute(segId, waypoints, transportType) {
+        fetch("{% url 'diary:resolve_route' %}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
+            body: JSON.stringify({ waypoints: waypoints, transport_type: transportType }),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var info = segmentMaps[segId];
+            if (!info) return;
+
+            if (info.routeLayer) {
+                info.map.removeLayer(info.routeLayer);
+            }
+            info.markerLayer.clearLayers();
+
+            waypoints.forEach(function(wp) {
+                L.marker([wp.lat, wp.lng]).bindPopup(wp.name).addTo(info.markerLayer);
+            });
+
+            if (data.geometry) {
+                info.routeLayer = L.geoJSON(data.geometry, {
+                    style: { color: "#6c9bcf", weight: 3 },
+                }).addTo(info.map);
+                info.map.fitBounds(info.routeLayer.getBounds().pad(0.1));
+            } else {
+                var bounds = L.latLngBounds(waypoints.map(function(w) { return [w.lat, w.lng]; }));
+                info.map.fitBounds(bounds.pad(0.1));
+            }
+        });
+    }
+
+    // --- Image upload ---
+
+    var imageInput = document.getElementById("image-input");
+    var uploadZone = document.getElementById("upload-zone");
+    var selectedFiles = [];
+    var deleteImageIds = [];
+
+    imageInput.addEventListener("change", function() {
+        Array.from(this.files).forEach(addImagePreview);
+    });
+
+    uploadZone.addEventListener("dragover", function(e) {
+        e.preventDefault();
+        this.style.borderColor = "var(--color-accent)";
+    });
+
+    uploadZone.addEventListener("dragleave", function() {
+        this.style.borderColor = "";
+    });
+
+    uploadZone.addEventListener("drop", function(e) {
+        e.preventDefault();
+        this.style.borderColor = "";
+        Array.from(e.dataTransfer.files).forEach(function(f) {
+            if (f.type.startsWith("image/")) addImagePreview(f);
+        });
+    });
+
+    function addImagePreview(file) {
+        selectedFiles.push(file);
+        var previews = document.getElementById("image-previews");
+        var div = document.createElement("div");
+        div.className = "image-preview";
+        var idx = selectedFiles.length - 1;
+        div.innerHTML = '<img src="" alt=""><button type="button" class="remove-img" data-idx="' + idx + '">&times;</button>';
+
+        var reader = new FileReader();
+        reader.onload = function(e) { div.querySelector("img").src = e.target.result; };
+        reader.readAsDataURL(file);
+
+        div.querySelector(".remove-img").addEventListener("click", function() {
+            selectedFiles[parseInt(this.dataset.idx)] = null;
+            div.remove();
+        });
+
+        previews.appendChild(div);
+    }
+
+    window.markImageForDeletion = function(imgId, btn) {
+        deleteImageIds.push(imgId);
+        var preview = document.getElementById("existing-img-" + imgId);
+        if (preview) preview.remove();
+    };
+
+    // --- Form submission ---
+
+    function showError(msg) {
+        var el = document.getElementById("form-error");
+        el.textContent = msg;
+        el.style.display = "block";
+        el.scrollIntoView({ behavior: "smooth" });
+    }
+
+    document.getElementById("trip-form").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        var title = document.getElementById("id_title").value.trim();
+        if (!title) {
+            showError("Bitte einen Titel eingeben.");
+            return;
+        }
+
+        var submitBtn = document.getElementById("submit-btn");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Speichern...";
+        document.getElementById("form-error").style.display = "none";
+
+        var formData = new FormData();
+        formData.append("csrfmiddlewaretoken", csrfToken);
+        formData.append("title", title);
+        formData.append("description", document.getElementById("id_description").value);
+
+        var tripData = {
+            outbound_journey: collectJourney("outbound"),
+            return_journey: collectJourney("return"),
+        };
+        formData.append("journey_data", JSON.stringify(tripData));
+
+        selectedFiles.forEach(function(f) {
+            if (f) formData.append("images", f);
+        });
+
+        deleteImageIds.forEach(function(id) {
+            formData.append("delete_images", id);
+        });
+
+        fetch(window.location.href, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrfToken },
+            body: formData,
+        })
+        .then(function(r) {
+            if (!r.ok) {
+                if (r.status === 413) throw new Error("Dateien zu groß. Bitte weniger oder kleinere Bilder hochladen.");
+                throw new Error("Server-Fehler (" + r.status + ")");
+            }
+            var ct = r.headers.get("content-type") || "";
+            if (ct.indexOf("application/json") === -1) {
+                throw new Error("Unerwartete Server-Antwort. Bitte erneut versuchen.");
+            }
+            return r.json().then(function(data) {
+                return { status: r.status, data: data };
+            });
+        })
+        .then(function(result) {
+            if (result.data.success) {
+                window.location.href = result.data.redirect;
+            } else {
+                showError(result.data.error || "Unbekannter Fehler beim Speichern.");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "{% if editing %}Speichern{% else %}Erstellen{% endif %}";
+            }
+        })
+        .catch(function(err) {
+            showError(err.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = "{% if editing %}Speichern{% else %}Erstellen{% endif %}";
+        });
+    });
+
+    function collectJourney(type) {
+        var dateStr = document.getElementById(type + "-date").value.trim();
+        if (!dateStr) return null;
+
+        var isoDate = dateToIso(dateStr);
+
+        var container = document.getElementById(type + "-segments");
+        var segmentEls = container.querySelectorAll(".segment-item");
+        var segments = [];
+
+        segmentEls.forEach(function(el) {
+            var transportType = el.querySelector(".seg-transport").value;
+            var waypoints = [];
+
+            if (transportType === "plane") {
+                var origin = el.querySelector("[id$='-origin']").value.trim().toUpperCase();
+                var dest = el.querySelector("[id$='-dest']").value.trim().toUpperCase();
+                var markers = segmentMaps[el.id];
+                if (markers && markers.markerLayer) {
+                    markers.markerLayer.eachLayer(function(m) {
+                        var ll = m.getLatLng();
+                        waypoints.push({ name: m.getPopup() ? m.getPopup().getContent() : "", lat: ll.lat, lng: ll.lng });
+                    });
+                }
+                segments.push({
+                    transport_type: transportType,
+                    waypoints: waypoints,
+                    origin_code: origin,
+                    destination_code: dest,
+                });
+            } else {
+                el.querySelectorAll(".waypoint-item").forEach(function(wp) {
+                    waypoints.push({
+                        name: wp.dataset.name,
+                        lat: parseFloat(wp.dataset.lat),
+                        lng: parseFloat(wp.dataset.lng),
+                    });
+                });
+                segments.push({
+                    transport_type: transportType,
+                    waypoints: waypoints,
+                    origin_code: "",
+                    destination_code: "",
+                });
+            }
+        });
+
+        return { travel_date: isoDate, segments: segments };
+    }
+
+    // --- Location Picker Modal ---
+    var locModal = { map: null, marker: null, imgId: null, latlng: null };
+
+    document.querySelectorAll(".set-location-btn").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            var id  = this.dataset.imgId;
+            var lat = this.dataset.lat ? parseFloat(this.dataset.lat) : null;
+            var lng = this.dataset.lng ? parseFloat(this.dataset.lng) : null;
+            openLocationPicker(id, lat, lng);
+        });
+    });
+
+    function openLocationPicker(imgId, lat, lng) {
+        locModal.imgId = imgId;
+        document.getElementById("location-modal").classList.remove("hidden");
+
+        if (!locModal.map) {
+            locModal.map = L.map("location-picker-map").setView([51.16, 10.45], 5);
+            L.tileLayer(DARK_TILE_URL, {
+                attribution: DARK_TILE_ATTR,
+                subdomains: "abcd",
+                maxZoom: 20,
+            }).addTo(locModal.map);
+            locModal.map.on("click", function(e) {
+                locModal.latlng = e.latlng;
+                if (locModal.marker) locModal.marker.setLatLng(e.latlng);
+                else locModal.marker = L.marker(e.latlng).addTo(locModal.map);
+            });
+        }
+        setTimeout(function() { locModal.map.invalidateSize(); }, 50);
+
+        if (lat !== null) {
+            var ll = L.latLng(lat, lng);
+            locModal.latlng = ll;
+            locModal.map.setView(ll, 10);
+            if (locModal.marker) locModal.marker.setLatLng(ll);
+            else locModal.marker = L.marker(ll).addTo(locModal.map);
+        } else {
+            locModal.map.setView([51.16, 10.45], 5);
+            if (locModal.marker) { locModal.marker.remove(); locModal.marker = null; }
+            locModal.latlng = null;
+        }
+    }
+
+    window.closeLocationModal = function() {
+        document.getElementById("location-modal").classList.add("hidden");
+    };
+
+    document.getElementById("location-save-btn").addEventListener("click", function() {
+        if (!locModal.latlng) return;
+        fetch("/diary/manage/image/" + locModal.imgId + "/set-location/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
+            body: JSON.stringify({ lat: locModal.latlng.lat, lng: locModal.latlng.lng }),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.ok) {
+                var dot = document.querySelector("#existing-img-" + locModal.imgId + " .loc-dot");
+                if (dot) dot.classList.add("has-location");
+                var btn = document.querySelector("#existing-img-" + locModal.imgId + " .set-location-btn");
+                if (btn) {
+                    btn.dataset.lat = locModal.latlng.lat;
+                    btn.dataset.lng = locModal.latlng.lng;
+                    btn.title = "Ort ändern";
+                }
+                window.closeLocationModal();
+            }
+        });
+    });
+
+    // --- Load existing data for editing ---
+    {% if trip_data %}
+    (function() {
+        var data = {{ trip_data|safe }};
+
+        function loadJourney(journeyData, type) {
+            if (!journeyData) return;
+            document.getElementById(type + "-date").value = isoToDate(journeyData.travel_date);
+            journeyData.segments.forEach(function(seg) {
+                addSegment(type);
+                var segEl = document.getElementById(type + "-segments").lastElementChild;
+                segEl.querySelector(".seg-transport").value = seg.transport_type;
+                onTransportChange(segEl.id);
+
+                if (seg.transport_type === "plane") {
+                    segEl.querySelector("[id$='-origin']").value = seg.origin_code;
+                    segEl.querySelector("[id$='-dest']").value = seg.destination_code;
+                    if (seg.waypoints.length >= 2) {
+                        previewRoute(segEl.id, seg.waypoints, seg.transport_type);
+                    }
+                } else {
+                    seg.waypoints.forEach(function(wp) {
+                        _addWaypointToSegment(segEl.id, wp.name, wp.lat, wp.lng);
+                    });
+                }
+            });
+        }
+
+        loadJourney(data.outbound_journey, "outbound");
+        loadJourney(data.return_journey, "return");
+    })();
+    {% endif %}
+})();
+</script>
+{% endblock %}

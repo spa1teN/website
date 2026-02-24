@@ -1,0 +1,433 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}{{ trip.title }} - spa1teN{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
+<style>
+.trip-detail {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.trip-detail h1 {
+    margin-bottom: 0.5rem;
+}
+
+.trip-meta {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.trip-description {
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+.detail-section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+#detail-map {
+    height: 500px;
+    border-radius: 6px;
+}
+
+.journey-block {
+    margin-bottom: 1rem;
+}
+
+.journey-block h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.journey-date {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.segment-info {
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.transport-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.transport-train { background: rgba(21,101,192,0.2); color: #64B5F6; }
+.transport-car { background: rgba(117,117,117,0.2); color: #BDBDBD; }
+.transport-plane { background: rgba(211,47,47,0.2); color: #EF9A9A; }
+.transport-ferry { background: rgba(46,125,50,0.2); color: #81C784; }
+
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.gallery-item {
+    aspect-ratio: 3/2;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.gallery-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    color: #fff;
+    padding: 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* MapLibre popup overrides */
+.maplibregl-popup-content {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+.maplibregl-popup-tip {
+    border-top-color: var(--color-surface);
+}
+
+.maplibregl-popup-close-button {
+    color: var(--color-text-muted);
+}
+
+.wp-label {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.trip-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+/* Lightbox */
+#lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    cursor: pointer;
+}
+
+#lightbox.hidden {
+    display: none;
+}
+
+#lightbox-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+#lightbox-close {
+    position: fixed;
+    top: 1rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="trip-detail">
+    <h1>{{ trip.title }}</h1>
+    <div class="trip-meta">
+        {% if trip.year %}{{ trip.year }}{% endif %}
+        {% for t in trip.transport_types %}
+        <span class="transport-badge transport-{{ t }}">
+            {% if t == "train" %}Zug{% elif t == "car" %}Auto{% elif t == "plane" %}Flug{% elif t == "ferry" %}Fähre{% endif %}
+        </span>
+        {% endfor %}
+    </div>
+
+    {% if trip.description %}
+    <p class="trip-description">{{ trip.description }}</p>
+    {% endif %}
+
+    <div class="detail-section">
+        <h2>Route</h2>
+        <div id="detail-map"></div>
+    </div>
+
+    {% if journey_info %}
+    <div class="detail-section">
+        <h2>Reisedetails</h2>
+        {% for j in journey_info %}
+        <div class="journey-block">
+            <h3>{{ j.label }}</h3>
+            <div class="journey-date">{{ j.date|date:"d.m.Y" }}</div>
+            {% for seg in j.segments %}
+            <div class="segment-info">
+                <span class="transport-badge transport-{{ seg.type_key }}">{{ seg.type_label }}</span>
+                <span>{{ seg.route_desc }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if images %}
+    <div class="detail-section">
+        <h2>Bilder ({{ images|length }})</h2>
+        <div class="gallery">
+            {% for img in images %}
+            <div class="gallery-item" onclick="openLightbox('{{ img.image.url }}')">
+                <img src="{{ img.image.url }}" alt="{{ img.caption }}" loading="lazy">
+                {% if img.caption %}
+                <div class="gallery-caption">{{ img.caption }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="trip-actions">
+        <a href="{% url 'diary:map' %}" class="btn btn-secondary">Zur Karte</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-primary">Bearbeiten</a>
+        {% endif %}
+    </div>
+</div>
+
+<div id="lightbox" class="hidden" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="" />
+    <button id="lightbox-close" onclick="closeLightbox()">&times;</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script>
+(function() {
+    "use strict";
+
+    var ROUTE_COLORS = {
+        train: "#1565C0",
+        car:   "#757575",
+        plane: "#D32F2F",
+        ferry: "#2E7D32",
+    };
+
+    var ROUTE_DASH = {
+        train: [10, 5],
+        plane: [5, 10],
+        ferry: [8, 8],
+    };
+
+    var routeGeoJSON = {{ route_geojson|safe }};
+    var imageData = {{ image_data|safe }};
+    var waypointData = {{ waypoint_data|safe }};
+
+    var map = new maplibregl.Map({
+        container: "detail-map",
+        style: {
+            version: 8,
+            projection: { type: "globe" },
+            sources: {
+                "carto-dark": {
+                    type: "raster",
+                    tiles: [
+                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                    ],
+                    tileSize: 256,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                },
+            },
+            layers: [{ id: "carto-dark-layer", type: "raster", source: "carto-dark" }],
+        },
+        center: [10.4515, 51.1657],
+        zoom: 5,
+    });
+
+    map.on("load", function() {
+        var bounds = new maplibregl.LngLatBounds();
+        var hasContent = false;
+
+        // Draw routes grouped by transport type
+        var grouped = { train: [], car: [], plane: [], ferry: [] };
+        routeGeoJSON.features.forEach(function(feature) {
+            if (!feature.geometry) return;
+            var type = feature.properties.transport_type;
+            if (grouped[type]) grouped[type].push(feature);
+        });
+
+        ["train", "car", "plane", "ferry"].forEach(function(type) {
+            if (grouped[type].length === 0) return;
+
+            map.addSource("routes-" + type, {
+                type: "geojson",
+                data: { type: "FeatureCollection", features: grouped[type] },
+            });
+
+            var paint = {
+                "line-color": ROUTE_COLORS[type] || "#999",
+                "line-width": type === "plane" ? 2 : 3,
+                "line-opacity": 0.9,
+            };
+            if (ROUTE_DASH[type]) paint["line-dasharray"] = ROUTE_DASH[type];
+
+            map.addLayer({
+                id: "route-" + type,
+                type: "line",
+                source: "routes-" + type,
+                paint: paint,
+            });
+
+            // Extend bounds from route coordinates
+            grouped[type].forEach(function(f) {
+                var coords = f.geometry.coordinates;
+                if (f.geometry.type === "LineString") {
+                    coords.forEach(function(c) { bounds.extend(c); });
+                } else if (f.geometry.type === "MultiLineString") {
+                    coords.forEach(function(line) {
+                        line.forEach(function(c) { bounds.extend(c); });
+                    });
+                }
+            });
+            hasContent = true;
+        });
+
+        // Add waypoint markers with labels
+        var addedPositions = {};
+        waypointData.forEach(function(wp) {
+            var key = wp.lat.toFixed(3) + "," + wp.lng.toFixed(3);
+            if (addedPositions[key]) return;
+            addedPositions[key] = true;
+
+            // Circle marker via DOM element
+            var el = document.createElement("div");
+            el.style.width = "12px";
+            el.style.height = "12px";
+            el.style.borderRadius = "50%";
+            el.style.background = "#fff";
+            el.style.border = "2px solid #6c9bcf";
+
+            new maplibregl.Marker({ element: el })
+                .setLngLat([wp.lng, wp.lat])
+                .addTo(map);
+
+            // Label
+            if (wp.name && wp.name !== "Punkt") {
+                var label = document.createElement("div");
+                label.className = "wp-label";
+                label.textContent = wp.name;
+                new maplibregl.Marker({ element: label, anchor: "bottom", offset: [0, -10] })
+                    .setLngLat([wp.lng, wp.lat])
+                    .addTo(map);
+            }
+
+            bounds.extend([wp.lng, wp.lat]);
+            hasContent = true;
+        });
+
+        // Add image markers
+        imageData.forEach(function(img) {
+            if (!img.lat || !img.lng) return;
+
+            var el = document.createElement("div");
+            el.style.width = "16px";
+            el.style.height = "16px";
+            el.style.borderRadius = "50%";
+            el.style.background = "#FF9800";
+            el.style.border = "2px solid #fff";
+            el.style.cursor = "pointer";
+
+            var marker = new maplibregl.Marker({ element: el })
+                .setLngLat([img.lng, img.lat])
+                .addTo(map);
+
+            var html = '<div style="text-align:center">';
+            html += '<img src="' + img.url + '" style="max-width:180px;border-radius:4px;cursor:pointer" onclick="openLightbox(\'' + img.url + '\')">';
+            if (img.caption) html += '<p style="margin:0.25rem 0 0;font-size:0.8rem;color:var(--color-text-muted)">' + img.caption + '</p>';
+            html += '</div>';
+
+            var popup = new maplibregl.Popup({ offset: 10, maxWidth: "220px" }).setHTML(html);
+            marker.setPopup(popup);
+
+            bounds.extend([img.lng, img.lat]);
+            hasContent = true;
+        });
+
+        if (hasContent && !bounds.isEmpty()) {
+            map.fitBounds(bounds, { padding: 50 });
+        }
+    });
+
+    window.openLightbox = function(url) {
+        document.getElementById("lightbox-img").src = url;
+        document.getElementById("lightbox").classList.remove("hidden");
+    };
+
+    window.closeLightbox = function() {
+        document.getElementById("lightbox").classList.add("hidden");
+        document.getElementById("lightbox-img").src = "";
+    };
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") closeLightbox();
+    });
+})();
+</script>
+{% endblock %}

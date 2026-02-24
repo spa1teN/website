@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}spa1teN{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="{% url 'core:home' %}" class="nav-brand">Caspar Sadenius</a>
+            <ul class="nav-links">
+                <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
+                <li><a href="{% url 'links:links' %}" {% if request.resolver_match.app_name == 'links' %}class="active"{% endif %}>Links</a></li>
+                <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>Reisen</a></li>
+            </ul>
+            <ul class="nav-auth">
+                {% if user.is_authenticated %}
+                <li>
+                    <form method="post" action="{% url 'logout' %}" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">Logout</button>
+                    </form>
+                </li>
+                {% else %}
+                <li><a href="{% url 'login' %}">Login</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

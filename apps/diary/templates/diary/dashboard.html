@@ -1,0 +1,107 @@
+{% extends "core/base.html" %}
+
+{% block title %}Reisen verwalten - spa1teN{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="dashboard-header">
+        <h1>Reisen verwalten</h1>
+        <div style="display:flex;gap:0.5rem">
+            <a href="{% url 'diary:map' %}" class="btn btn-secondary">Zur Karte</a>
+            <a href="{% url 'diary:trip_create' %}" class="btn btn-primary">Neue Reise</a>
+        </div>
+    </div>
+
+    {% if trips %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Titel</th>
+                <th>Jahr</th>
+                <th>Transportmittel</th>
+                <th>Bilder</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip in trips %}
+            <tr>
+                <td>{{ trip.title }}</td>
+                <td>{{ trip.year|default:"-" }}</td>
+                <td>
+                    {% for t in trip.transport_types %}
+                    <span class="transport-badge transport-{{ t }}">
+                        {% if t == "train" %}Zug{% elif t == "car" %}Auto{% elif t == "plane" %}Flug{% elif t == "ferry" %}Fähre{% endif %}
+                    </span>
+                    {% endfor %}
+                </td>
+                <td>{{ trip.images.count }}</td>
+                <td>
+                    <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-secondary btn-sm">Bearbeiten</a>
+                    <a href="{% url 'diary:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">Löschen</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">Noch keine Reisen vorhanden. Erstelle deine erste Reise!</p>
+    {% endif %}
+</div>
+
+<style>
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.data-table th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+}
+
+.data-table tr:hover {
+    background: var(--color-surface);
+}
+
+.transport-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+}
+
+.transport-train { background: rgba(21,101,192,0.2); color: #64B5F6; }
+.transport-car { background: rgba(117,117,117,0.2); color: #BDBDBD; }
+.transport-plane { background: rgba(211,47,47,0.2); color: #EF9A9A; }
+.transport-ferry { background: rgba(46,125,50,0.2); color: #81C784; }
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--color-text-muted);
+}
+</style>
+{% endblock %}

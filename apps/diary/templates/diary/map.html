@@ -1,0 +1,62 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Reisen - spa1teN{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="{% static 'diary/css/map.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div id="map-page">
+    <div id="filter-panel">
+        <h3>Filter</h3>
+
+        <div class="filter-section">
+            <h4>Transportmittel</h4>
+            <label><input type="checkbox" data-transport="train" checked> <span class="color-dot" style="background:#1565C0"></span> Zug</label>
+            <label><input type="checkbox" data-transport="car" checked> <span class="color-dot" style="background:#757575"></span> Auto</label>
+            <label><input type="checkbox" data-transport="plane" checked> <span class="color-dot" style="background:#D32F2F"></span> Flugzeug</label>
+            <label><input type="checkbox" data-transport="ferry" checked> <span class="color-dot" style="background:#2E7D32"></span> Fähre</label>
+        </div>
+
+        <div class="filter-section">
+            <h4>Jahr</h4>
+            <select id="year-filter">
+                <option value="">Alle Jahre</option>
+            </select>
+        </div>
+
+        <div class="filter-section">
+            <h4>Reisen</h4>
+            <div id="trip-list"></div>
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="filter-panel-footer">
+            <a href="{% url 'diary:dashboard' %}" class="btn btn-primary btn-sm btn-block">Verwalten</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="map"></div>
+    <div id="trip-info" class="hidden"></div>
+</div>
+
+<div id="lightbox" class="hidden" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="" />
+    <button id="lightbox-close" onclick="closeLightbox()">&times;</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script
+    id="map-config"
+    data-routes-url="{% url 'diary-api:routes' %}"
+    data-images-url="{% url 'diary-api:images' %}"
+    data-trips-url="{% url 'diary-api:trips' %}"
+></script>
+<script src="{% static 'diary/js/map.js' %}"></script>
+{% endblock %}

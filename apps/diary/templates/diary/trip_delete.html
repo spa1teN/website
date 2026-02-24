@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+
+{% block title %}Reise löschen - spa1teN{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width: 500px;">
+    <h1>Reise löschen</h1>
+    <p>Möchtest du die Reise <strong>{{ trip.title }}</strong> wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</p>
+    <form method="post" style="margin-top: 1.5rem;">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Ja, löschen</button>
+            <a href="{% url 'diary:dashboard' %}" class="btn btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

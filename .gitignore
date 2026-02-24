@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.env
+db.sqlite3
+media/
+static/
+*.log
+.vscode/
+.idea/
+osrm-data/
+tasks.txt

@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+
+{% block title %}Login - spa1teN{% endblock %}
+
+{% block content %}
+<div class="page-container login-container">
+    <h1>Login</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="error-message">Benutzername oder Passwort falsch.</div>
+        {% endif %}
+        <div class="form-group">
+            <label for="id_username">Benutzername</label>
+            {{ form.username }}
+        </div>
+        <div class="form-group">
+            <label for="id_password">Passwort</label>
+            {{ form.password }}
+        </div>
+        <button type="submit" class="btn btn-primary">Einloggen</button>
+    </form>
+</div>
+{% endblock %}
