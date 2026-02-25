@@ -1,6 +1,7 @@
 services:
   db:
     image: postgis/postgis:16-3.4
+    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -15,6 +16,7 @@ services:
 
   web:
     build: .
+    restart: unless-stopped
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
@@ -35,6 +37,7 @@ services:
 
   nginx:
     build: ./nginx
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -48,6 +51,7 @@ services:
 
   certbot:
     image: certbot/certbot
+    restart: unless-stopped
     volumes:
       - certbot_certs:/etc/letsencrypt
       - certbot_www:/var/www/certbot
