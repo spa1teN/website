@@ -8,7 +8,7 @@ build/
 .env
 db.sqlite3
 media/
-static/
+staticfiles/
 *.log
 .vscode/
 .idea/

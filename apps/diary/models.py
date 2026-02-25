@@ -47,7 +47,10 @@ class JourneySegment(models.Model):
 
 class Trip(models.Model):
     title = models.CharField(max_length=255)
+    subtitle = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
+    is_event = models.BooleanField(default=False)
+    event_date = models.DateField(null=True, blank=True)
     outbound_journey = models.ForeignKey(
         Journey,
         on_delete=models.SET_NULL,
@@ -75,6 +78,8 @@ class Trip(models.Model):
     def year(self):
         if self.outbound_journey and self.outbound_journey.travel_date:
             return self.outbound_journey.travel_date.year
+        if self.event_date:
+            return self.event_date.year
         return None
 
     @property

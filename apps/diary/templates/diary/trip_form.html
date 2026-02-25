@@ -314,6 +314,25 @@ textarea.form-control {
                 {{ form.title }}
             </div>
             <div class="form-group">
+                <label for="id_subtitle">Untertitel</label>
+                {{ form.subtitle }}
+            </div>
+            <div class="form-group">
+                <label>Typ</label>
+                <div style="display:flex; gap:1.5rem;">
+                    <label style="color:var(--color-text); cursor:pointer;">
+                        <input type="radio" name="trip_type" value="trip" id="type-trip" style="margin-right:0.35rem;" checked> Reise
+                    </label>
+                    <label style="color:var(--color-text); cursor:pointer;">
+                        <input type="radio" name="trip_type" value="event" id="type-event" style="margin-right:0.35rem;"> Event
+                    </label>
+                </div>
+            </div>
+            <div class="form-group" id="event-date-group" style="display:none">
+                <label for="event-date-input">Datum</label>
+                <input type="text" class="form-control" id="event-date-input" placeholder="TT.MM.JJJJ">
+            </div>
+            <div class="form-group">
                 <label for="id_description">Beschreibung</label>
                 {{ form.description }}
             </div>
@@ -406,6 +425,21 @@ textarea.form-control {
     var segmentMaps = {};
     var searchTimeout = null;
     var csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+    // --- Trip type toggle ---
+
+    function setTripType(isEvent) {
+        document.getElementById("outbound-section").style.display = isEvent ? "none" : "";
+        document.getElementById("return-section").style.display = isEvent ? "none" : "";
+        document.getElementById("event-date-group").style.display = isEvent ? "" : "none";
+    }
+
+    document.getElementById("type-trip").addEventListener("change", function() {
+        if (this.checked) setTripType(false);
+    });
+    document.getElementById("type-event").addEventListener("change", function() {
+        if (this.checked) setTripType(true);
+    });
 
     // --- Date helpers (DD.MM.YYYY ↔ YYYY-MM-DD) ---
 
@@ -749,13 +783,21 @@ textarea.form-control {
         var formData = new FormData();
         formData.append("csrfmiddlewaretoken", csrfToken);
         formData.append("title", title);
+        formData.append("subtitle", document.getElementById("id_subtitle").value);
         formData.append("description", document.getElementById("id_description").value);
 
-        var tripData = {
-            outbound_journey: collectJourney("outbound"),
-            return_journey: collectJourney("return"),
-        };
-        formData.append("journey_data", JSON.stringify(tripData));
+        var isEvent = document.getElementById("type-event").checked;
+        formData.append("is_event", isEvent ? "1" : "0");
+
+        if (isEvent) {
+            formData.append("event_date", document.getElementById("event-date-input").value.trim());
+        } else {
+            var tripData = {
+                outbound_journey: collectJourney("outbound"),
+                return_journey: collectJourney("return"),
+            };
+            formData.append("journey_data", JSON.stringify(tripData));
+        }
 
         selectedFiles.forEach(function(f) {
             if (f) formData.append("images", f);
@@ -925,31 +967,39 @@ textarea.form-control {
     (function() {
         var data = {{ trip_data|safe }};
 
-        function loadJourney(journeyData, type) {
-            if (!journeyData) return;
-            document.getElementById(type + "-date").value = isoToDate(journeyData.travel_date);
-            journeyData.segments.forEach(function(seg) {
-                addSegment(type);
-                var segEl = document.getElementById(type + "-segments").lastElementChild;
-                segEl.querySelector(".seg-transport").value = seg.transport_type;
-                onTransportChange(segEl.id);
+        if (data.is_event) {
+            document.getElementById("type-event").checked = true;
+            setTripType(true);
+            if (data.event_date) {
+                document.getElementById("event-date-input").value = data.event_date;
+            }
+        } else {
+            function loadJourney(journeyData, type) {
+                if (!journeyData) return;
+                document.getElementById(type + "-date").value = isoToDate(journeyData.travel_date);
+                journeyData.segments.forEach(function(seg) {
+                    addSegment(type);
+                    var segEl = document.getElementById(type + "-segments").lastElementChild;
+                    segEl.querySelector(".seg-transport").value = seg.transport_type;
+                    onTransportChange(segEl.id);
 
-                if (seg.transport_type === "plane") {
-                    segEl.querySelector("[id$='-origin']").value = seg.origin_code;
-                    segEl.querySelector("[id$='-dest']").value = seg.destination_code;
-                    if (seg.waypoints.length >= 2) {
-                        previewRoute(segEl.id, seg.waypoints, seg.transport_type);
+                    if (seg.transport_type === "plane") {
+                        segEl.querySelector("[id$='-origin']").value = seg.origin_code;
+                        segEl.querySelector("[id$='-dest']").value = seg.destination_code;
+                        if (seg.waypoints.length >= 2) {
+                            previewRoute(segEl.id, seg.waypoints, seg.transport_type);
+                        }
+                    } else {
+                        seg.waypoints.forEach(function(wp) {
+                            _addWaypointToSegment(segEl.id, wp.name, wp.lat, wp.lng);
+                        });
                     }
-                } else {
-                    seg.waypoints.forEach(function(wp) {
-                        _addWaypointToSegment(segEl.id, wp.name, wp.lat, wp.lng);
-                    });
-                }
-            });
-        }
+                });
+            }
 
-        loadJourney(data.outbound_journey, "outbound");
-        loadJourney(data.return_journey, "return");
+            loadJourney(data.outbound_journey, "outbound");
+            loadJourney(data.return_journey, "return");
+        }
     })();
     {% endif %}
 })();

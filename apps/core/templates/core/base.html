@@ -13,23 +13,26 @@
     <nav class="main-nav">
         <div class="nav-container">
             <a href="{% url 'core:home' %}" class="nav-brand">Caspar Sadenius</a>
-            <ul class="nav-links">
-                <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
-                <li><a href="{% url 'links:links' %}" {% if request.resolver_match.app_name == 'links' %}class="active"{% endif %}>Links</a></li>
-                <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>Reisen</a></li>
-            </ul>
-            <ul class="nav-auth">
-                {% if user.is_authenticated %}
-                <li>
-                    <form method="post" action="{% url 'logout' %}" class="logout-form">
-                        {% csrf_token %}
-                        <button type="submit" class="logout-btn">Logout</button>
-                    </form>
-                </li>
-                {% else %}
-                <li><a href="{% url 'login' %}">Login</a></li>
-                {% endif %}
-            </ul>
+            <button class="nav-hamburger" id="nav-hamburger" aria-label="Menü">&#9776;</button>
+            <div class="nav-menu" id="nav-menu">
+                <ul class="nav-links">
+                    <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
+                    <li><a href="{% url 'links:links' %}" {% if request.resolver_match.app_name == 'links' %}class="active"{% endif %}>Links</a></li>
+                    <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>Diary</a></li>
+                </ul>
+                <ul class="nav-auth">
+                    {% if user.is_authenticated %}
+                    <li>
+                        <form method="post" action="{% url 'logout' %}" class="logout-form">
+                            {% csrf_token %}
+                            <button type="submit" class="logout-btn">Logout</button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -38,5 +41,10 @@
     </main>
 
     {% block extra_js %}{% endblock %}
+    <script>
+    document.getElementById('nav-hamburger').addEventListener('click', function () {
+        document.getElementById('nav-menu').classList.toggle('open');
+    });
+    </script>
 </body>
 </html>

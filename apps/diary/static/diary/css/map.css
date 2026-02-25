@@ -1,0 +1,331 @@
+#map-page {
+    display: flex;
+    height: calc(100vh - var(--nav-height));
+    position: relative;
+}
+
+#map {
+    flex: 1;
+    z-index: 1;
+    position: relative;
+}
+
+#trip-info {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    min-width: 180px;
+    max-width: 240px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    font-size: 0.875rem;
+    pointer-events: auto;
+}
+
+#trip-info.hidden {
+    display: none;
+}
+
+#trip-info h4 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+}
+
+#trip-info .trip-info-meta {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.4rem;
+}
+
+#trip-info .trip-info-link {
+    display: inline-block;
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--color-accent);
+}
+
+#filter-panel {
+    width: 260px;
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 1rem;
+    overflow-y: hidden;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+#filter-panel h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.filter-panel-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.filter-section {
+    margin-bottom: 1.25rem;
+}
+
+.filter-section h4 {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.filter-section label {
+    display: block;
+    padding: 0.25rem 0;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.filter-section label:hover {
+    color: var(--color-accent);
+}
+
+.filter-section input[type="checkbox"] {
+    margin-right: 0.5rem;
+    accent-color: var(--color-accent);
+}
+
+.color-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+#year-filter {
+    width: 100%;
+    padding: 0.4rem;
+    background: var(--color-bg);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+}
+
+.trip-list-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin-bottom: 0;
+}
+
+#trip-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+}
+
+#trip-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+#trip-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#trip-list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+}
+
+#trip-list::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}
+
+.trip-item {
+    padding: 0.4rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.trip-item:hover {
+    background: var(--color-surface-hover);
+}
+
+.trip-item.active {
+    background: var(--color-accent);
+    color: #fff;
+}
+
+.trip-section-header {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+    padding: 0.5rem 0.5rem 0.2rem;
+    margin-top: 0.25rem;
+}
+
+.trip-item-subtitle {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.1rem;
+}
+
+.trip-item.active .trip-item-subtitle {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.trip-info-subtitle {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+/* Lightbox */
+#lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    cursor: pointer;
+}
+
+#lightbox.hidden {
+    display: none;
+}
+
+#lightbox-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+#lightbox-close {
+    position: fixed;
+    top: 1rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+/* MapLibre popup style overrides */
+.maplibregl-popup-content {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.maplibregl-popup-content a {
+    color: var(--color-accent);
+}
+
+.maplibregl-popup-tip {
+    border-top-color: var(--color-surface);
+}
+
+.maplibregl-popup-close-button {
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+}
+
+.image-popup img {
+    max-width: 200px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.image-popup p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #map-page {
+        display: block;
+    }
+
+    #map {
+        height: calc(100vh - var(--nav-height));
+        width: 100%;
+    }
+
+    #filter-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 48px;
+        overflow: hidden;
+        border-right: none;
+        border-top: 1px solid var(--color-border);
+        padding: 0 1rem;
+        z-index: 50;
+        transition: height 0.3s ease;
+    }
+
+    #filter-panel.filter-open {
+        height: 70vh;
+        overflow-y: auto;
+        padding-bottom: 1rem;
+    }
+
+    #filter-panel h3 {
+        height: 48px;
+        min-height: 48px;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    #filter-panel h3::after {
+        content: "▲";
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+        margin-left: 0.5rem;
+    }
+
+    #filter-panel.filter-open h3::after {
+        content: "▼";
+    }
+
+    .trip-list-section {
+        flex: none;
+    }
+
+    #trip-list {
+        max-height: none;
+        overflow-y: visible;
+    }
+}

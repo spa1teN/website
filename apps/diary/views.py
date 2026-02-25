@@ -187,31 +187,54 @@ def _save_trip(request, trip=None):
 
     try:
         trip_obj = form.save(commit=False)
+        is_event = request.POST.get("is_event") == "1"
+        trip_obj.is_event = is_event
 
-        # Journey data comes as JSON string in FormData field
-        journey_data_raw = request.POST.get("journey_data", "")
-        if journey_data_raw:
-            try:
-                journey_data = json.loads(journey_data_raw)
-            except json.JSONDecodeError:
-                return JsonResponse(
-                    {"error": "Ungültige Reisedaten (JSON)"},
-                    status=400,
-                )
+        if is_event:
+            # Clear journeys if converting from trip to event
+            old_outbound = trip_obj.outbound_journey
+            old_return = trip_obj.return_journey
+            trip_obj.outbound_journey = None
+            trip_obj.return_journey = None
+            raw_date = request.POST.get("event_date", "")
+            if raw_date:
+                from datetime import datetime
+                try:
+                    trip_obj.event_date = datetime.strptime(raw_date, "%d.%m.%Y").date()
+                except ValueError:
+                    trip_obj.event_date = None
+            else:
+                trip_obj.event_date = None
+            trip_obj.save()
+            if old_outbound:
+                old_outbound.delete()
+            if old_return:
+                old_return.delete()
+        else:
+            # Journey data comes as JSON string in FormData field
+            journey_data_raw = request.POST.get("journey_data", "")
+            if journey_data_raw:
+                try:
+                    journey_data = json.loads(journey_data_raw)
+                except json.JSONDecodeError:
+                    return JsonResponse(
+                        {"error": "Ungültige Reisedaten (JSON)"},
+                        status=400,
+                    )
 
-            outbound_data = journey_data.get("outbound_journey")
-            if outbound_data:
-                trip_obj.outbound_journey = _save_journey(
-                    outbound_data, trip_obj.outbound_journey
-                )
+                outbound_data = journey_data.get("outbound_journey")
+                if outbound_data:
+                    trip_obj.outbound_journey = _save_journey(
+                        outbound_data, trip_obj.outbound_journey
+                    )
 
-            return_data = journey_data.get("return_journey")
-            if return_data:
-                trip_obj.return_journey = _save_journey(
-                    return_data, trip_obj.return_journey
-                )
+                return_data = journey_data.get("return_journey")
+                if return_data:
+                    trip_obj.return_journey = _save_journey(
+                        return_data, trip_obj.return_journey
+                    )
 
-        trip_obj.save()
+            trip_obj.save()
 
         # Handle deletion of existing images
         delete_images = request.POST.getlist("delete_images")
@@ -266,6 +289,8 @@ def _trip_to_json(trip):
     result = {
         "title": trip.title,
         "description": trip.description,
+        "is_event": trip.is_event,
+        "event_date": trip.event_date.strftime("%d.%m.%Y") if trip.event_date else "",
         "outbound_journey": None,
         "return_journey": None,
     }

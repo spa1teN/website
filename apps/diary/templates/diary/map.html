@@ -14,9 +14,15 @@
         <h3>Filter</h3>
 
         <div class="filter-section">
+            <h4>Typ</h4>
+            <label><input type="checkbox" id="filter-type-journey" checked> Reisen</label>
+            <label><input type="checkbox" id="filter-type-event" checked> Events</label>
+        </div>
+
+        <div class="filter-section" id="transport-filter-section">
             <h4>Transportmittel</h4>
             <label><input type="checkbox" data-transport="train" checked> <span class="color-dot" style="background:#1565C0"></span> Zug</label>
-            <label><input type="checkbox" data-transport="car" checked> <span class="color-dot" style="background:#757575"></span> Auto</label>
+            <label><input type="checkbox" data-transport="car" checked> <span class="color-dot" style="background:#9c27b0"></span> Auto</label>
             <label><input type="checkbox" data-transport="plane" checked> <span class="color-dot" style="background:#D32F2F"></span> Flugzeug</label>
             <label><input type="checkbox" data-transport="ferry" checked> <span class="color-dot" style="background:#2E7D32"></span> Fähre</label>
         </div>
@@ -28,8 +34,8 @@
             </select>
         </div>
 
-        <div class="filter-section">
-            <h4>Reisen</h4>
+        <div class="filter-section trip-list-section">
+            <h4>Einträge</h4>
             <div id="trip-list"></div>
         </div>
 

@@ -71,7 +71,7 @@ class TripListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Trip
-        fields = ["id", "title", "year", "transport_types", "lat", "lng", "travel_date"]
+        fields = ["id", "title", "subtitle", "year", "transport_types", "lat", "lng", "travel_date", "is_event"]
 
     def get_year(self, obj):
         return obj.year
@@ -90,6 +90,8 @@ class TripListSerializer(serializers.ModelSerializer):
     def get_travel_date(self, obj):
         if obj.outbound_journey and obj.outbound_journey.travel_date:
             return obj.outbound_journey.travel_date.isoformat()
+        if obj.event_date:
+            return obj.event_date.isoformat()
         return None
 
     def _geocode(self, obj):

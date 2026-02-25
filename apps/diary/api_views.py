@@ -48,6 +48,7 @@ class ImageMarkerListView(ListAPIView):
             qs = qs.filter(
                 Q(trip__outbound_journey__travel_date__year=year)
                 | Q(trip__return_journey__travel_date__year=year)
+                | Q(trip__event_date__year=year)
             )
 
         return qs
@@ -56,5 +57,5 @@ class ImageMarkerListView(ListAPIView):
 class TripListView(ListAPIView):
     serializer_class = TripListSerializer
     queryset = Trip.objects.select_related("outbound_journey").order_by(
-        "-outbound_journey__travel_date"
+        "-outbound_journey__travel_date", "-event_date"
     )
