@@ -3,7 +3,7 @@
 ## Tech-Stack
 - **Backend:** Django 5.2, Python 3.13
 - **Datenbank:** PostgreSQL 16 + PostGIS 3.4
-- **Frontend:** Django Templates, Leaflet.js 1.9.4, Vanilla JS
+- **Frontend:** Django Templates, MapLibre GL JS v5, Vanilla JS
 - **Routing:** OSRM (Auto), BRouter (Zug), Great-Circle (Flug), gerade Linie (Fähre)
 - **Deployment:** Docker Compose
 - **Reverse Proxy:** Nginx 1.27
@@ -21,6 +21,7 @@ website/
 │   └── wsgi.py
 ├── apps/
 │   ├── core/                   # Home-Seite, base.html, Navigation, Login
+│   │   └── static/core/css/style.css  # Globales CSS + Mobile-Responsive
 │   ├── links/                  # Social-Media-Links + Discord-Status
 │   └── diary/                  # Reisetagebuch (Kernfeature)
 │       ├── models.py           # Trip, Journey, JourneySegment, TripImage
@@ -35,8 +36,9 @@ website/
 │       │   └── geocoding.py    # IATA-Auflösung + Photon-Stationssuche
 │       ├── data/airports.json  # ~65 Flughäfen (IATA → Koordinaten)
 │       ├── data/stations.json  # Bahnhöfe-Cache
-│       └── static/diary/js/
-│           └── map.js          # Leaflet-Karte, Filter, Lightbox
+│       └── static/diary/
+│           ├── css/map.css     # Karten-Layout + Mobile Bottom Drawer
+│           └── js/map.js       # MapLibre GL JS: Filter, Marker, Lightbox
 ├── nginx/                      # Nginx Dockerfile + Config
 ├── docker-compose.yml
 ├── Dockerfile
@@ -52,7 +54,6 @@ website/
 - **Stoppen:** `docker-compose down`
 - **Rebuild:** `docker-compose build && docker-compose up -d`
 - **Logs:** `docker-compose logs -f web`
-- **DB-Port:** Extern 5433 → Intern 5432 (Port 5432 auf Host belegt)
 - **Migrationen:** `docker-compose exec -T web python manage.py migrate`
 - **Neue Migrationen:** `docker-compose exec -T web python manage.py makemigrations`
 - **Shell:** `docker-compose exec -T web python manage.py shell`
@@ -66,21 +67,38 @@ website/
 - Settings-Modul lokal: `config.settings.development`
 - Web: Port 80/443 (Nginx) → Port 8000 (Gunicorn)
 
+## Docker Volumes — WICHTIG
+```yaml
+- .:/app                        # Code (bind-mount, direkt vom Host)
+- static_volume:/app/staticfiles  # Gesammelte Static Files (collectstatic)
+- media_volume:/app/media        # Hochgeladene Bilder (NICHT im Host-Verzeichnis!)
+```
+- **`media_volume`** ist ein Docker Named Volume — Bilder gehen NICHT nach `~/website/media/` auf dem Host, sondern in `/var/lib/docker/volumes/website_media_volume/_data/`
+- `~/website/media/` auf dem Host wird vom Container ignoriert (Named Volume hat Vorrang)
+- Für Media-Sync zwischen Umgebungen **immer tar+pipe via Container** verwenden (kein rsync auf Host-Verzeichnis):
+  ```bash
+  # Lokal → Server (alle Medien):
+  docker-compose exec -T web tar -C /app/media -czf - trips/ | \
+    ssh root@87.106.242.207 "cd ~/website && docker compose exec -T web tar -C /app/media -xzf -"
+  ```
+
 ## Deployment-Workflow
 ```bash
 # Lokal ändern, committen, pushen:
 git add . && git commit -m "..." && git push
 
-# Auf Server deployen:
-ssh root@87.106.242.207 "cd ~/website && git pull && docker compose restart web"
+# Auf Server deployen (mit Migration falls nötig):
+ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web python manage.py migrate && docker compose restart web"
 
-# Als Einzeiler:
+# Als Einzeiler (ohne Migration):
 git push && ssh root@87.106.242.207 "cd ~/website && git pull && docker compose restart web"
 ```
-- `.env` und `media/` sind in `.gitignore` — werden nie gepusht, bleiben auf dem Server
+- `.env` ist in `.gitignore` — wird nie gepusht, bleibt auf dem Server
+- `apps/*/static/` (CSS, JS) **ist in Git** — wird mit `git pull` aktualisiert
+- `staticfiles/` (collectstatic-Output) ist in `.gitignore` und im Docker Named Volume
 
 ## Datenmodelle (apps/diary/models.py)
-- **Trip:** title, description, outbound_journey (FK→Journey), return_journey (FK→Journey)
+- **Trip:** title, subtitle, description, is_event (bool), event_date, outbound_journey (FK→Journey), return_journey (FK→Journey)
 - **Journey:** travel_date
 - **JourneySegment:** journey (FK), order, transport_type (train/car/plane/ferry), waypoints (JSONField), route_geometry (LineStringField), origin_code, destination_code
 - **TripImage:** trip (FK), image (ImageField), location (PointField, aus EXIF oder manuell), caption, taken_at
@@ -118,6 +136,8 @@ git push && ssh root@87.106.242.207 "cd ~/website && git pull && docker compose 
 - Routen werden beim Speichern aufgelöst und in `route_geometry` gecacht
 
 ## Formulareingabe (trip_form.html)
+- **Typ-Auswahl:** Reise oder Event (Radio-Buttons)
+- **Event:** Nur Datum (event_date), keine Journeys
 - **Flug:** IATA-Codes für Start/Ziel (z.B. `TXL`, `LIS`)
 - **Zug/Auto/Fähre:** Wegpunkte per Textsuche (Photon-API) oder Kartenklick
 
@@ -142,8 +162,9 @@ git push && ssh root@87.106.242.207 "cd ~/website && git pull && docker compose 
 
 ## Wichtige Hinweise
 - Static Files werden via Nginx unter `/staticfiles/` ausgeliefert
-- Media Files (Bilder) unter `/media/` — im Docker-Volume, nicht im Git
-- `STATIC_ROOT` = `/app/staticfiles` (im Container)
+- Media Files (Bilder) unter `/media/` — im Docker Named Volume `media_volume`, nicht im Git und nicht im Host-Verzeichnis
+- `STATIC_ROOT` = `/app/staticfiles` (im Container, Named Volume `static_volume`)
 - Das Volume `.:/app` mountet den Code live in den Container
 - Bei Modelländerungen: `makemigrations` → `migrate` → ggf. Container neustarten
 - SSL-Zertifikat via Let's Encrypt (certbot), automatische Erneuerung alle 12h
+- Production nutzt cached Template Loader (DEBUG=False) → nach Template-Änderungen `docker compose restart web`
