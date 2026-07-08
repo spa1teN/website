@@ -63,5 +63,6 @@
     "SZG": {"name": "Salzburg", "lat": 47.7933, "lng": 13.0043},
     "INN": {"name": "Innsbruck", "lat": 47.2602, "lng": 11.3440},
     "LNZ": {"name": "Linz", "lat": 48.2332, "lng": 14.1875},
-    "BSL": {"name": "Basel-Mulhouse", "lat": 47.5896, "lng": 7.5299}
+    "BSL": {"name": "Basel-Mulhouse", "lat": 47.5896, "lng": 7.5299},
+    "KTT": {"name": "Kittilä", "lat": 67.7010, "lng": 24.8468}
 }

@@ -1,7 +1,8 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load i18n_extra %}
 
-{% block title %}{{ trip.title }} - spa1teN{% endblock %}
+{% block title %}{{ trip.title }} - Caspar Sadenius{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
@@ -193,7 +194,7 @@
         {% if trip.year %}{{ trip.year }}{% endif %}
         {% for t in trip.transport_types %}
         <span class="transport-badge transport-{{ t }}">
-            {% if t == "train" %}Zug{% elif t == "car" %}Auto{% elif t == "plane" %}Flug{% elif t == "ferry" %}Fähre{% endif %}
+            {% if t == "train" %}{% t 'Zug' 'Train' %}{% elif t == "car" %}{% t 'Auto' 'Car' %}{% elif t == "plane" %}{% t 'Flug' 'Plane' %}{% elif t == "ferry" %}{% t 'Fähre' 'Ferry' %}{% endif %}
         </span>
         {% endfor %}
     </div>
@@ -203,13 +204,13 @@
     {% endif %}
 
     <div class="detail-section">
-        <h2>Route</h2>
+        <h2>{% t 'Route' 'Route' %}</h2>
         <div id="detail-map"></div>
     </div>
 
     {% if journey_info %}
     <div class="detail-section">
-        <h2>Reisedetails</h2>
+        <h2>{% t 'Reisedetails' 'Trip Details' %}</h2>
         {% for j in journey_info %}
         <div class="journey-block">
             <h3>{{ j.label }}</h3>
@@ -227,11 +228,11 @@
 
     {% if images %}
     <div class="detail-section">
-        <h2>Bilder ({{ images|length }})</h2>
+        <h2>{% t 'Bilder' 'Photos' %} ({{ images|length }})</h2>
         <div class="gallery">
             {% for img in images %}
             <div class="gallery-item" onclick="openLightbox('{{ img.image.url }}')">
-                <img src="{{ img.image.url }}" alt="{{ img.caption }}" loading="lazy">
+                <img src="{% if img.thumbnail %}{{ img.thumbnail.url }}{% else %}{{ img.image.url }}{% endif %}" alt="{{ img.caption }}" loading="lazy">
                 {% if img.caption %}
                 <div class="gallery-caption">{{ img.caption }}</div>
                 {% endif %}
@@ -241,8 +242,24 @@
     </div>
     {% endif %}
 
+    {% if videos %}
+    <div class="detail-section">
+        <h2>Videos ({{ videos|length }})</h2>
+        <div class="gallery">
+            {% for vid in videos %}
+            <div class="gallery-item" onclick="openVideoPlayer('{{ vid.video.url }}')" style="display:flex; align-items:center; justify-content:center; background:#0d1b2a; cursor:pointer;">
+                <span style="font-size:3rem; color:#29B6F6;">&#9654;</span>
+                {% if vid.caption %}
+                <div class="gallery-caption">{{ vid.caption }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="trip-actions">
-        <a href="{% url 'diary:map' %}" class="btn btn-secondary">Zur Karte</a>
+        <a href="{% url 'diary:map' %}" class="btn btn-secondary">{% t 'Zur Karte' 'Back to Map' %}</a>
         {% if user.is_authenticated %}
         <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-primary">Bearbeiten</a>
         {% endif %}
@@ -252,6 +269,11 @@
 <div id="lightbox" class="hidden" onclick="closeLightbox()">
     <img id="lightbox-img" src="" alt="" />
     <button id="lightbox-close" onclick="closeLightbox()">&times;</button>
+</div>
+
+<div id="video-player" class="hidden" onclick="closeVideoPlayer()">
+    <video id="video-player-el" controls style="max-width:90vw; max-height:85vh; border-radius:8px;"></video>
+    <button id="lightbox-close" onclick="closeVideoPlayer()">&times;</button>
 </div>
 {% endblock %}
 
@@ -276,6 +298,7 @@
 
     var routeGeoJSON = {{ route_geojson|safe }};
     var imageData = {{ image_data|safe }};
+    var videoData = {{ video_data|safe }};
     var waypointData = {{ waypoint_data|safe }};
 
     var map = new maplibregl.Map({
@@ -382,31 +405,77 @@
             hasContent = true;
         });
 
-        // Add image markers
-        imageData.forEach(function(img) {
-            if (!img.lat || !img.lng) return;
+        // Add image markers as native GL layer (performant for many images)
+        var geoImages = imageData.filter(function(img) { return img.lat && img.lng; });
+        if (geoImages.length > 0) {
+            map.addSource("photo-locations", {
+                type: "geojson",
+                data: {
+                    type: "FeatureCollection",
+                    features: geoImages.map(function(img) {
+                        return {
+                            type: "Feature",
+                            geometry: { type: "Point", coordinates: [img.lng, img.lat] },
+                            properties: { url: img.url, thumb: img.thumb, caption: img.caption }
+                        };
+                    })
+                }
+            });
+            map.addLayer({
+                id: "photo-dots",
+                type: "circle",
+                source: "photo-locations",
+                paint: {
+                    "circle-radius": 8,
+                    "circle-color": "#FF9800",
+                    "circle-stroke-width": 2,
+                    "circle-stroke-color": "#fff"
+                }
+            });
+            map.on("click", "photo-dots", function(e) {
+                var props = e.features[0].properties;
+                var html = '<div style="text-align:center">'
+                    + '<img src="' + props.thumb + '" style="max-width:180px;border-radius:4px;cursor:pointer" onclick="openLightbox(\'' + props.url + '\')">'
+                    + (props.caption ? '<p style="margin:0.25rem 0 0;font-size:0.8rem;color:var(--color-text-muted)">' + props.caption + '</p>' : '')
+                    + '</div>';
+                new maplibregl.Popup({ offset: 10, maxWidth: "220px" })
+                    .setLngLat(e.features[0].geometry.coordinates)
+                    .setHTML(html)
+                    .addTo(map);
+            });
+            map.on("mouseenter", "photo-dots", function() { map.getCanvas().style.cursor = "pointer"; });
+            map.on("mouseleave", "photo-dots", function() { map.getCanvas().style.cursor = ""; });
+            geoImages.forEach(function(img) {
+                bounds.extend([img.lng, img.lat]);
+                hasContent = true;
+            });
+        }
+
+        // Add video markers
+        videoData.forEach(function(vid) {
+            if (!vid.lat || !vid.lng) return;
 
             var el = document.createElement("div");
             el.style.width = "16px";
             el.style.height = "16px";
             el.style.borderRadius = "50%";
-            el.style.background = "#FF9800";
+            el.style.background = "#29B6F6";
             el.style.border = "2px solid #fff";
             el.style.cursor = "pointer";
 
             var marker = new maplibregl.Marker({ element: el })
-                .setLngLat([img.lng, img.lat])
+                .setLngLat([vid.lng, vid.lat])
                 .addTo(map);
 
-            var html = '<div style="text-align:center">';
-            html += '<img src="' + img.url + '" style="max-width:180px;border-radius:4px;cursor:pointer" onclick="openLightbox(\'' + img.url + '\')">';
-            if (img.caption) html += '<p style="margin:0.25rem 0 0;font-size:0.8rem;color:var(--color-text-muted)">' + img.caption + '</p>';
+            var html = '<div style="text-align:center; padding:0.25rem;">';
+            html += '<div style="font-size:2rem; color:#29B6F6; cursor:pointer" onclick="openVideoPlayer(\'' + vid.url + '\')">&#9654;</div>';
+            if (vid.caption) html += '<p style="margin:0.25rem 0 0;font-size:0.8rem;color:var(--color-text-muted)">' + vid.caption + '</p>';
             html += '</div>';
 
-            var popup = new maplibregl.Popup({ offset: 10, maxWidth: "220px" }).setHTML(html);
+            var popup = new maplibregl.Popup({ offset: 10, maxWidth: "160px" }).setHTML(html);
             marker.setPopup(popup);
 
-            bounds.extend([img.lng, img.lat]);
+            bounds.extend([vid.lng, vid.lat]);
             hasContent = true;
         });
 
@@ -425,8 +494,25 @@
         document.getElementById("lightbox-img").src = "";
     };
 
+    window.openVideoPlayer = function(url) {
+        var vid = document.getElementById("video-player-el");
+        vid.src = url;
+        document.getElementById("video-player").classList.remove("hidden");
+        vid.play();
+    };
+
+    window.closeVideoPlayer = function() {
+        var vid = document.getElementById("video-player-el");
+        vid.pause();
+        vid.src = "";
+        document.getElementById("video-player").classList.add("hidden");
+    };
+
     document.addEventListener("keydown", function(e) {
-        if (e.key === "Escape") closeLightbox();
+        if (e.key === "Escape") {
+            closeLightbox();
+            closeVideoPlayer();
+        }
     });
 })();
 </script>

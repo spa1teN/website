@@ -1,7 +1,8 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load i18n_extra %}
 
-{% block title %}Reisen - spa1teN{% endblock %}
+{% block title %}{% t 'Reisen' 'Travels' %} - Caspar Sadenius{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
@@ -11,31 +12,31 @@
 {% block content %}
 <div id="map-page">
     <div id="filter-panel">
-        <h3>Filter</h3>
+        <h3>{% t 'Filter' 'Filter' %}</h3>
 
         <div class="filter-section">
-            <h4>Typ</h4>
-            <label><input type="checkbox" id="filter-type-journey" checked> Reisen</label>
-            <label><input type="checkbox" id="filter-type-event" checked> Events</label>
+            <h4>{% t 'Typ' 'Type' %}</h4>
+            <label><input type="checkbox" id="filter-type-journey" checked> {% t 'Reisen' 'Trips' %}</label>
+            <label><input type="checkbox" id="filter-type-event" checked> {% t 'Events' 'Events' %}</label>
         </div>
 
         <div class="filter-section" id="transport-filter-section">
-            <h4>Transportmittel</h4>
-            <label><input type="checkbox" data-transport="train" checked> <span class="color-dot" style="background:#1565C0"></span> Zug</label>
-            <label><input type="checkbox" data-transport="car" checked> <span class="color-dot" style="background:#9c27b0"></span> Auto</label>
-            <label><input type="checkbox" data-transport="plane" checked> <span class="color-dot" style="background:#D32F2F"></span> Flugzeug</label>
-            <label><input type="checkbox" data-transport="ferry" checked> <span class="color-dot" style="background:#2E7D32"></span> Fähre</label>
+            <h4>{% t 'Transportmittel' 'Transport' %}</h4>
+            <label><input type="checkbox" data-transport="train" checked> <span class="color-dot" style="background:#1565C0"></span> {% t 'Zug' 'Train' %}</label>
+            <label><input type="checkbox" data-transport="car" checked> <span class="color-dot" style="background:#9c27b0"></span> {% t 'Auto' 'Car' %}</label>
+            <label><input type="checkbox" data-transport="plane" checked> <span class="color-dot" style="background:#D32F2F"></span> {% t 'Flugzeug' 'Plane' %}</label>
+            <label><input type="checkbox" data-transport="ferry" checked> <span class="color-dot" style="background:#2E7D32"></span> {% t 'Fähre' 'Ferry' %}</label>
         </div>
 
         <div class="filter-section">
-            <h4>Jahr</h4>
+            <h4>{% t 'Jahr' 'Year' %}</h4>
             <select id="year-filter">
-                <option value="">Alle Jahre</option>
+                <option value="">{% t 'Alle Jahre' 'All years' %}</option>
             </select>
         </div>
 
         <div class="filter-section trip-list-section">
-            <h4>Einträge</h4>
+            <h4>{% t 'Einträge' 'Entries' %}</h4>
             <div id="trip-list"></div>
         </div>
 
@@ -54,6 +55,11 @@
     <img id="lightbox-img" src="" alt="" />
     <button id="lightbox-close" onclick="closeLightbox()">&times;</button>
 </div>
+
+<div id="video-player" class="hidden" onclick="closeVideoPlayer()">
+    <video id="video-player-el" controls style="max-width:90vw; max-height:85vh; border-radius:8px;"></video>
+    <button id="lightbox-close" onclick="closeVideoPlayer()">&times;</button>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -62,7 +68,9 @@
     id="map-config"
     data-routes-url="{% url 'diary-api:routes' %}"
     data-images-url="{% url 'diary-api:images' %}"
+    data-videos-url="{% url 'diary-api:videos' %}"
     data-trips-url="{% url 'diary-api:trips' %}"
+    data-lang="{{ LANG }}"
 ></script>
 <script src="{% static 'diary/js/map.js' %}"></script>
 {% endblock %}

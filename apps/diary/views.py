@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from .forms import TripForm
 from django.contrib.gis.geos import Point
 
-from .models import Journey, JourneySegment, Trip, TripImage
+from .models import Journey, JourneySegment, Trip, TripImage, TripVideo
 from .services.geocoding import resolve_airport, search_stations
 from .services.routing import resolve_route
 
@@ -20,6 +20,7 @@ def map_view(request):
 def trip_detail(request, pk):
     trip = get_object_or_404(Trip, pk=pk)
     images = trip.images.all()
+    videos = trip.videos.all()
 
     segments = []
     for journey_attr in ["outbound_journey", "return_journey"]:
@@ -47,15 +48,34 @@ def trip_detail(request, pk):
 
     image_data = []
     for img in images:
-        entry = {"url": img.image.url, "caption": img.caption}
+        entry = {
+            "url": img.image.url,
+            "thumb": img.thumbnail.url if img.thumbnail else img.image.url,
+            "caption": img.caption,
+        }
         if img.location:
             entry["lat"] = img.location.y
             entry["lng"] = img.location.x
         image_data.append(entry)
 
-    transport_labels = {"train": "Zug", "car": "Auto", "plane": "Flugzeug", "ferry": "Fähre"}
+    video_data = []
+    for vid in videos:
+        entry = {"url": vid.video.url, "caption": vid.caption}
+        if vid.location:
+            entry["lat"] = vid.location.y
+            entry["lng"] = vid.location.x
+        video_data.append(entry)
+
+    lang = request.session.get("lang", "de")
+    if lang == "en":
+        transport_labels = {"train": "Train", "car": "Car", "plane": "Plane", "ferry": "Ferry"}
+        journey_labels = [("Outbound", "outbound_journey"), ("Return", "return_journey")]
+    else:
+        transport_labels = {"train": "Zug", "car": "Auto", "plane": "Flugzeug", "ferry": "Fähre"}
+        journey_labels = [("Hinreise", "outbound_journey"), ("Rückreise", "return_journey")]
+
     journey_info = []
-    for label, journey_attr in [("Hinreise", "outbound_journey"), ("Rückreise", "return_journey")]:
+    for label, journey_attr in journey_labels:
         journey = getattr(trip, journey_attr)
         if journey:
             segs = []
@@ -77,8 +97,10 @@ def trip_detail(request, pk):
     return render(request, "diary/trip_detail.html", {
         "trip": trip,
         "images": images,
+        "videos": videos,
         "route_geojson": json.dumps({"type": "FeatureCollection", "features": route_data}),
         "image_data": json.dumps(image_data),
+        "video_data": json.dumps(video_data),
         "waypoint_data": json.dumps(waypoint_data),
         "journey_info": journey_info,
     })
@@ -108,12 +130,14 @@ def trip_edit(request, pk):
     form = TripForm(instance=trip)
     trip_data = _trip_to_json(trip)
     existing_images = trip.images.all()
+    existing_videos = trip.videos.all()
     return render(request, "diary/trip_form.html", {
         "form": form,
         "editing": True,
         "trip": trip,
         "trip_data": json.dumps(trip_data),
         "existing_images": existing_images,
+        "existing_videos": existing_videos,
     })
 
 
@@ -244,6 +268,15 @@ def _save_trip(request, trip=None):
         # Process uploaded images
         for img_file in request.FILES.getlist("images"):
             TripImage.objects.create(trip=trip_obj, image=img_file)
+
+        # Handle deletion of existing videos
+        delete_videos = request.POST.getlist("delete_videos")
+        if delete_videos:
+            TripVideo.objects.filter(id__in=delete_videos, trip=trip_obj).delete()
+
+        # Process uploaded videos
+        for vid_file in request.FILES.getlist("videos"):
+            TripVideo.objects.create(trip=trip_obj, video=vid_file)
 
         return JsonResponse({"success": True, "redirect": "/diary/manage/"})
 

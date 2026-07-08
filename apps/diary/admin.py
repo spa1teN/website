@@ -1,5 +1,5 @@
 from django.contrib.gis import admin
-from .models import Trip, Journey, JourneySegment, TripImage
+from .models import Trip, Journey, JourneySegment, TripImage, TripVideo
 
 
 class JourneySegmentInline(admin.TabularInline):
@@ -27,3 +27,8 @@ class TripAdmin(admin.GISModelAdmin):
 @admin.register(TripImage)
 class TripImageAdmin(admin.GISModelAdmin):
     list_display = ["__str__", "trip", "taken_at"]
+
+
+@admin.register(TripVideo)
+class TripVideoAdmin(admin.GISModelAdmin):
+    list_display = ["__str__", "trip", "created_at"]

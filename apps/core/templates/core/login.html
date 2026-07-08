@@ -1,6 +1,7 @@
 {% extends "core/base.html" %}
+{% load i18n_extra %}
 
-{% block title %}Login - spa1teN{% endblock %}
+{% block title %}Login - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="page-container login-container">
@@ -8,17 +9,17 @@
     <form method="post">
         {% csrf_token %}
         {% if form.errors %}
-        <div class="error-message">Benutzername oder Passwort falsch.</div>
+        <div class="error-message">{% t 'Benutzername oder Passwort falsch.' 'Incorrect username or password.' %}</div>
         {% endif %}
         <div class="form-group">
-            <label for="id_username">Benutzername</label>
+            <label for="id_username">{% t 'Benutzername' 'Username' %}</label>
             {{ form.username }}
         </div>
         <div class="form-group">
-            <label for="id_password">Passwort</label>
+            <label for="id_password">{% t 'Passwort' 'Password' %}</label>
             {{ form.password }}
         </div>
-        <button type="submit" class="btn btn-primary">Einloggen</button>
+        <button type="submit" class="btn btn-primary">{% t 'Einloggen' 'Log in' %}</button>
     </form>
 </div>
 {% endblock %}

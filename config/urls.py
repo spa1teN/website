@@ -9,7 +9,7 @@ urlpatterns = [
     path("accounts/login/", LoginView.as_view(template_name="core/login.html"), name="login"),
     path("accounts/logout/", LogoutView.as_view(), name="logout"),
     path("", include("apps.core.urls")),
-    path("links/", include("apps.links.urls")),
+    path("about/", include("apps.links.urls")),
     path("diary/", include("apps.diary.urls")),
     path("api/diary/", include(("apps.diary.api_urls", "diary-api"))),
 ]

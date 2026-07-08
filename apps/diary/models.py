@@ -98,6 +98,8 @@ class TripImage(models.Model):
         Trip, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField(upload_to="trips/%Y/%m/")
+    thumbnail = models.ImageField(upload_to="trips/thumbs/%Y/%m/", null=True, blank=True)
+    micro_thumbnail = models.ImageField(upload_to="trips/micro/%Y/%m/", null=True, blank=True)
     location = gis_models.PointField(srid=4326, null=True, blank=True)
     caption = models.CharField(max_length=255, blank=True)
     taken_at = models.DateTimeField(null=True, blank=True)
@@ -105,6 +107,31 @@ class TripImage(models.Model):
 
     def __str__(self):
         return self.caption or f"Bild zu {self.trip.title}"
+
+    def _generate_thumbnail(self):
+        import os
+        from io import BytesIO
+
+        from django.core.files.base import ContentFile
+        from PIL import Image as PILImage
+
+        self.image.open()
+        img = PILImage.open(self.image)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        base_name = os.path.basename(self.image.name)
+
+        thumb = img.copy()
+        thumb.thumbnail((800, 800), PILImage.LANCZOS)
+        output = BytesIO()
+        thumb.save(output, format="JPEG", quality=80)
+        self.thumbnail.save("thumb_" + base_name + ".jpg", ContentFile(output.getvalue()), save=False)
+
+        micro = img.copy()
+        micro.thumbnail((150, 150), PILImage.LANCZOS)
+        output = BytesIO()
+        micro.save(output, format="JPEG", quality=75)
+        self.micro_thumbnail.save("micro_" + base_name + ".jpg", ContentFile(output.getvalue()), save=False)
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -121,5 +148,24 @@ class TripImage(models.Model):
             if gps_data["taken_at"]:
                 self.taken_at = gps_data["taken_at"]
                 update_fields.append("taken_at")
+            try:
+                self._generate_thumbnail()
+                update_fields.append("thumbnail")
+                update_fields.append("micro_thumbnail")
+            except Exception:
+                pass
             if update_fields:
                 super().save(update_fields=update_fields)
+
+
+class TripVideo(models.Model):
+    trip = models.ForeignKey(
+        Trip, on_delete=models.CASCADE, related_name="videos"
+    )
+    video = models.FileField(upload_to="trips/%Y/%m/")
+    location = gis_models.PointField(srid=4326, null=True, blank=True)
+    caption = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.caption or f"Video zu {self.trip.title}"

@@ -1,22 +1,38 @@
 {% extends "core/base.html" %}
+{% load i18n_extra %}
 
-{% block title %}Links - spa1teN{% endblock %}
+{% block title %}{% t 'Über mich' 'About Me' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="page-container">
+    <h1>{% t 'Über mich' 'About Me' %}</h1>
 
-    <h2 class="links-section-title">Socials</h2>
     <div class="link-cards">
-        <a href="https://github.com/spa1teN" target="_blank" rel="noopener" class="link-card">
+        <div class="link-card">
+            <i class="fa-solid fa-envelope"></i>
+            <span class="link-label">E-Mail</span>
+            <span class="link-handle">me [at] casparsadenius [dot] de</span>
+        </div>
+    </div>
+
+    <h2 class="links-section-title">{% t 'Finde mich hier' 'Find Me Here' %}</h2>
+    <div class="link-cards link-cards-grid">
+        <a href="https://www.linkedin.com/in/caspar-sadenius-a506332ab/" target="_blank" rel="noopener" class="link-card link-card-full">
+            <i class="fa-brands fa-linkedin-in"></i>
+            <span class="link-label">LinkedIn</span>
+            <span class="link-handle">Caspar Sadenius</span>
+        </a>
+
+        <a href="https://github.com/spa1teN" target="_blank" rel="noopener" class="link-card link-card-full">
             <i class="fa-brands fa-github"></i>
             <span class="link-label">GitHub</span>
             <span class="link-handle">spa1teN</span>
         </a>
 
-        <a href="https://www.reddit.com/user/spa1teN/" target="_blank" rel="noopener" class="link-card">
-            <i class="fa-brands fa-reddit-alien"></i>
-            <span class="link-label">Reddit</span>
-            <span class="link-handle">u/spa1teN</span>
+        <a href="https://www.instagram.com/spa1ten/" target="_blank" rel="noopener" class="link-card">
+            <i class="fa-brands fa-instagram"></i>
+            <span class="link-label">Instagram</span>
+            <span class="link-handle">@spa1ten</span>
         </a>
 
         <a href="https://x.com/spa1teN" target="_blank" rel="noopener" class="link-card">
@@ -25,10 +41,40 @@
             <span class="link-handle">@spa1teN</span>
         </a>
 
-        <a href="https://bsky.app/profile/spa1ten.bsky.social" target="_blank" rel="noopener" class="link-card">
+        <a href="https://bsky.app/profile/casparsadenius.de" target="_blank" rel="noopener" class="link-card">
             <i class="fa-brands fa-bluesky"></i>
             <span class="link-label">Bluesky</span>
-            <span class="link-handle">@spa1ten.bsky.social</span>
+            <span class="link-handle">@casparsadenius.de</span>
+        </a>
+
+        <a href="https://www.reddit.com/user/spa1teN/" target="_blank" rel="noopener" class="link-card">
+            <i class="fa-brands fa-reddit-alien"></i>
+            <span class="link-label">Reddit</span>
+            <span class="link-handle">u/spa1teN</span>
+        </a>
+
+        <a href="https://www.twitch.tv/spa1ten" target="_blank" rel="noopener" class="link-card">
+            <i class="fa-brands fa-twitch"></i>
+            <span class="link-label">Twitch</span>
+            <span class="link-handle">spa1ten</span>
+        </a>
+
+        <a href="https://www.youtube.com/@spa1teN" target="_blank" rel="noopener" class="link-card">
+            <i class="fa-brands fa-youtube"></i>
+            <span class="link-label">YouTube</span>
+            <span class="link-handle">@spa1teN</span>
+        </a>
+
+        <a href="https://steamcommunity.com/id/spa1teN" target="_blank" rel="noopener" class="link-card">
+            <i class="fa-brands fa-steam"></i>
+            <span class="link-label">Steam</span>
+            <span class="link-handle">spa1teN</span>
+        </a>
+
+        <a href="https://de.wikipedia.org/wiki/Benutzer:Spa1teN" target="_blank" rel="noopener" class="link-card">
+            <i class="fa-brands fa-wikipedia-w"></i>
+            <span class="link-label">Wikipedia</span>
+            <span class="link-handle">Spa1teN</span>
         </a>
     </div>
 
@@ -37,37 +83,50 @@
         <div class="link-card discord-card">
             <i class="fa-brands fa-discord"></i>
             <span class="link-label">Discord</span>
-            <span class="link-handle" id="discord-handle">Lade...</span>
+            <span class="link-handle" id="discord-handle">{% t 'Lade...' 'Loading...' %}</span>
             <span class="discord-indicator" id="discord-indicator"></span>
         </div>
     </div>
     {% endif %}
 
-    <h2 class="links-section-title">Studying</h2>
-    <div class="link-cards">
-        <a href="https://hpi.de" target="_blank" rel="noopener" class="link-card">
-            <span class="link-label">HPI</span>
-            <span class="link-handle">hpi.de</span>
-        </a>
+    <h2 class="links-section-title">{% t 'Ausbildung' 'Education' %}</h2>
+    <div class="link-cards link-cards-grid">
+        <div class="link-card link-card-full edu-combined">
+            <span class="link-card-stack">
+                <span class="edu-institutions">
+                    <a href="https://hpi.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Hasso-Plattner-Institut' 'Hasso-Plattner-Institute' %}</a>
+                    <span class="edu-divider"></span>
+                    <a href="https://uni-potsdam.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Universität Potsdam' 'University of Potsdam' %}</a>
+                </span>
+                <span class="link-handle">{% t 'Bachelor of Science · seit 2023' 'Bachelor of Science · since 2023' %}</span>
+            </span>
+        </div>
 
-        <a href="https://uni-potsdam.de" target="_blank" rel="noopener" class="link-card">
-            <span class="link-label">Uni Potsdam</span>
-            <span class="link-handle">uni-potsdam.de</span>
+        <a href="https://www.waldorfschule-nienstedten.de" target="_blank" rel="noopener" class="link-card link-card-full">
+            <span class="link-card-stack">
+                <span class="link-label">{% t 'Rudolf-Steiner-Schule Hamburg-Nienstedten' 'Rudolf-Steiner-School Hamburg-Nienstedten' %}</span>
+                <span class="link-handle">Abitur · 2023</span>
+            </span>
         </a>
     </div>
 
-    <h2 class="links-section-title">Discord Bot</h2>
+    <h2 class="links-section-title">{% t 'Tausendsassa, mein Discord-Bot' 'Tausendsassa, my discord bot' %}</h2>
     <div class="link-cards">
         <a href="https://discord.com/discovery/applications/1398477775828029645" target="_blank" rel="noopener" class="link-card">
-            <span class="link-label">Tausendsassa</span>
+            <span class="link-label">{% t 'Discord-Discovery-Seite' 'Discord discovery page' %}</span>
             <span class="link-handle">discord.com</span>
+        </a>
+
+        <a href="https://tausendsassa.casparsadenius.de/login" target="_blank" rel="noopener" class="link-card">
+            <span class="link-label">Interface</span>
+            <span class="link-handle">tausendsassa.casparsadenius.de</span>
         </a>
     </div>
 
-    <h2 class="links-section-title">Mitglied</h2>
+    <h2 class="links-section-title">{% t 'Mitglied' 'Member' %}</h2>
     <div class="link-cards">
         <a href="https://gruene.de" target="_blank" rel="noopener" class="link-card">
-            <span class="link-label">DIE GRÜNEN</span>
+            <span class="link-label">{% t 'Bündnis 90/Die Grünen' 'Alliance 90/The Greens' %}</span>
             <span class="link-handle">gruene.de</span>
         </a>
 
@@ -99,6 +158,25 @@
     gap: 0.6rem;
 }
 
+.link-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.link-card-full {
+    grid-column: 1 / -1;
+}
+
+.link-cards-grid .link-card {
+    flex-wrap: wrap;
+    row-gap: 0.15rem;
+}
+
+@media (max-width: 560px) {
+    .link-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .link-card {
     display: flex;
     align-items: center;
@@ -117,6 +195,42 @@
     color: var(--color-text);
 }
 
+.edu-institutions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.edu-inst-link {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.edu-inst-link:hover {
+    color: var(--color-accent);
+}
+
+.edu-divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--color-border);
+}
+
+@media (max-width: 560px) {
+    .edu-institutions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+    }
+
+    .edu-divider {
+        width: 100%;
+        height: 1px;
+        align-self: stretch;
+    }
+}
+
 .link-card i {
     font-size: 1.5rem;
     width: 2rem;
@@ -131,6 +245,12 @@
 .link-handle {
     color: var(--color-text-muted);
     font-size: 0.9rem;
+}
+
+.link-card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
 }
 
 .discord-status {
@@ -162,13 +282,14 @@
 <script>
 (function() {
     const userId = "{{ discord_user_id }}";
+    const lang = "{{ LANG }}";
     fetch("https://api.lanyard.rest/v1/users/" + userId)
         .then(r => r.json())
         .then(data => {
             var handle = document.getElementById("discord-handle");
             var indicator = document.getElementById("discord-indicator");
             if (!data.success) {
-                handle.textContent = "Status nicht verfügbar";
+                handle.textContent = lang === "en" ? "Status unavailable" : "Status nicht verfügbar";
                 indicator.classList.add("offline");
                 return;
             }
@@ -176,11 +297,13 @@
             var user = data.data.discord_user;
             handle.textContent = user.global_name || user.username;
             indicator.classList.add(status);
-            var labels = {online: "Online", idle: "Abwesend", dnd: "Bitte nicht stören", offline: "Offline"};
+            var labelsDe = {online: "Online", idle: "Abwesend", dnd: "Bitte nicht stören", offline: "Offline"};
+            var labelsEn = {online: "Online", idle: "Away", dnd: "Do Not Disturb", offline: "Offline"};
+            var labels = lang === "en" ? labelsEn : labelsDe;
             indicator.title = labels[status] || status;
         })
         .catch(function() {
-            document.getElementById("discord-handle").textContent = "Nicht verfügbar";
+            document.getElementById("discord-handle").textContent = lang === "en" ? "Unavailable" : "Nicht verfügbar";
             document.getElementById("discord-indicator").classList.add("offline");
         });
 })();

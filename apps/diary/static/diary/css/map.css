@@ -230,6 +230,26 @@
     cursor: pointer;
 }
 
+/* Video Player Overlay */
+#video-player {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    cursor: pointer;
+}
+
+#video-player.hidden {
+    display: none;
+}
+
+#video-player-el {
+    cursor: default;
+}
+
 /* MapLibre popup style overrides */
 .maplibregl-popup-content {
     background: var(--color-surface);

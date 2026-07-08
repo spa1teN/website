@@ -1,12 +1,11 @@
 {% extends "core/base.html" %}
+{% load i18n_extra %}
 
-{% block title %}Home - spa1teN{% endblock %}
+{% block title %}{% t 'Home' 'Home' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="page-container">
-    <h1>Willkommen</h1>
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-    <p>Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula.</p>
+    <h1>{% t 'Willkommen' 'Welcome' %}</h1>
+    <p>{% t 'Hallo, ich bin Caspar aus Hamburg und studiere aktuell IT-Systems Engineering im Bachelor am Hasso-Plattner-Institut in Potsdam. Diese Website ist noch work in progress.' "Hi, I'm Caspar from Hamburg, currently studying for a Bachelor's in IT-Systems Engineering at the Hasso-Plattner-Institute in Potsdam. This website is still work in progress." %}</p>
 </div>
 {% endblock %}

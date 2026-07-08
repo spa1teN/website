@@ -2,6 +2,7 @@
     "use strict";
 
     var config = document.getElementById("map-config").dataset;
+    var LANG = config.lang === "en" ? "en" : "de";
 
     var ROUTE_COLORS = {
         train: "#1565C0",
@@ -50,6 +51,7 @@
     // State
     var allTrips = [];
     var imageMarkers = [];
+    var videoMarkers = [];
     var activeFilters = {
         transport: { train: true, car: true, plane: true, ferry: true },
         year: "",
@@ -62,14 +64,32 @@
     // --- Data fetching ---
 
     function loadTrips() {
-        fetch(config.tripsUrl)
-            .then(function (r) { return r.json(); })
-            .then(function (trips) {
-                allTrips = trips;
-                populateFilters(trips);
-                loadRoutes();
-                showTripMarkers();
+        Promise.all([
+            fetch(config.tripsUrl).then(function (r) { return r.json(); }),
+            fetch(config.routesUrl).then(function (r) { return r.json(); }),
+        ]).then(function (results) {
+            var trips = results[0];
+            var routes = results[1];
+            allTrips = trips;
+            populateFilters(trips);
+            renderRoutes(routes);
+            showTripMarkers(false);
+
+            // Zoom to all content: trip markers + route geometries
+            var bounds = new maplibregl.LngLatBounds();
+            trips.forEach(function (t) {
+                if (t.lat && t.lng) bounds.extend([t.lng, t.lat]);
             });
+            if (routes && routes.features) {
+                routes.features.forEach(function (f) {
+                    if (!f.geometry || !f.geometry.coordinates) return;
+                    f.geometry.coordinates.forEach(function (c) { bounds.extend(c); });
+                });
+            }
+            if (!bounds.isEmpty()) {
+                map.fitBounds(bounds, { padding: 60, maxZoom: 8 });
+            }
+        });
     }
 
     function loadRoutes(callback) {
@@ -90,7 +110,17 @@
         var url = config.imagesUrl + "?trip_id=" + tripId;
         fetch(url)
             .then(function (r) { return r.json(); })
-            .then(function (geojson) { renderImages(geojson); });
+            .then(function (geojson) {
+                renderImages(geojson);
+                zoomToTripContent(geojson);
+            });
+    }
+
+    function loadVideosForTrip(tripId) {
+        var url = config.videosUrl + "?trip_id=" + tripId;
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(function (geojson) { renderVideos(geojson); });
     }
 
     // --- Trip Markers (overview) via GL layers ---
@@ -246,6 +276,7 @@
             var coords = feature.geometry.coordinates;
             var props = feature.properties;
             var imgUrl = props.image_url || "";
+            var thumbUrl = props.thumb_url || imgUrl;
             var caption = props.caption || "";
 
             var el = document.createElement("div");
@@ -258,7 +289,7 @@
             el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
 
             var img = document.createElement("img");
-            img.src = imgUrl;
+            img.src = thumbUrl;
             img.alt = caption;
             img.style.width = "100%";
             img.style.height = "100%";
@@ -281,6 +312,52 @@
     function clearImageMarkers() {
         imageMarkers.forEach(function (m) { m.remove(); });
         imageMarkers = [];
+    }
+
+    function renderVideos(geojson) {
+        clearVideoMarkers();
+        if (!geojson || !geojson.features || geojson.features.length === 0) return;
+
+        var offsets = computeImageOffsets(geojson.features);
+
+        geojson.features.forEach(function (feature, i) {
+            if (!feature.geometry || !feature.geometry.coordinates) return;
+            var coords = feature.geometry.coordinates;
+            var props = feature.properties;
+            var videoUrl = props.video_url || "";
+
+            var el = document.createElement("div");
+            el.style.width = "48px";
+            el.style.height = "48px";
+            el.style.borderRadius = "6px";
+            el.style.overflow = "hidden";
+            el.style.border = "2px solid #29B6F6";
+            el.style.cursor = "pointer";
+            el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
+            el.style.background = "#0d1b2a";
+            el.style.display = "flex";
+            el.style.alignItems = "center";
+            el.style.justifyContent = "center";
+            el.style.fontSize = "22px";
+            el.style.color = "#29B6F6";
+            el.textContent = "\u25B6";
+
+            el.addEventListener("click", function (e) {
+                e.stopPropagation();
+                openVideoPlayer(videoUrl);
+            });
+
+            var marker = new maplibregl.Marker({ element: el, offset: offsets[i] })
+                .setLngLat(coords)
+                .addTo(map);
+
+            videoMarkers.push(marker);
+        });
+    }
+
+    function clearVideoMarkers() {
+        videoMarkers.forEach(function (m) { m.remove(); });
+        videoMarkers = [];
     }
 
     // --- Routes ---
@@ -334,7 +411,8 @@
 
             map.on("click", "route-" + type, function (e) {
                 var props = e.features[0].properties;
-                var html = "<b>" + (props.trip_title || "Reise") + "</b><br>" + transportLabel(props.transport_type);
+                var fallbackTitle = LANG === "en" ? "Trip" : "Reise";
+                var html = "<b>" + (props.trip_title || fallbackTitle) + "</b><br>" + transportLabel(props.transport_type);
                 if (props.trip_id) {
                     html += '<br><a href="/diary/trip/' + props.trip_id + '/">Details &rarr;</a>';
                 }
@@ -400,6 +478,7 @@
 
         if (!tripId) {
             clearImageMarkers();
+            clearVideoMarkers();
             loadRoutes();
             showTripMarkers();
             hideTripInfo();
@@ -409,35 +488,30 @@
         clearTripMarkers();
         loadRoutes();
         loadImagesForTrip(tripId);
+        loadVideosForTrip(tripId);
 
         var trip = allTrips.find(function (t) { return t.id === tripId; });
         if (trip) {
             showTripInfo(trip);
         }
-
-        zoomToTripContent(tripId);
     }
 
-    function zoomToTripContent(tripId) {
-        var imageUrl = config.imagesUrl + "?trip_id=" + tripId;
+    function zoomToTripContent(imageGeoJSON) {
+        var bounds = new maplibregl.LngLatBounds();
+        var hasContent = false;
 
-        fetch(imageUrl).then(function (r) { return r.json(); }).then(function (imageGeoJSON) {
-            var bounds = new maplibregl.LngLatBounds();
-            var hasContent = false;
+        if (imageGeoJSON && imageGeoJSON.features) {
+            imageGeoJSON.features.forEach(function (f) {
+                if (f.geometry && f.geometry.coordinates) {
+                    bounds.extend(f.geometry.coordinates);
+                    hasContent = true;
+                }
+            });
+        }
 
-            if (imageGeoJSON && imageGeoJSON.features) {
-                imageGeoJSON.features.forEach(function (f) {
-                    if (f.geometry && f.geometry.coordinates) {
-                        bounds.extend(f.geometry.coordinates);
-                        hasContent = true;
-                    }
-                });
-            }
-
-            if (hasContent && !bounds.isEmpty()) {
-                map.fitBounds(bounds, { padding: 60, maxZoom: 12 });
-            }
-        });
+        if (hasContent && !bounds.isEmpty()) {
+            map.fitBounds(bounds, { padding: 60, maxZoom: 12 });
+        }
     }
 
     // --- Trip List ---
@@ -467,7 +541,7 @@
 
         var allItem = document.createElement("div");
         allItem.className = "trip-item" + (activeFilters.tripId === "" ? " active" : "");
-        allItem.textContent = "Alle";
+        allItem.textContent = LANG === "en" ? "All" : "Alle";
         allItem.dataset.tripId = "";
         allItem.addEventListener("click", function () { selectTrip(""); });
         tripList.appendChild(allItem);
@@ -591,7 +665,9 @@
     // --- Helpers ---
 
     function transportLabel(type) {
-        var labels = { train: "Zug", car: "Auto", plane: "Flugzeug", ferry: "Fähre" };
+        var labels = LANG === "en"
+            ? { train: "Train", car: "Car", plane: "Plane", ferry: "Ferry" }
+            : { train: "Zug", car: "Auto", plane: "Flugzeug", ferry: "Fähre" };
         return labels[type] || type;
     }
 
@@ -607,8 +683,27 @@
         document.getElementById("lightbox-img").src = "";
     };
 
+    // --- Video Player ---
+
+    window.openVideoPlayer = function (url) {
+        var vid = document.getElementById("video-player-el");
+        vid.src = url;
+        document.getElementById("video-player").classList.remove("hidden");
+        vid.play();
+    };
+
+    window.closeVideoPlayer = function () {
+        var vid = document.getElementById("video-player-el");
+        vid.pause();
+        vid.src = "";
+        document.getElementById("video-player").classList.add("hidden");
+    };
+
     document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") closeLightbox();
+        if (e.key === "Escape") {
+            closeLightbox();
+            closeVideoPlayer();
+        }
     });
 
     // Mobile: filter drawer toggle

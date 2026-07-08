@@ -46,6 +46,11 @@ services:
       - media_volume:/app/media
       - certbot_certs:/etc/letsencrypt
       - certbot_www:/var/www/certbot
+    networks:
+      - default
+      - tausendsassa
+      - nextcloud
+      - dashboard
     depends_on:
       - web
 
@@ -68,3 +73,19 @@ volumes:
   media_volume:
   certbot_certs:
   certbot_www:
+
+networks:
+  default:
+    name: website_default
+  tausendsassa:
+    name: tausendsassa-network
+    external: true
+  nextcloud:
+    name: nextcloud_default
+    external: true
+  collabora:
+    name: nextcloud_default
+    external: true
+  dashboard:
+    name: dashboard-network
+    external: true

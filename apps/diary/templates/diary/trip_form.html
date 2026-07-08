@@ -1,7 +1,7 @@
 {% extends "core/base.html" %}
 {% load static l10n %}
 
-{% block title %}{% if editing %}Reise bearbeiten{% else %}Neue Reise{% endif %} - spa1teN{% endblock %}
+{% block title %}{% if editing %}Reise bearbeiten{% else %}Neue Reise{% endif %} - Caspar Sadenius{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -358,6 +358,32 @@ textarea.form-control {
             </div>
             <div class="segment-list" id="return-segments"></div>
             <button type="button" class="btn btn-secondary btn-add-segment" onclick="addSegment('return')">Abschnitt hinzufügen</button>
+        </div>
+
+        <!-- Videos -->
+        <div class="form-section">
+            <h2>Videos</h2>
+
+            {% if existing_videos %}
+            <div class="existing-images">
+                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">Vorhandene Videos</h4>
+                <div class="image-preview-list" id="existing-video-list">
+                    {% for vid in existing_videos %}
+                    <div class="image-preview" id="existing-vid-{{ vid.id }}" style="width:auto; padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem;">
+                        <span style="font-size:1.2rem;">&#9654;</span>
+                        <span style="font-size:0.8rem; color:var(--color-text-muted); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ vid.video.name|cut:"trips/" }}</span>
+                        <button type="button" class="remove-img" onclick="markVideoForDeletion({{ vid.id }}, this)">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="image-upload-zone" id="video-upload-zone" onclick="document.getElementById('video-input').click()">
+                Klicke hier oder ziehe Videos hierher
+            </div>
+            <input type="file" id="video-input" name="videos" multiple accept="video/*" style="display:none">
+            <div class="image-preview-list" id="video-previews"></div>
         </div>
 
         <!-- Images -->
@@ -757,6 +783,55 @@ textarea.form-control {
         if (preview) preview.remove();
     };
 
+    // --- Video upload ---
+
+    var videoInput = document.getElementById("video-input");
+    var videoUploadZone = document.getElementById("video-upload-zone");
+    var selectedVideos = [];
+    var deleteVideoIds = [];
+
+    videoInput.addEventListener("change", function() {
+        Array.from(this.files).forEach(addVideoPreview);
+    });
+
+    videoUploadZone.addEventListener("dragover", function(e) {
+        e.preventDefault();
+        this.style.borderColor = "var(--color-accent)";
+    });
+
+    videoUploadZone.addEventListener("dragleave", function() {
+        this.style.borderColor = "";
+    });
+
+    videoUploadZone.addEventListener("drop", function(e) {
+        e.preventDefault();
+        this.style.borderColor = "";
+        Array.from(e.dataTransfer.files).forEach(function(f) {
+            if (f.type.startsWith("video/")) addVideoPreview(f);
+        });
+    });
+
+    function addVideoPreview(file) {
+        selectedVideos.push(file);
+        var previews = document.getElementById("video-previews");
+        var div = document.createElement("div");
+        div.className = "image-preview";
+        div.style.cssText = "width:auto; padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem;";
+        var idx = selectedVideos.length - 1;
+        div.innerHTML = '<span style="font-size:1.2rem;">&#9654;</span><span style="font-size:0.8rem; color:var(--color-text-muted); max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + file.name + '</span><button type="button" class="remove-img" data-vidx="' + idx + '">&times;</button>';
+        div.querySelector(".remove-img").addEventListener("click", function() {
+            selectedVideos[parseInt(this.dataset.vidx)] = null;
+            div.remove();
+        });
+        previews.appendChild(div);
+    }
+
+    window.markVideoForDeletion = function(vidId, btn) {
+        deleteVideoIds.push(vidId);
+        var preview = document.getElementById("existing-vid-" + vidId);
+        if (preview) preview.remove();
+    };
+
     // --- Form submission ---
 
     function showError(msg) {
@@ -805,6 +880,14 @@ textarea.form-control {
 
         deleteImageIds.forEach(function(id) {
             formData.append("delete_images", id);
+        });
+
+        selectedVideos.forEach(function(f) {
+            if (f) formData.append("videos", f);
+        });
+
+        deleteVideoIds.forEach(function(id) {
+            formData.append("delete_videos", id);
         });
 
         fetch(window.location.href, {

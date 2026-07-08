@@ -14,3 +14,4 @@ staticfiles/
 .idea/
 osrm-data/
 tasks.txt
+nginx/.htpasswd
