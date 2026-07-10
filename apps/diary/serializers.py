@@ -103,10 +103,14 @@ class TripListSerializer(serializers.ModelSerializer):
     lat = serializers.SerializerMethodField()
     lng = serializers.SerializerMethodField()
     travel_date = serializers.SerializerMethodField()
+    destination_country = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
-        fields = ["id", "title", "subtitle", "year", "transport_types", "lat", "lng", "travel_date", "is_event"]
+        fields = [
+            "id", "title", "subtitle", "year", "transport_types", "lat", "lng",
+            "travel_date", "is_event", "destination_country",
+        ]
 
     def get_year(self, obj):
         return obj.year
@@ -121,6 +125,18 @@ class TripListSerializer(serializers.ModelSerializer):
     def get_lng(self, obj):
         coords = self._get_first_coords(obj)
         return coords["lng"] if coords else None
+
+    def get_destination_country(self, obj):
+        from .services.stats import resolve_trip_destination_country
+
+        lang = self.context.get("lang", "de")
+        country = resolve_trip_destination_country(obj)
+        if not country:
+            return None
+        return {
+            "name": country["name_de"] if lang == "de" else country["name"],
+            "iso_a2": country.get("iso_a2"),
+        }
 
     def get_travel_date(self, obj):
         if obj.outbound_journey and obj.outbound_journey.travel_date:

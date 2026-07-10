@@ -1,8 +1,21 @@
 from django.db.models import Q
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import JourneySegment, Trip, TripImage, TripVideo
 from .serializers import ImageMarkerSerializer, RouteSerializer, TripListSerializer, VideoMarkerSerializer
+from .services.stats import (
+    compute_all_states_geojson,
+    compute_states_geojson,
+    compute_stats,
+    compute_visited_countries_geojson,
+)
+
+
+def _request_lang(request):
+    lang = request.session.get("lang", "de")
+    return lang if lang in ("de", "en", "fi") else "de"
 
 
 class RouteListView(ListAPIView):
@@ -85,3 +98,53 @@ class TripListView(ListAPIView):
     queryset = Trip.objects.select_related("outbound_journey").prefetch_related(
         "outbound_journey__segments"
     ).order_by("-outbound_journey__travel_date", "-event_date")
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["lang"] = _request_lang(self.request)
+        return context
+
+
+class StatsView(APIView):
+    def get(self, request):
+        years = set(request.GET.getlist("year"))
+        transports = set(request.GET.getlist("transport"))
+        types = set(request.GET.getlist("type"))
+        countries = set(request.GET.getlist("country"))
+        data = compute_stats(
+            _request_lang(request),
+            years=years or None,
+            transports=transports or None,
+            types=types or None,
+            countries=countries or None,
+        )
+        return Response(data)
+
+
+class VisitedCountriesView(APIView):
+    def get(self, request):
+        years = set(request.GET.getlist("year"))
+        transports = set(request.GET.getlist("transport"))
+        types = set(request.GET.getlist("type"))
+        countries = set(request.GET.getlist("country"))
+        data = compute_visited_countries_geojson(
+            _request_lang(request),
+            years=years or None,
+            transports=transports or None,
+            types=types or None,
+            countries=countries or None,
+        )
+        return Response(data)
+
+
+class StatesView(APIView):
+    def get(self, request):
+        country = request.GET.get("country")
+        years = set(request.GET.getlist("year"))
+        transports = set(request.GET.getlist("transport"))
+        lang = _request_lang(request)
+        if country:
+            data = compute_states_geojson(lang, country, years=years or None, transports=transports or None)
+        else:
+            data = compute_all_states_geojson(lang, years=years or None, transports=transports or None)
+        return Response(data)

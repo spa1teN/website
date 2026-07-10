@@ -8,26 +8,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     {% load static %}
     <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+    {% if not user.is_authenticated %}
+    <script src="{% static 'core/js/analytics.js' %}"></script>
+    {% endif %}
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     <nav class="main-nav">
         <div class="nav-container">
             <a href="{% url 'core:home' %}" class="nav-brand">Caspar Sadenius</a>
-            <button class="nav-hamburger" id="nav-hamburger" aria-label="{% t 'Menü' 'Menu' %}">&#9776;</button>
+            <button class="nav-hamburger" id="nav-hamburger" aria-label="{% t 'Menü' 'Menu' 'Valikko' %}">&#9776;</button>
             <div class="nav-menu" id="nav-menu">
                 <ul class="nav-links">
-                    <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>{% t 'Start' 'Home' %}</a></li>
-                    <li><a href="{% url 'links:links' %}" {% if request.resolver_match.app_name == 'links' %}class="active"{% endif %}>{% t 'Über mich' 'About Me' %}</a></li>
-                    <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>{% t 'Reisetagebuch' 'Travel Diary' %}</a></li>
+                    <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>{% t 'Start' 'Home' 'Etusivu' %}</a></li>
+                    <li><a href="{% url 'links:links' %}" {% if request.resolver_match.app_name == 'links' %}class="active"{% endif %}>{% t 'Über mich' 'About Me' 'Tietoa minusta' %}</a></li>
+                    <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>{% t 'Reisetagebuch' 'Travel Diary' 'Matkapäiväkirja' %}</a></li>
                 </ul>
                 <ul class="nav-auth">
                     <li class="nav-btn-group">
-                        {% if LANG == 'de' %}
-                        <a href="{% url 'core:set_language' 'en' %}" class="nav-btn-group-item lang-btn" aria-label="Switch to English" title="English">🇬🇧</a>
-                        {% else %}
-                        <a href="{% url 'core:set_language' 'de' %}" class="nav-btn-group-item lang-btn" aria-label="Auf Deutsch wechseln" title="Deutsch">🇩🇪</a>
-                        {% endif %}
+                        {% for lang_option in OTHER_LANGS %}
+                        <a href="{% url 'core:set_language' lang_option.code %}" class="nav-btn-group-item lang-btn" aria-label="{{ lang_option.aria }}" title="{{ lang_option.label }}">{{ lang_option.flag }}</a>
+                        {% endfor %}
                         <span class="nav-btn-group-sep"></span>
                         {% if user.is_authenticated %}
                         <form method="post" action="{% url 'logout' %}" class="logout-form">
@@ -46,6 +47,12 @@
     <main class="content">
         {% block content %}{% endblock %}
     </main>
+
+    {% if request.resolver_match.app_name != 'diary' %}
+    <footer class="site-footer">
+        <a href="{% url 'core:privacy' %}">{% t 'Datenschutzerklärung' 'Privacy Policy' 'Tietosuojaseloste' %}</a>
+    </footer>
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
     <script>

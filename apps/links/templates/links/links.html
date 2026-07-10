@@ -1,11 +1,11 @@
 {% extends "core/base.html" %}
 {% load i18n_extra %}
 
-{% block title %}{% t 'Über mich' 'About Me' %} - Caspar Sadenius{% endblock %}
+{% block title %}{% t 'Über mich' 'About Me' 'Tietoa minusta' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="page-container">
-    <h1>{% t 'Über mich' 'About Me' %}</h1>
+    <h1>{% t 'Über mich' 'About Me' 'Tietoa minusta' %}</h1>
 
     <div class="link-cards">
         <div class="link-card">
@@ -15,63 +15,63 @@
         </div>
     </div>
 
-    <h2 class="links-section-title">{% t 'Finde mich hier' 'Find Me Here' %}</h2>
+    <h2 class="links-section-title">{% t 'Finde mich hier' 'Find Me Here' 'Löydä minut täältä' %}</h2>
     <div class="link-cards link-cards-grid">
-        <a href="https://www.linkedin.com/in/caspar-sadenius-a506332ab/" target="_blank" rel="noopener" class="link-card link-card-full">
+        <a href="https://www.linkedin.com/in/caspar-sadenius-a506332ab/" target="_blank" rel="noopener" class="link-card link-card-full" data-track="social:linkedin">
             <i class="fa-brands fa-linkedin-in"></i>
             <span class="link-label">LinkedIn</span>
             <span class="link-handle">Caspar Sadenius</span>
         </a>
 
-        <a href="https://github.com/spa1teN" target="_blank" rel="noopener" class="link-card link-card-full">
+        <a href="https://github.com/spa1teN" target="_blank" rel="noopener" class="link-card link-card-full" data-track="social:github">
             <i class="fa-brands fa-github"></i>
             <span class="link-label">GitHub</span>
             <span class="link-handle">spa1teN</span>
         </a>
 
-        <a href="https://www.instagram.com/spa1ten/" target="_blank" rel="noopener" class="link-card">
+        <a href="https://www.instagram.com/spa1ten/" target="_blank" rel="noopener" class="link-card" data-track="social:instagram">
             <i class="fa-brands fa-instagram"></i>
             <span class="link-label">Instagram</span>
             <span class="link-handle">@spa1ten</span>
         </a>
 
-        <a href="https://x.com/spa1teN" target="_blank" rel="noopener" class="link-card">
+        <a href="https://x.com/spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:twitter">
             <i class="fa-brands fa-twitter"></i>
             <span class="link-label">Twitter</span>
             <span class="link-handle">@spa1teN</span>
         </a>
 
-        <a href="https://bsky.app/profile/casparsadenius.de" target="_blank" rel="noopener" class="link-card">
+        <a href="https://bsky.app/profile/casparsadenius.de" target="_blank" rel="noopener" class="link-card" data-track="social:bluesky">
             <i class="fa-brands fa-bluesky"></i>
             <span class="link-label">Bluesky</span>
             <span class="link-handle">@casparsadenius.de</span>
         </a>
 
-        <a href="https://www.reddit.com/user/spa1teN/" target="_blank" rel="noopener" class="link-card">
+        <a href="https://www.reddit.com/user/spa1teN/" target="_blank" rel="noopener" class="link-card" data-track="social:reddit">
             <i class="fa-brands fa-reddit-alien"></i>
             <span class="link-label">Reddit</span>
             <span class="link-handle">u/spa1teN</span>
         </a>
 
-        <a href="https://www.twitch.tv/spa1ten" target="_blank" rel="noopener" class="link-card">
+        <a href="https://www.twitch.tv/spa1ten" target="_blank" rel="noopener" class="link-card" data-track="social:twitch">
             <i class="fa-brands fa-twitch"></i>
             <span class="link-label">Twitch</span>
             <span class="link-handle">spa1ten</span>
         </a>
 
-        <a href="https://www.youtube.com/@spa1teN" target="_blank" rel="noopener" class="link-card">
+        <a href="https://www.youtube.com/@spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:youtube">
             <i class="fa-brands fa-youtube"></i>
             <span class="link-label">YouTube</span>
             <span class="link-handle">@spa1teN</span>
         </a>
 
-        <a href="https://steamcommunity.com/id/spa1teN" target="_blank" rel="noopener" class="link-card">
+        <a href="https://steamcommunity.com/id/spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:steam">
             <i class="fa-brands fa-steam"></i>
             <span class="link-label">Steam</span>
             <span class="link-handle">spa1teN</span>
         </a>
 
-        <a href="https://de.wikipedia.org/wiki/Benutzer:Spa1teN" target="_blank" rel="noopener" class="link-card">
+        <a href="https://de.wikipedia.org/wiki/Benutzer:Spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:wikipedia">
             <i class="fa-brands fa-wikipedia-w"></i>
             <span class="link-label">Wikipedia</span>
             <span class="link-handle">Spa1teN</span>
@@ -83,50 +83,50 @@
         <div class="link-card discord-card">
             <i class="fa-brands fa-discord"></i>
             <span class="link-label">Discord</span>
-            <span class="link-handle" id="discord-handle">{% t 'Lade...' 'Loading...' %}</span>
+            <span class="link-handle" id="discord-handle">{% t 'Lade...' 'Loading...' 'Ladataan...' %}</span>
             <span class="discord-indicator" id="discord-indicator"></span>
         </div>
     </div>
     {% endif %}
 
-    <h2 class="links-section-title">{% t 'Ausbildung' 'Education' %}</h2>
+    <h2 class="links-section-title">{% t 'Ausbildung' 'Education' 'Koulutus' %}</h2>
     <div class="link-cards link-cards-grid">
         <div class="link-card link-card-full edu-combined">
             <span class="link-card-stack">
                 <span class="edu-institutions">
-                    <a href="https://hpi.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Hasso-Plattner-Institut' 'Hasso-Plattner-Institute' %}</a>
+                    <a href="https://hpi.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Hasso-Plattner-Institut' 'Hasso-Plattner-Institute' 'Hasso-Plattner-Institut' %}</a>
                     <span class="edu-divider"></span>
-                    <a href="https://uni-potsdam.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Universität Potsdam' 'University of Potsdam' %}</a>
+                    <a href="https://uni-potsdam.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Universität Potsdam' 'University of Potsdam' 'Potsdamin yliopisto' %}</a>
                 </span>
-                <span class="link-handle">{% t 'Bachelor of Science · seit 2023' 'Bachelor of Science · since 2023' %}</span>
+                <span class="link-handle">{% t 'Bachelor of Science · seit 2023' 'Bachelor of Science · since 2023' 'Bachelor of Science · vuodesta 2023' %}</span>
             </span>
         </div>
 
         <a href="https://www.waldorfschule-nienstedten.de" target="_blank" rel="noopener" class="link-card link-card-full">
             <span class="link-card-stack">
-                <span class="link-label">{% t 'Rudolf-Steiner-Schule Hamburg-Nienstedten' 'Rudolf-Steiner-School Hamburg-Nienstedten' %}</span>
+                <span class="link-label">{% t 'Rudolf-Steiner-Schule Hamburg-Nienstedten' 'Rudolf-Steiner-School Hamburg-Nienstedten' 'Rudolf-Steiner-Schule Hamburg-Nienstedten' %}</span>
                 <span class="link-handle">Abitur · 2023</span>
             </span>
         </a>
     </div>
 
-    <h2 class="links-section-title">{% t 'Tausendsassa, mein Discord-Bot' 'Tausendsassa, my discord bot' %}</h2>
+    <h2 class="links-section-title">{% t 'Tausendsassa, mein Discord-Bot' 'Tausendsassa, my discord bot' 'Tausendsassa, Discord-bottini' %}</h2>
     <div class="link-cards">
-        <a href="https://discord.com/discovery/applications/1398477775828029645" target="_blank" rel="noopener" class="link-card">
-            <span class="link-label">{% t 'Discord-Discovery-Seite' 'Discord discovery page' %}</span>
+        <a href="https://discord.com/discovery/applications/1398477775828029645" target="_blank" rel="noopener" class="link-card" data-track="social:discord_bot_discovery">
+            <span class="link-label">{% t 'Discord-Discovery-Seite' 'Discord discovery page' 'Discordin discovery-sivu' %}</span>
             <span class="link-handle">discord.com</span>
         </a>
 
-        <a href="https://tausendsassa.casparsadenius.de/login" target="_blank" rel="noopener" class="link-card">
+        <a href="https://tausendsassa.casparsadenius.de/login" target="_blank" rel="noopener" class="link-card" data-track="social:tausendsassa_interface">
             <span class="link-label">Interface</span>
             <span class="link-handle">tausendsassa.casparsadenius.de</span>
         </a>
     </div>
 
-    <h2 class="links-section-title">{% t 'Mitglied' 'Member' %}</h2>
+    <h2 class="links-section-title">{% t 'Mitglied' 'Member' 'Jäsen' %}</h2>
     <div class="link-cards">
         <a href="https://gruene.de" target="_blank" rel="noopener" class="link-card">
-            <span class="link-label">{% t 'Bündnis 90/Die Grünen' 'Alliance 90/The Greens' %}</span>
+            <span class="link-label">{% t 'Bündnis 90/Die Grünen' 'Alliance 90/The Greens' 'Liitto 90/Vihreät' %}</span>
             <span class="link-handle">gruene.de</span>
         </a>
 
@@ -289,7 +289,8 @@
             var handle = document.getElementById("discord-handle");
             var indicator = document.getElementById("discord-indicator");
             if (!data.success) {
-                handle.textContent = lang === "en" ? "Status unavailable" : "Status nicht verfügbar";
+                var unavailableLabels = {en: "Status unavailable", fi: "Tila ei saatavilla", de: "Status nicht verfügbar"};
+                handle.textContent = unavailableLabels[lang] || unavailableLabels.de;
                 indicator.classList.add("offline");
                 return;
             }
@@ -299,11 +300,14 @@
             indicator.classList.add(status);
             var labelsDe = {online: "Online", idle: "Abwesend", dnd: "Bitte nicht stören", offline: "Offline"};
             var labelsEn = {online: "Online", idle: "Away", dnd: "Do Not Disturb", offline: "Offline"};
-            var labels = lang === "en" ? labelsEn : labelsDe;
+            var labelsFi = {online: "Paikalla", idle: "Poissa", dnd: "Älä häiritse", offline: "Offline"};
+            var labelsByLang = {en: labelsEn, fi: labelsFi, de: labelsDe};
+            var labels = labelsByLang[lang] || labelsDe;
             indicator.title = labels[status] || status;
         })
         .catch(function() {
-            document.getElementById("discord-handle").textContent = lang === "en" ? "Unavailable" : "Nicht verfügbar";
+            var errorLabels = {en: "Unavailable", fi: "Ei saatavilla", de: "Nicht verfügbar"};
+            document.getElementById("discord-handle").textContent = errorLabels[lang] || errorLabels.de;
             document.getElementById("discord-indicator").classList.add("offline");
         });
 })();

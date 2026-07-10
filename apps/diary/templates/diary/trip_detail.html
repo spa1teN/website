@@ -194,7 +194,7 @@
         {% if trip.year %}{{ trip.year }}{% endif %}
         {% for t in trip.transport_types %}
         <span class="transport-badge transport-{{ t }}">
-            {% if t == "train" %}{% t 'Zug' 'Train' %}{% elif t == "car" %}{% t 'Auto' 'Car' %}{% elif t == "plane" %}{% t 'Flug' 'Plane' %}{% elif t == "ferry" %}{% t 'Fähre' 'Ferry' %}{% endif %}
+            {% if t == "train" %}{% t 'Zug' 'Train' 'Juna' %}{% elif t == "car" %}{% t 'Auto' 'Car / Bus' 'Auto / Bussi' %}{% elif t == "plane" %}{% t 'Flug' 'Plane' 'Lentokone' %}{% elif t == "ferry" %}{% t 'Fähre' 'Ferry' 'Lautta' %}{% endif %}
         </span>
         {% endfor %}
     </div>
@@ -204,13 +204,13 @@
     {% endif %}
 
     <div class="detail-section">
-        <h2>{% t 'Route' 'Route' %}</h2>
+        <h2>{% t 'Route' 'Route' 'Reitti' %}</h2>
         <div id="detail-map"></div>
     </div>
 
     {% if journey_info %}
     <div class="detail-section">
-        <h2>{% t 'Reisedetails' 'Trip Details' %}</h2>
+        <h2>{% t 'Reisedetails' 'Trip Details' 'Matkan tiedot' %}</h2>
         {% for j in journey_info %}
         <div class="journey-block">
             <h3>{{ j.label }}</h3>
@@ -228,7 +228,7 @@
 
     {% if images %}
     <div class="detail-section">
-        <h2>{% t 'Bilder' 'Photos' %} ({{ images|length }})</h2>
+        <h2>{% t 'Bilder' 'Photos' 'Kuvat' %} ({{ images|length }})</h2>
         <div class="gallery">
             {% for img in images %}
             <div class="gallery-item" onclick="openLightbox('{{ img.image.url }}')">
@@ -259,7 +259,7 @@
     {% endif %}
 
     <div class="trip-actions">
-        <a href="{% url 'diary:map' %}" class="btn btn-secondary">{% t 'Zur Karte' 'Back to Map' %}</a>
+        <a href="{% url 'diary:map' %}" class="btn btn-secondary">{% t 'Zur Karte' 'Back to Map' 'Kartalle' %}</a>
         {% if user.is_authenticated %}
         <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-primary">Bearbeiten</a>
         {% endif %}

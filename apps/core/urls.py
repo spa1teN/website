@@ -6,4 +6,5 @@ app_name = "core"
 urlpatterns = [
     path("", views.home, name="home"),
     path("set-language/<str:lang>/", views.set_language, name="set_language"),
+    path("datenschutz/", views.privacy, name="privacy"),
 ]

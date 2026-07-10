@@ -1,0 +1,69 @@
+{% extends "core/base.html" %}
+{% load i18n_extra %}
+
+{% block title %}{% t 'Datenschutzerklärung' 'Privacy Policy' 'Tietosuojaseloste' %} - Caspar Sadenius{% endblock %}
+
+{% block content %}
+<div class="page-container privacy-container">
+    <h1>{% t 'Datenschutzerklärung' 'Privacy Policy' 'Tietosuojaseloste' %}</h1>
+
+    <h2>{% t 'Verantwortlicher' 'Data Controller' 'Rekisterinpitäjä' %}</h2>
+    <p>{% t 'Caspar Sadenius, Hamburg / Potsdam.' 'Caspar Sadenius, Hamburg / Potsdam, Germany.' 'Caspar Sadenius, Hampuri / Potsdam, Saksa.' %}
+    {% t 'Kontakt: me [at] casparsadenius [dot] de' 'Contact: me [at] casparsadenius [dot] de' 'Yhteystiedot: me [at] casparsadenius [dot] de' %}</p>
+
+    <h2>{% t 'Im Überblick' 'In Short' 'Lyhyesti' %}</h2>
+    <p>{% t 'Diese Website erhebt anonyme Nutzungsstatistiken, ohne Cookies, ohne Konten und ohne IP-Adressen zu speichern. Es findet keine Wiedererkennung einzelner Besucher über mehrere Seitenaufrufe hinweg statt.' 'This website collects anonymous usage statistics without cookies, without accounts, and without storing IP addresses. No visitor is re-identified across multiple page views.' 'Tämä verkkosivusto kerää anonyymejä käyttötilastoja ilman evästeitä, ilman käyttäjätilejä ja ilman IP-osoitteiden tallentamista. Yksittäisiä kävijöitä ei tunnisteta uudelleen useiden sivulatausten yli.' %}</p>
+
+    <h2>{% t 'Zugriffsstatistiken' 'Access Statistics' 'Käyttötilastot' %}</h2>
+    <p>{% t 'Bei jedem Seitenaufruf und bei Klicks auf bestimmte Links (z. B. Social-Media-Profile) wird ein einzelnes, isoliertes Ereignis erfasst. Jedes Ereignis steht für sich und wird nicht mit anderen Ereignissen zu einem Besucherprofil oder einer Sitzung verknüpft. Erfasst werden dabei:' 'Each page view and each click on certain links (e.g. social media profiles) generates a single, isolated event. Every event stands on its own and is never linked to other events to form a visitor profile or session. The following is recorded:' 'Jokainen sivulataus ja tiettyjen linkkien (esim. sosiaalisen median profiilit) klikkaus tuottaa yksittäisen, erillisen tapahtuman. Jokainen tapahtuma on itsenäinen, eikä sitä koskaan yhdistetä muihin tapahtumiin kävijäprofiiliksi tai istunnoksi. Tallennettavat tiedot:' %}</p>
+    <ul>
+        <li>{% t 'Grobe geografische Herkunft (Land/Stadt), abgeleitet aus der IP-Adresse zum Zeitpunkt des Zugriffs. Die IP-Adresse selbst wird zu keinem Zeitpunkt gespeichert oder protokolliert, sie wird nur für diese eine Berechnung im Arbeitsspeicher verwendet und danach verworfen.' 'Coarse geographic origin (country/city), derived from the IP address at the time of the request. The IP address itself is never stored or logged - it is used only in memory for this one lookup and then discarded.' 'Karkea maantieteellinen alkuperä (maa/kaupunki), joka johdetaan IP-osoitteesta pyynnön hetkellä. IP-osoitetta itseään ei koskaan tallenneta tai kirjata lokiin - sitä käytetään vain muistissa tähän yhteen hakuun ja sitten hylätään.' %}</li>
+        <li>{% t 'Herkunfts-Domain (z. B. "google.com" oder "instagram.com"), falls dein Browser diese Information beim Aufruf mitschickt.' 'Referring domain (e.g. "google.com" or "instagram.com"), if your browser sends this information with the request.' 'Viittaava verkkotunnus (esim. "google.com" tai "instagram.com"), jos selaimesi lähettää tämän tiedon pyynnön mukana.' %}</li>
+        <li>{% t 'Aufgerufener Seitenpfad bzw. angeklicktes Element.' 'The page path visited, or the element clicked.' 'Vierailtu sivupolku tai klikattu elementti.' %}</li>
+        <li>{% t 'Grober Gerätetyp, Browser- und Betriebssystem-Familie (z. B. "Mobile / Safari / iOS"), ohne Versionsnummern oder sonstige eindeutig identifizierende Merkmale.' 'Coarse device type, browser and operating system family (e.g. "Mobile / Safari / iOS"), without version numbers or other uniquely identifying details.' 'Karkea laitetyyppi, selain- ja käyttöjärjestelmäperhe (esim. "Mobile / Safari / iOS"), ilman versionumeroita tai muita yksilöiviä tietoja.' %}</li>
+        <li>{% t 'Ausgewählte Sprache der Website (Deutsch/Englisch/Finnisch).' 'Selected site language (German/English/Finnish).' 'Valittu sivuston kieli (saksa/englanti/suomi).' %}</li>
+        <li>{% t 'Grobe Bildschirmgrößen-Kategorie (z. B. "Mobile" oder "Desktop"), nicht die exakte Auflösung.' 'Coarse screen-size category (e.g. "Mobile" or "Desktop"), not the exact resolution.' 'Karkea näytön kokoluokka (esim. "Mobile" tai "Desktop"), ei tarkkaa resoluutiota.' %}</li>
+    </ul>
+    <p>{% t 'Es werden keine Cookies gesetzt und keine Kennungen (IDs) verwendet, um dich wiederzuerkennen. Angemeldete Nutzer (also nur der Betreiber selbst) werden von dieser Erfassung ausgenommen.' 'No cookies are set and no identifiers are used to recognize you. Logged-in users (i.e. only the site operator) are excluded from this collection.' 'Evästeitä ei aseteta eikä tunnisteita käytetä sinun tunnistamiseesi uudelleen. Kirjautuneet käyttäjät (eli vain sivuston ylläpitäjä) on suljettu tämän keräyksen ulkopuolelle.' %}</p>
+    <p>{% t 'Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) daran zu verstehen, wie die Website genutzt wird.' 'The legal basis is our legitimate interest (Art. 6(1)(f) GDPR) in understanding how the website is used.' 'Oikeusperustana on oikeutettu etumme (GDPR 6 artiklan 1 kohdan f alakohta) ymmärtää, miten sivustoa käytetään.' %}</p>
+
+    <h2>{% t 'Eingebundene Drittanbieter-Inhalte' 'Embedded Third-Party Content' 'Upotettu kolmannen osapuolen sisältö' %}</h2>
+    <p>{% t 'Unabhängig von der oben beschriebenen Statistik lädt diese Website einige Inhalte direkt von Drittanbietern, wodurch deine IP-Adresse an diese Anbieter übertragen wird:' 'Independently of the statistics described above, this website loads some content directly from third parties, which transmits your IP address to those providers:' 'Yllä kuvatuista tilastoista riippumatta tämä verkkosivusto lataa osan sisällöstä suoraan kolmansilta osapuolilta, mikä välittää IP-osoitteesi näille palveluntarjoajille:' %}</p>
+    <ul>
+        <li>{% t 'Font Awesome Icons (cdnjs.cloudflare.com) – auf jeder Seite, für Icons in der Navigation und im Inhalt.' 'Font Awesome icons (cdnjs.cloudflare.com) - on every page, for icons in the navigation and content.' 'Font Awesome -kuvakkeet (cdnjs.cloudflare.com) - jokaisella sivulla, navigoinnin ja sisällön kuvakkeisiin.' %}</li>
+        <li>{% t 'Kartenkacheln von OpenStreetMap/CARTO – im Reisetagebuch, zur Anzeige der interaktiven Karte.' 'Map tiles from OpenStreetMap/CARTO - in the travel diary, to display the interactive map.' 'OpenStreetMap/CARTO-karttalaatat - matkapäiväkirjassa, interaktiivisen kartan näyttämiseen.' %}</li>
+        <li>{% t 'Discord-Status via Lanyard API (api.lanyard.rest) – auf der "Über mich"-Seite, zur Anzeige des aktuellen Discord-Status.' 'Discord status via the Lanyard API (api.lanyard.rest) - on the "About Me" page, to display the current Discord status.' 'Discord-tila Lanyard-rajapinnan kautta (api.lanyard.rest) - "Tietoa minusta" -sivulla, nykyisen Discord-tilan näyttämiseen.' %}</li>
+    </ul>
+    <p>{% t 'Wie diese Anbieter mit IP-Adressen umgehen, regeln deren eigene Datenschutzerklärungen.' 'How these providers handle IP addresses is governed by their own privacy policies.' 'Se, miten nämä palveluntarjoajat käsittelevät IP-osoitteita, määräytyy niiden omien tietosuojaselosteiden mukaan.' %}</p>
+
+    <h2>{% t 'Speicherdauer' 'Retention Period' 'Säilytysaika' %}</h2>
+    <p>{% t 'Die anonymen Zugriffsstatistiken werden derzeit ohne automatische Löschfrist gespeichert, da sie sich keiner Person zuordnen lassen. Bei Fragen oder Löschwünschen kannst du dich jederzeit an die oben genannte Kontaktadresse wenden.' 'The anonymous access statistics are currently retained without an automatic deletion period, since they cannot be attributed to any individual. If you have questions or a deletion request, you can contact the address above at any time.' 'Anonyymejä käyttötilastoja säilytetään tällä hetkellä ilman automaattista poistoaikaa, koska niitä ei voida yhdistää mihinkään yksittäiseen henkilöön. Jos sinulla on kysyttävää tai poistopyyntö, voit ottaa yhteyttä yllä mainittuun osoitteeseen milloin tahansa.' %}</p>
+
+    <h2>{% t 'Deine Rechte' 'Your Rights' 'Oikeutesi' %}</h2>
+    <p>{% t 'Nach der DSGVO hast du grundsätzlich das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner personenbezogenen Daten sowie ein Widerspruchsrecht. Da die erhobenen Statistikdaten anonym sind, lassen sie sich in der Regel keiner bestimmten Person zuordnen; für alle anderen Anliegen (z. B. zu den oben genannten Drittanbietern) wende dich bitte an die genannte Kontaktadresse.' 'Under the GDPR you generally have the right to access, rectify, erase, and restrict the processing of your personal data, as well as a right to object. Since the collected statistics are anonymous, they generally cannot be attributed to any specific person; for any other concerns (e.g. regarding the third parties listed above), please contact the address given above.' 'GDPR:n mukaan sinulla on yleensä oikeus saada pääsy henkilötietoihisi, oikaista ja poistaa niitä sekä rajoittaa niiden käsittelyä, samoin kuin oikeus vastustaa käsittelyä. Koska kerätyt tilastotiedot ovat anonyymejä, niitä ei yleensä voida yhdistää tiettyyn henkilöön; muissa asioissa (esim. yllä mainittuihin kolmansiin osapuoliin liittyen) ota yhteyttä yllä mainittuun osoitteeseen.' %}</p>
+</div>
+
+<style>
+.privacy-container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    line-height: 1.7;
+}
+
+.privacy-container h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.15rem;
+}
+
+.privacy-container ul {
+    padding-left: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.privacy-container li {
+    margin-bottom: 0.4rem;
+}
+</style>
+{% endblock %}

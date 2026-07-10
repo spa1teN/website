@@ -12,6 +12,7 @@ urlpatterns = [
     path("about/", include("apps.links.urls")),
     path("diary/", include("apps.diary.urls")),
     path("api/diary/", include(("apps.diary.api_urls", "diary-api"))),
+    path("api/analytics/", include("apps.analytics.urls")),
 ]
 
 if settings.DEBUG:

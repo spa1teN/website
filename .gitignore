@@ -15,3 +15,6 @@ staticfiles/
 osrm-data/
 tasks.txt
 nginx/.htpasswd
+
+# GeoIP databases (MaxMind GeoLite2 — licensed, downloaded separately)
+geoip/

@@ -68,7 +68,7 @@ def trip_detail(request, pk):
 
     lang = request.session.get("lang", "de")
     if lang == "en":
-        transport_labels = {"train": "Train", "car": "Car", "plane": "Plane", "ferry": "Ferry"}
+        transport_labels = {"train": "Train", "car": "Car / Bus", "plane": "Plane", "ferry": "Ferry"}
         journey_labels = [("Outbound", "outbound_journey"), ("Return", "return_journey")]
     else:
         transport_labels = {"train": "Zug", "car": "Auto", "plane": "Flugzeug", "ferry": "Fähre"}

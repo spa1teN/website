@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.links",
     "apps.diary",
+    "apps.analytics",
 ]
 
 MIDDLEWARE = [
@@ -89,6 +90,17 @@ LOGOUT_REDIRECT_URL = "/"
 
 OSRM_API_URL = config("OSRM_API_URL", default="https://router.project-osrm.org")
 DISCORD_USER_ID = config("DISCORD_USER_ID", default="")
+
+# Optional path to a MaxMind GeoLite2-City.mmdb file used to resolve a coarse
+# country/city for analytics events. Geolocation is skipped gracefully (no
+# error) if this file doesn't exist - see DATA_INTERFACE.md for setup.
+ANALYTICS_GEOIP_DB_PATH = config(
+    "ANALYTICS_GEOIP_DB_PATH", default=os.path.join(BASE_DIR, "geoip", "GeoLite2-City.mmdb")
+)
+
+# Shared secret the external ops dashboard sends as X-API-Key to read
+# apps.analytics.views.stats_api. Read-only, aggregate data only.
+ANALYTICS_DASHBOARD_API_KEY = config("ANALYTICS_DASHBOARD_API_KEY", default="")
 
 REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],

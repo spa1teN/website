@@ -23,6 +23,10 @@ body {
     color: var(--color-text);
     line-height: 1.6;
     min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 a {
@@ -165,8 +169,28 @@ a:hover {
 
 /* Content */
 .content {
-    margin-top: var(--nav-height);
-    min-height: calc(100vh - var(--nav-height));
+    /* padding-top (not margin-top) so this offset can never collapse through
+       body into documentElement.scrollHeight and phantom-extend the page. */
+    padding-top: var(--nav-height);
+    box-sizing: border-box;
+    flex: 1;
+}
+
+.site-footer {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 1.25rem 1rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    border-top: 1px solid var(--color-border);
+}
+
+.site-footer a {
+    color: var(--color-text-muted);
+}
+
+.site-footer a:hover {
+    color: var(--color-accent);
 }
 
 .page-container {

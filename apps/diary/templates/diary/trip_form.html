@@ -358,6 +358,7 @@ textarea.form-control {
             </div>
             <div class="segment-list" id="return-segments"></div>
             <button type="button" class="btn btn-secondary btn-add-segment" onclick="addSegment('return')">Abschnitt hinzufügen</button>
+            <button type="button" class="btn btn-secondary btn-add-segment" onclick="copyOutboundAsReturn()">Hinreise umgekehrt übernehmen</button>
         </div>
 
         <!-- Videos -->
@@ -973,6 +974,51 @@ textarea.form-control {
 
         return { travel_date: isoDate, segments: segments };
     }
+
+    // --- Copy outbound as return (reversed) ---
+
+    window.copyOutboundAsReturn = function() {
+        var outboundData = collectJourney("outbound");
+        if (!outboundData || !outboundData.segments.length) {
+            alert("Bitte zuerst die Hinreise ausfüllen.");
+            return;
+        }
+
+        var returnContainer = document.getElementById("return-segments");
+        Array.from(returnContainer.querySelectorAll(".segment-item")).forEach(function(el) {
+            removeSegment(el.id);
+        });
+
+        // Reverse segment order, reverse waypoints within each segment, and
+        // swap origin/destination airport codes - i.e. the same route backwards.
+        var reversedSegments = outboundData.segments.slice().reverse().map(function(seg) {
+            return {
+                transport_type: seg.transport_type,
+                waypoints: seg.waypoints.slice().reverse(),
+                origin_code: seg.destination_code,
+                destination_code: seg.origin_code,
+            };
+        });
+
+        reversedSegments.forEach(function(seg) {
+            addSegment("return");
+            var segEl = returnContainer.lastElementChild;
+            segEl.querySelector(".seg-transport").value = seg.transport_type;
+            onTransportChange(segEl.id);
+
+            if (seg.transport_type === "plane") {
+                segEl.querySelector("[id$='-origin']").value = seg.origin_code;
+                segEl.querySelector("[id$='-dest']").value = seg.destination_code;
+                if (seg.waypoints.length >= 2) {
+                    previewRoute(segEl.id, seg.waypoints, seg.transport_type);
+                }
+            } else {
+                seg.waypoints.forEach(function(wp) {
+                    _addWaypointToSegment(segEl.id, wp.name, wp.lat, wp.lng);
+                });
+            }
+        });
+    };
 
     // --- Location Picker Modal ---
     var locModal = { map: null, marker: null, imgId: null, latlng: null };

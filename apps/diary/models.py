@@ -169,3 +169,17 @@ class TripVideo(models.Model):
 
     def __str__(self):
         return self.caption or f"Video zu {self.trip.title}"
+
+
+def _invalidate_stats_cache(*args, **kwargs):
+    from django.core.cache import cache
+
+    cache.delete("diary_stats_de")
+    cache.delete("diary_stats_en")
+    cache.delete("diary_geo_index")
+    cache.delete("diary_state_index")
+
+
+for _model in (Trip, JourneySegment, TripImage, TripVideo):
+    models.signals.post_save.connect(_invalidate_stats_cache, sender=_model)
+    models.signals.post_delete.connect(_invalidate_stats_cache, sender=_model)

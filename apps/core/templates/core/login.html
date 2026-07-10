@@ -9,17 +9,17 @@
     <form method="post">
         {% csrf_token %}
         {% if form.errors %}
-        <div class="error-message">{% t 'Benutzername oder Passwort falsch.' 'Incorrect username or password.' %}</div>
+        <div class="error-message">{% t 'Benutzername oder Passwort falsch.' 'Incorrect username or password.' 'Väärä käyttäjätunnus tai salasana.' %}</div>
         {% endif %}
         <div class="form-group">
-            <label for="id_username">{% t 'Benutzername' 'Username' %}</label>
+            <label for="id_username">{% t 'Benutzername' 'Username' 'Käyttäjätunnus' %}</label>
             {{ form.username }}
         </div>
         <div class="form-group">
-            <label for="id_password">{% t 'Passwort' 'Password' %}</label>
+            <label for="id_password">{% t 'Passwort' 'Password' 'Salasana' %}</label>
             {{ form.password }}
         </div>
-        <button type="submit" class="btn btn-primary">{% t 'Einloggen' 'Log in' %}</button>
+        <button type="submit" class="btn btn-primary">{% t 'Einloggen' 'Log in' 'Kirjaudu sisään' %}</button>
     </form>
 </div>
 {% endblock %}

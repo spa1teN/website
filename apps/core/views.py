@@ -7,8 +7,12 @@ def home(request):
     return render(request, "core/home.html")
 
 
+def privacy(request):
+    return render(request, "core/privacy.html")
+
+
 def set_language(request, lang):
-    if lang not in ("de", "en"):
+    if lang not in ("de", "en", "fi"):
         lang = "de"
     request.session["lang"] = lang
 

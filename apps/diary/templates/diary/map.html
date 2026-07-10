@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n_extra %}
 
-{% block title %}{% t 'Reisen' 'Travels' %} - Caspar Sadenius{% endblock %}
+{% block title %}{% t 'Reisen' 'Travels' 'Matkat' %} - Caspar Sadenius{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
@@ -12,43 +12,112 @@
 {% block content %}
 <div id="map-page">
     <div id="filter-panel">
-        <h3>{% t 'Filter' 'Filter' %}</h3>
+        <div class="map-mode-switch" role="tablist">
+            <button type="button" class="map-mode-btn active" data-mode="detailed">{% t 'Reisen' 'Trips' 'Matkat' %}</button>
+            <button type="button" class="map-mode-btn" data-mode="visited">{% t 'Besuchte Länder' 'Visited Countries' 'Vieraillut maat' %}</button>
+        </div>
 
-        <div class="filter-section">
-            <h4>{% t 'Typ' 'Type' %}</h4>
-            <label><input type="checkbox" id="filter-type-journey" checked> {% t 'Reisen' 'Trips' %}</label>
-            <label><input type="checkbox" id="filter-type-event" checked> {% t 'Events' 'Events' %}</label>
+        <button type="button" id="subdivisions-toggle" class="subdivisions-toggle hidden">{% t 'Regionen anzeigen' 'Show regions' 'Näytä alueet' %}</button>
+
+        <div class="filter-title-row">
+            <h3>{% t 'Filter' 'Filter' 'Suodatin' %}</h3>
+            <button type="button" id="filter-reset-btn" class="filter-reset-btn hidden">{% t 'Zurücksetzen' 'Reset' 'Nollaa' %}</button>
+        </div>
+
+        <div class="filter-section" id="type-filter-section">
+            <h4>{% t 'Typ' 'Type' 'Tyyppi' %}</h4>
+            <div class="ms-dropdown" id="filter-type" data-filter="types">
+                <button type="button" class="ms-dropdown-toggle">
+                    <span class="ms-dropdown-label">{% t 'Alle' 'All' 'Kaikki' %}</span>
+                    <span class="ms-dropdown-arrow">▾</span>
+                </button>
+                <div class="ms-dropdown-menu">
+                    <label><input type="checkbox" value="__all__" checked> {% t 'Alle' 'All' 'Kaikki' %}<span class="ms-check">✓</span></label>
+                    <label><input type="checkbox" value="journey"> {% t 'Reisen' 'Trips' 'Matkat' %}<span class="ms-check">✓</span></label>
+                    <label><input type="checkbox" value="event"> {% t 'Events' 'Events' 'Tapahtumat' %}<span class="ms-check">✓</span></label>
+                </div>
+            </div>
         </div>
 
         <div class="filter-section" id="transport-filter-section">
-            <h4>{% t 'Transportmittel' 'Transport' %}</h4>
-            <label><input type="checkbox" data-transport="train" checked> <span class="color-dot" style="background:#1565C0"></span> {% t 'Zug' 'Train' %}</label>
-            <label><input type="checkbox" data-transport="car" checked> <span class="color-dot" style="background:#9c27b0"></span> {% t 'Auto' 'Car' %}</label>
-            <label><input type="checkbox" data-transport="plane" checked> <span class="color-dot" style="background:#D32F2F"></span> {% t 'Flugzeug' 'Plane' %}</label>
-            <label><input type="checkbox" data-transport="ferry" checked> <span class="color-dot" style="background:#2E7D32"></span> {% t 'Fähre' 'Ferry' %}</label>
+            <h4>{% t 'Transportmittel' 'Transport' 'Kulkuväline' %}</h4>
+            <div class="ms-dropdown" id="filter-transport" data-filter="transport">
+                <button type="button" class="ms-dropdown-toggle">
+                    <span class="ms-dropdown-label">{% t 'Alle' 'All' 'Kaikki' %}</span>
+                    <span class="ms-dropdown-arrow">▾</span>
+                </button>
+                <div class="ms-dropdown-menu">
+                    <label><input type="checkbox" value="__all__" checked> {% t 'Alle' 'All' 'Kaikki' %}<span class="ms-check">✓</span></label>
+                    <label data-color="#1565C0"><input type="checkbox" value="train"> {% t 'Zug' 'Train' 'Juna' %}<span class="ms-check">✓</span></label>
+                    <label data-color="#9c27b0"><input type="checkbox" value="car"> {% t 'Auto' 'Car / Bus' 'Auto / Bussi' %}<span class="ms-check">✓</span></label>
+                    <label data-color="#D32F2F"><input type="checkbox" value="plane"> {% t 'Flugzeug' 'Plane' 'Lentokone' %}<span class="ms-check">✓</span></label>
+                    <label data-color="#2E7D32"><input type="checkbox" value="ferry"> {% t 'Fähre' 'Ferry' 'Lautta' %}<span class="ms-check">✓</span></label>
+                </div>
+            </div>
         </div>
 
-        <div class="filter-section">
-            <h4>{% t 'Jahr' 'Year' %}</h4>
-            <select id="year-filter">
-                <option value="">{% t 'Alle Jahre' 'All years' %}</option>
-            </select>
+        <div class="filter-section" id="year-filter-section">
+            <h4>{% t 'Jahr' 'Year' 'Vuosi' %}</h4>
+            <div class="ms-dropdown" id="filter-year" data-filter="years">
+                <button type="button" class="ms-dropdown-toggle">
+                    <span class="ms-dropdown-label">{% t 'Alle Jahre' 'All years' 'Kaikki vuodet' %}</span>
+                    <span class="ms-dropdown-arrow">▾</span>
+                </button>
+                <div class="ms-dropdown-menu" id="filter-year-menu"></div>
+            </div>
         </div>
 
-        <div class="filter-section trip-list-section">
-            <h4>{% t 'Einträge' 'Entries' %}</h4>
+        <div class="filter-section" id="country-filter-section">
+            <h4>{% t 'Zielland' 'Destination Country' 'Kohdemaa' %}</h4>
+            <div class="ms-dropdown" id="filter-country" data-filter="countries">
+                <button type="button" class="ms-dropdown-toggle">
+                    <span class="ms-dropdown-label">{% t 'Alle Länder' 'All countries' 'Kaikki maat' %}</span>
+                    <span class="ms-dropdown-arrow">▾</span>
+                </button>
+                <div class="ms-dropdown-menu ms-flag-grid" id="filter-country-menu"></div>
+            </div>
+        </div>
+
+        <div class="filter-section trip-list-section" id="entries-section">
+            <h4>{% t 'Einträge' 'Entries' 'Merkinnät' %}</h4>
             <div id="trip-list"></div>
         </div>
-
-        {% if user.is_authenticated %}
-        <div class="filter-panel-footer">
-            <a href="{% url 'diary:dashboard' %}" class="btn btn-primary btn-sm btn-block">Verwalten</a>
-        </div>
-        {% endif %}
     </div>
 
-    <div id="map"></div>
+    <div id="map-container">
+        <div id="map"></div>
+        <button id="states-back-btn" class="hidden">&larr; <span id="states-back-label">{% t 'Alle Länder' 'All countries' 'Kaikki maat' %}</span></button>
+        {% if user.is_authenticated %}
+        <a href="{% url 'diary:dashboard' %}" id="manage-link" class="btn btn-primary btn-sm">{% t 'Verwalten' 'Manage' 'Hallinnoi' %}</a>
+        {% endif %}
+    </div>
     <div id="trip-info" class="hidden"></div>
+
+    <div id="stats-panel">
+        <button id="stats-toggle" aria-label="{% t 'Statistiken' 'Statistics' 'Tilastot' %}">
+            <i class="fa-solid fa-chart-bar"></i>
+        </button>
+        <div id="stats-content">
+            <h3>{% t 'Statistiken' 'Statistics' 'Tilastot' %}</h3>
+
+            <div id="stats-summary" class="stats-summary"></div>
+
+            <div class="filter-section">
+                <h4>{% t 'Besuchte Länder' 'Visited Countries' 'Vieraillut maat' %}</h4>
+                <div id="stats-visited-list" class="stats-visited-list"></div>
+            </div>
+
+            <div class="filter-section">
+                <h4>{% t 'Bilder pro Land' 'Photos per Country' 'Kuvat maittain' %}</h4>
+                <div id="stats-countries" class="stats-bars"></div>
+            </div>
+
+            <div class="filter-section">
+                <h4>{% t 'Strecke pro Verkehrsmittel' 'Distance per Transport' 'Matka kulkuvälineittäin' %}</h4>
+                <div id="stats-transport" class="stats-bars"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="lightbox" class="hidden" onclick="closeLightbox()">
@@ -70,6 +139,9 @@
     data-images-url="{% url 'diary-api:images' %}"
     data-videos-url="{% url 'diary-api:videos' %}"
     data-trips-url="{% url 'diary-api:trips' %}"
+    data-stats-url="{% url 'diary-api:stats' %}"
+    data-visited-countries-url="{% url 'diary-api:visited_countries' %}"
+    data-states-url="{% url 'diary-api:states' %}"
     data-lang="{{ LANG }}"
 ></script>
 <script src="{% static 'diary/js/map.js' %}"></script>
