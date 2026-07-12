@@ -16,6 +16,7 @@
     height: 100%;
     z-index: 1;
     position: relative;
+    background: radial-gradient(circle at 50% 42%, #131c34 0%, #070b16 68%);
 }
 
 #trip-info {

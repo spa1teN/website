@@ -25,33 +25,15 @@
 
     var map = new maplibregl.Map({
         container: "map",
-        style: {
-            version: 8,
-            projection: { type: "globe" },
-            sources: {
-                "carto-dark": {
-                    type: "raster",
-                    tiles: [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-                        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-                        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-                        "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-                    ],
-                    tileSize: 256,
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-                },
-            },
-            layers: [
-                {
-                    id: "carto-dark-layer",
-                    type: "raster",
-                    source: "carto-dark",
-                },
-            ],
-        },
+        style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
         center: [10.4515, 51.1657],
         zoom: 5,
-        attributionControl: true,
+        attributionControl: false,
+    });
+
+    map.on("style.load", function () {
+        map.setProjection({ type: "globe" });
+        try { map.setSky({ "atmosphere-blend": 0.85 }); } catch (e) {}
     });
 
     // State
