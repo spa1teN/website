@@ -1,40 +1,4 @@
 services:
-  db:
-    image: postgis/postgis:16-3.4
-    restart: unless-stopped
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${DB_NAME:-travelsite}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  web:
-    build: .
-    restart: unless-stopped
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
-    volumes:
-      - .:/app
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
-    env_file:
-      - .env
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.production
-    depends_on:
-      db:
-        condition: service_healthy
-    expose:
-      - "8000"
-
   nginx:
     build: ./nginx
     restart: unless-stopped
@@ -42,24 +6,22 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
-      - certbot_certs:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
+      - website_static_volume:/app/staticfiles
+      - website_media_volume:/app/media
+      - website_certbot_certs:/etc/letsencrypt
+      - website_certbot_www:/var/www/certbot
     networks:
       - default
       - tausendsassa
       - nextcloud
       - dashboard
-    depends_on:
-      - web
 
   certbot:
     image: certbot/certbot
     restart: unless-stopped
     volumes:
-      - certbot_certs:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
+      - website_certbot_certs:/etc/letsencrypt
+      - website_certbot_www:/var/www/certbot
     entrypoint: >
       /bin/sh -c "trap exit TERM;
                   while :; do
@@ -68,11 +30,14 @@ services:
                   done"
 
 volumes:
-  postgres_data:
-  static_volume:
-  media_volume:
-  certbot_certs:
-  certbot_www:
+  website_static_volume:
+    external: true
+  website_media_volume:
+    external: true
+  website_certbot_certs:
+    external: true
+  website_certbot_www:
+    external: true
 
 networks:
   default:
@@ -81,9 +46,6 @@ networks:
     name: tausendsassa-network
     external: true
   nextcloud:
-    name: nextcloud_default
-    external: true
-  collabora:
     name: nextcloud_default
     external: true
   dashboard:
