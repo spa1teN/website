@@ -1,0 +1,7 @@
+{% load i18n_extra %}
+<aside class="admin-sidebar">
+    <h3>Admin</h3>
+    <ul class="admin-submenu">
+        <li><a href="{% url 'diary:dashboard' %}" class="admin-submenu-item {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'trip_create' or request.resolver_match.url_name == 'trip_edit' or request.resolver_match.url_name == 'trip_delete' %}active{% endif %}">📔 {% t 'Diary' 'Diary' 'Diary' %}</a></li>
+    </ul>
+</aside>

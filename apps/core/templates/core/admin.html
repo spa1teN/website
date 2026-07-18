@@ -1,0 +1,91 @@
+{% extends "core/base.html" %}
+{% load i18n_extra %}
+
+{% block title %}{% t 'Admin' 'Admin' 'Admin' %} - Caspar Sadenius{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    {% include "core/admin_sidebar.html" %}
+    <div class="admin-content">
+        <h2>{% t 'Admin' 'Admin' 'Admin' %}</h2>
+        <p class="admin-welcome">{% t 'Wähle einen Bereich aus dem Menü.' 'Select a section from the menu.' 'Valitse osio valikosta.' %}</p>
+    </div>
+</div>
+
+<style>
+.admin-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - var(--nav-height));
+}
+
+.admin-sidebar {
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 1.5rem 1rem;
+}
+
+.admin-sidebar h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin: 0 0 0.75rem;
+    padding: 0 0.5rem;
+}
+
+.admin-submenu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.admin-submenu-item {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    transition: background 0.15s, color 0.15s;
+}
+
+.admin-submenu-item:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+}
+
+.admin-submenu-item.active {
+    background: rgba(108,155,207,0.15);
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.admin-content {
+    padding: 2rem;
+}
+
+.admin-welcome {
+    color: var(--color-text-muted);
+}
+
+@media (max-width: 768px) {
+    .admin-layout {
+        grid-template-columns: 1fr;
+    }
+    .admin-sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        padding: 1rem;
+    }
+    .admin-submenu {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+    .admin-content {
+        padding: 1.5rem 1rem;
+    }
+}
+</style>
+{% endblock %}

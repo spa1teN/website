@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -9,6 +10,11 @@ def home(request):
 
 def privacy(request):
     return render(request, "core/privacy.html")
+
+
+@login_required
+def admin_index(request):
+    return render(request, "core/admin.html")
 
 
 def set_language(request, lang):

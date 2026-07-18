@@ -95,8 +95,12 @@ class VideoMarkerListView(ListAPIView):
 
 class TripListView(ListAPIView):
     serializer_class = TripListSerializer
-    queryset = Trip.objects.select_related("outbound_journey").prefetch_related(
-        "outbound_journey__segments"
+    queryset = Trip.objects.select_related(
+        "outbound_journey", "return_journey"
+    ).prefetch_related(
+        "outbound_journey__segments",
+        "return_journey__segments",
+        "images",
     ).order_by("-outbound_journey__travel_date", "-event_date")
 
     def get_serializer_context(self):

@@ -5,6 +5,24 @@
 {% block title %}{{ trip.title }} - Caspar Sadenius{% endblock %}
 
 {% block extra_head %}
+<meta property="og:title" content="{{ trip.title }}{% if trip.subtitle %} — {{ trip.subtitle }}{% endif %}" />
+{% if og_description %}<meta property="og:description" content="{{ og_description }}" />
+{% endif %}<meta property="og:type" content="article" />
+<meta property="og:url" content="https://casparsadenius.de{{ request.path }}" />
+<meta property="og:site_name" content="casparsadenius.de" />
+{% if og_images %}
+{% for og_img in og_images %}
+<meta property="og:image" content="https://casparsadenius.de{{ og_img.url }}" />
+<meta property="og:image:width" content="{{ og_img.width|default:'630' }}" />
+<meta property="og:image:height" content="{{ og_img.height|default:'630' }}" />
+{% endfor %}
+{% elif images.0 %}
+<meta property="og:image" content="https://casparsadenius.de{{ images.0.image.url }}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+{% endif %}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#6c9bcf" />
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
 <style>
 .trip-detail {
@@ -13,79 +31,249 @@
     padding: 2rem 1.5rem;
 }
 
-.trip-detail h1 {
-    margin-bottom: 0.5rem;
+/* ── Hero header ─────────────────────────────────────── */
+.trip-hero {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
 }
 
-.trip-meta {
+.trip-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.trip-hero-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.trip-hero h1 {
+    margin: 0 0 0.4rem;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.trip-hero .trip-subtitle {
     color: var(--color-text-muted);
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
 }
 
+.trip-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+.trip-stats span { white-space: nowrap; }
+.trip-stats strong {
+    color: var(--color-text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.trip-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+/* ── Transport badges ─────────────────────────────────── */
+.transport-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+.transport-train { background: rgba(21,101,192,0.18); color: #64B5F6; }
+.transport-car   { background: rgba(156,39,176,0.18); color: #CE93D8; }
+.transport-plane { background: rgba(211,47,47,0.18); color: #EF9A9A; }
+.transport-ferry { background: rgba(46,125,50,0.18); color: #81C784; }
+
+/* ── Description ──────────────────────────────────────── */
 .trip-description {
-    margin-bottom: 1.5rem;
-    line-height: 1.7;
+    color: var(--color-text);
+    line-height: 1.75;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
 }
 
+.trip-date-range {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin-top: -1.25rem;
+    margin-bottom: 2rem;
+}
+
+/* ── Sections ─────────────────────────────────────────── */
 .detail-section {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 1.25rem;
+    border-radius: 10px;
+    padding: 1.5rem;
     margin-bottom: 1.5rem;
 }
 
 .detail-section h2 {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    margin: 0 0 1rem;
 }
 
+/* ── Map ──────────────────────────────────────────────── */
 #detail-map {
-    height: 500px;
-    border-radius: 6px;
+    height: 420px;
+    border-radius: 8px;
     background: radial-gradient(circle at 50% 42%, #131c34 0%, #070b16 68%);
 }
 
+/* ── Journey timeline ─────────────────────────────────── */
+.journey-timeline {
+    position: relative;
+    padding-left: 28px;
+}
+
+.journey-timeline::before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--color-border);
+}
+
 .journey-block {
-    margin-bottom: 1rem;
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+.journey-block:last-child { margin-bottom: 0; }
+
+.journey-block::before {
+    content: "";
+    position: absolute;
+    left: -25px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    border: 2px solid var(--color-accent, #6c9bcf);
+    z-index: 1;
 }
 
 .journey-block h3 {
     font-size: 0.95rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin: 0 0 0.2rem;
 }
 
 .journey-date {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--color-text-muted);
     margin-bottom: 0.5rem;
 }
 
 .segment-info {
-    padding: 0.4rem 0;
-    font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.35rem 0;
+    font-size: 0.85rem;
 }
 
-.transport-badge {
-    display: inline-block;
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
+/* ── Journey compact / expand ────────────────────────── */
+.journey-wrapper {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.journey-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.journey-compact-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.5rem;
+}
+
+.journey-compact.hidden { display: none; }
+
+.journey-compact-label {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.journey-compact-route {
+    color: var(--color-text);
+}
+
+.journey-compact-arrow {
+    color: var(--color-text-muted);
     font-size: 0.75rem;
+    margin: 0 0.1rem;
 }
 
-.transport-train { background: rgba(21,101,192,0.2); color: #64B5F6; }
-.transport-car { background: rgba(117,117,117,0.2); color: #BDBDBD; }
-.transport-plane { background: rgba(211,47,47,0.2); color: #EF9A9A; }
-.transport-ferry { background: rgba(46,125,50,0.2); color: #81C784; }
+.journey-compact-sep {
+    color: var(--color-border);
+    margin: 0 0.4rem;
+}
 
+.journey-expand-btn {
+    display: block;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    margin: 0.5rem auto 0;
+}
+.journey-expand-btn:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.journey-expanded {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+}
+.journey-expanded.hidden { display: none; }
+
+/* ── Gallery ──────────────────────────────────────────── */
 .gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.75rem;
 }
 
 .gallery-item {
@@ -94,17 +282,18 @@
     overflow: hidden;
     cursor: pointer;
     position: relative;
+    background: #0d1b2a;
 }
 
 .gallery-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.2s;
+    transition: transform 0.25s ease;
 }
 
 .gallery-item:hover img {
-    transform: scale(1.05);
+    transform: scale(1.06);
 }
 
 .gallery-caption {
@@ -112,13 +301,29 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    background: linear-gradient(transparent, rgba(0,0,0,0.75));
     color: #fff;
-    padding: 0.75rem;
-    font-size: 0.85rem;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.3;
 }
 
-/* MapLibre popup overrides */
+.gallery-item.video-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.gallery-item.video-card .play-icon {
+    font-size: 3rem;
+    color: #29B6F6;
+    transition: transform 0.2s;
+}
+.gallery-item.video-card:hover .play-icon {
+    transform: scale(1.15);
+}
+
+/* ── MapLibre overrides ────────────────────────────────── */
 .maplibregl-popup-content {
     background: var(--color-surface);
     color: var(--color-text);
@@ -126,113 +331,269 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
 }
-
-.maplibregl-popup-tip {
-    border-top-color: var(--color-surface);
-}
-
-.maplibregl-popup-close-button {
-    color: var(--color-text-muted);
-}
+.maplibregl-popup-tip { border-top-color: var(--color-surface); }
+.maplibregl-popup-close-button { color: var(--color-text-muted); }
 
 .wp-label {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     color: var(--color-text);
     padding: 0.15rem 0.4rem;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     border-radius: 3px;
     white-space: nowrap;
     pointer-events: none;
 }
 
+/* ── Actions ──────────────────────────────────────────── */
 .trip-actions {
     display: flex;
     gap: 0.75rem;
-    margin-top: 0.5rem;
+    flex-shrink: 0;
 }
 
-/* Lightbox */
+/* ── Lightbox ──────────────────────────────────────────── */
 #lightbox {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.92);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
-    cursor: pointer;
+    cursor: default;
 }
+#lightbox.hidden { display: none; }
 
-#lightbox.hidden {
-    display: none;
-}
-
-#lightbox-img {
-    max-width: 90vw;
+.lightbox-card {
+    display: flex;
+    background: var(--color-surface);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 95vw;
     max-height: 90vh;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.lightbox-image-wrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    position: relative;
+}
+
+.lightbox-image-wrap img {
+    max-width: 100%;
+    max-height: 85vh;
     object-fit: contain;
-    border-radius: 4px;
+}
+
+.lightbox-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem 0.75rem;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: #ccc;
+    font-size: 0.8rem;
+}
+
+.lightbox-map-wrap {
+    width: 320px;
+    min-height: 300px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+#lightbox-map {
+    width: 320px;
+    height: 100%;
+    min-height: 300px;
+}
+
+.lightbox-map-wrap .maplibregl-map {
+    width: 100%;
+    height: 100%;
 }
 
 #lightbox-close {
     position: fixed;
     top: 1rem;
     right: 1.5rem;
-    background: none;
+    background: rgba(255,255,255,0.1);
     border: none;
     color: #fff;
     font-size: 2rem;
     cursor: pointer;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2001;
+    line-height: 1;
+}
+#lightbox-close:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Mobile lightbox ────────────────────────────────────── */
+@media (max-width: 768px) {
+    .lightbox-card {
+        flex-direction: column;
+        max-width: 98vw;
+    }
+    .lightbox-map-wrap {
+        width: 100%;
+        height: 220px;
+        min-height: 0;
+    }
+    .lightbox-image-wrap img {
+        max-height: 50vh;
+    }
+}
+#video-player {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2001;
+    cursor: pointer;
+}
+#video-player.hidden { display: none; }
+.video-close-btn {
+    position: fixed;
+    top: 1rem;
+    right: 1.5rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2002;
+    line-height: 1;
+}
+.video-close-btn:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Mobile ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .trip-detail { padding: 1rem 1rem 2rem; }
+    .trip-hero-top { flex-direction: column; }
+    .trip-hero h1 { font-size: 1.5rem; }
+    .trip-stats { gap: 0.3rem 1rem; font-size: 0.8rem; }
+    #detail-map { height: 50vh; min-height: 280px; }
+    .gallery { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.5rem; }
+    .detail-section { padding: 1rem 0.75rem; }
+    .journey-timeline { padding-left: 24px; }
+    .journey-block::before { left: -21px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="trip-detail">
-    <h1>{{ trip.title }}</h1>
-    <div class="trip-meta">
-        {% if trip.year %}{{ trip.year }}{% endif %}
-        {% for t in trip.transport_types %}
-        <span class="transport-badge transport-{{ t }}">
-            {% if t == "train" %}{% t 'Zug' 'Train' 'Juna' %}{% elif t == "car" %}{% t 'Auto' 'Car / Bus' 'Auto / Bussi' %}{% elif t == "plane" %}{% t 'Flug' 'Plane' 'Lentokone' %}{% elif t == "ferry" %}{% t 'Fähre' 'Ferry' 'Lautta' %}{% endif %}
-        </span>
-        {% endfor %}
+    <div class="trip-hero">
+        <div class="trip-hero-top">
+            <div class="trip-hero-title">
+                <h1>{{ trip.title }}</h1>
+                {% if trip.subtitle %}<div class="trip-subtitle">{{ trip.subtitle }}</div>{% endif %}
+            </div>
+            <div class="trip-actions">
+                <a href="{% url 'diary:map' %}" class="btn btn-secondary">← {% t 'Zur Karte' 'Back to Map' 'Kartalle' %}</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-primary">{% t 'Bearbeiten' 'Edit' 'Muokkaa' %}</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="trip-stats">
+            {% if stats.total_distance_km %}<span>{% t 'Strecke' 'Distance' 'Matka' %}: <strong>{{ stats.total_distance_km }} km</strong></span>{% endif %}
+            {% if stats.duration_days %}<span>{% t 'Dauer' 'Duration' 'Kesto' %}: <strong>{{ stats.duration_days }} {% t 'Tage' 'days' 'pv' %}</strong></span>{% endif %}
+            {% if stats.country_count %}<span>{% t 'Länder' 'Countries' 'Maita' %}: <strong>{{ stats.country_count }}</strong></span>{% endif %}
+            {% if stats.photo_count %}<span>{% t 'Fotos' 'Photos' 'Kuvia' %}: <strong>{{ stats.photo_count }}</strong></span>{% endif %}
+        </div>
+
+        <div class="trip-meta-row">
+            {% if trip.year %}<span style="color:var(--color-text-muted);font-size:0.85rem">{{ trip.year }}</span>{% endif %}
+            {% for t in trip.transport_types %}
+            <span class="transport-badge transport-{{ t }}">
+                {% if t == "train" %}🚆 {% t 'Zug' 'Train' 'Juna' %}
+                {% elif t == "car" %}🚗 {% t 'Auto' 'Car / Bus' 'Auto / Bussi' %}
+                {% elif t == "plane" %}✈️ {% t 'Flug' 'Plane' 'Lentokone' %}
+                {% elif t == "ferry" %}⛴ {% t 'Fähre' 'Ferry' 'Lautta' %}
+                {% endif %}
+            </span>
+            {% endfor %}
+        </div>
     </div>
 
     {% if trip.description %}
     <p class="trip-description">{{ trip.description }}</p>
     {% endif %}
+    {% if date_range %}
+    <p class="trip-date-range">{{ date_range }}</p>
+    {% endif %}
 
     <div class="detail-section">
         <h2>{% t 'Route' 'Route' 'Reitti' %}</h2>
         <div id="detail-map"></div>
-    </div>
-
-    {% if journey_info %}
-    <div class="detail-section">
-        <h2>{% t 'Reisedetails' 'Trip Details' 'Matkan tiedot' %}</h2>
-        {% for j in journey_info %}
-        <div class="journey-block">
-            <h3>{{ j.label }}</h3>
-            <div class="journey-date">{{ j.date|date:"d.m.Y" }}</div>
-            {% for seg in j.segments %}
-            <div class="segment-info">
-                <span class="transport-badge transport-{{ seg.type_key }}">{{ seg.type_label }}</span>
-                <span>{{ seg.route_desc }}</span>
+        {% if journey_info %}
+        <div class="journey-wrapper">
+        <div class="journey-compact" id="journey-compact">
+            {% for j in journey_info %}
+            <div class="journey-compact-row">
+                <span class="journey-compact-label">{{ j.label }}:</span>
+                {% for seg in j.segments %}
+                <span class="transport-badge transport-{{ seg.type_key }}">
+                    {% if seg.type_key == "train" %}🚆{% elif seg.type_key == "car" %}🚗{% elif seg.type_key == "plane" %}✈️{% elif seg.type_key == "ferry" %}⛴{% endif %}
+                </span>
+                <span class="journey-compact-route">{{ seg.route_desc }}</span>
+                {% if not forloop.last %}<span class="journey-compact-arrow">→</span>{% endif %}
+                {% endfor %}
             </div>
             {% endfor %}
         </div>
-        {% endfor %}
+        <div class="journey-expanded hidden" id="journey-expanded">
+            <div class="journey-timeline">
+                {% for j in journey_info %}
+                <div class="journey-block">
+                    <h3>{{ j.label }}</h3>
+                    <div class="journey-date">{{ j.date|date:"d.m.Y" }}</div>
+                    {% for seg in j.segments %}
+                    <div class="segment-info">
+                        <span class="transport-badge transport-{{ seg.type_key }}">
+                            {% if seg.type_key == "train" %}🚆 {% elif seg.type_key == "car" %}🚗 {% elif seg.type_key == "plane" %}✈️ {% elif seg.type_key == "ferry" %}⛴ {% endif %}
+                            {{ seg.type_label }}
+                        </span>
+                        <span>{{ seg.route_desc }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <button type="button" class="journey-expand-btn" onclick="toggleJourneyExpand()" id="journey-expand-btn">▸ {% t 'Details' 'Details' 'Tiedot' %}</button>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 
     {% if images %}
     <div class="detail-section">
         <h2>{% t 'Bilder' 'Photos' 'Kuvat' %} ({{ images|length }})</h2>
         <div class="gallery">
             {% for img in images %}
-            <div class="gallery-item" onclick="openLightbox('{{ img.image.url }}')">
+            <div class="gallery-item" data-img-url="{{ img.image.url }}" data-lat="{% if img.location %}{{ img.location.y|stringformat:'.6f' }}{% endif %}" data-lng="{% if img.location %}{{ img.location.x|stringformat:'.6f' }}{% endif %}" data-caption="{{ img.caption|default:'' }}" onclick="openLightbox(this)">
                 <img src="{% if img.thumbnail %}{{ img.thumbnail.url }}{% else %}{{ img.image.url }}{% endif %}" alt="{{ img.caption }}" loading="lazy">
                 {% if img.caption %}
                 <div class="gallery-caption">{{ img.caption }}</div>
@@ -248,8 +609,8 @@
         <h2>Videos ({{ videos|length }})</h2>
         <div class="gallery">
             {% for vid in videos %}
-            <div class="gallery-item" onclick="openVideoPlayer('{{ vid.video.url }}')" style="display:flex; align-items:center; justify-content:center; background:#0d1b2a; cursor:pointer;">
-                <span style="font-size:3rem; color:#29B6F6;">&#9654;</span>
+            <div class="gallery-item video-card" onclick="openVideoPlayer('{{ vid.video.url }}')">
+                <span class="play-icon">▶</span>
                 {% if vid.caption %}
                 <div class="gallery-caption">{{ vid.caption }}</div>
                 {% endif %}
@@ -259,22 +620,24 @@
     </div>
     {% endif %}
 
-    <div class="trip-actions">
-        <a href="{% url 'diary:map' %}" class="btn btn-secondary">{% t 'Zur Karte' 'Back to Map' 'Kartalle' %}</a>
-        {% if user.is_authenticated %}
-        <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-primary">Bearbeiten</a>
-        {% endif %}
-    </div>
 </div>
 
-<div id="lightbox" class="hidden" onclick="closeLightbox()">
-    <img id="lightbox-img" src="" alt="" />
-    <button id="lightbox-close" onclick="closeLightbox()">&times;</button>
+<div id="lightbox" class="hidden">
+    <div class="lightbox-card">
+        <div class="lightbox-image-wrap">
+            <img id="lightbox-img" src="" alt="" />
+            <div id="lightbox-caption" class="lightbox-caption" style="display:none"></div>
+        </div>
+        <div class="lightbox-map-wrap" id="lightbox-map-wrap" style="display:none">
+            <div id="lightbox-map"></div>
+        </div>
+    </div>
+    <button id="lightbox-close">&times;</button>
 </div>
 
 <div id="video-player" class="hidden" onclick="closeVideoPlayer()">
     <video id="video-player-el" controls style="max-width:90vw; max-height:85vh; border-radius:8px;"></video>
-    <button id="lightbox-close" onclick="closeVideoPlayer()">&times;</button>
+    <button class="video-close-btn" onclick="closeVideoPlayer()">&times;</button>
 </div>
 {% endblock %}
 
@@ -286,15 +649,22 @@
 
     var ROUTE_COLORS = {
         train: "#1565C0",
-        car:   "#757575",
+        car:   "#9c27b0",
         plane: "#D32F2F",
         ferry: "#2E7D32",
     };
 
     var ROUTE_DASH = {
-        train: [10, 5],
+        train: [8, 3],
         plane: [5, 10],
         ferry: [8, 8],
+    };
+
+    var typeLabels = {
+        train: "{% t 'Zug' 'Train' 'Juna' %}",
+        car: "{% t 'Auto' 'Car' 'Auto' %}",
+        plane: "{% t 'Flug' 'Plane' 'Lento' %}",
+        ferry: "{% t 'Fähre' 'Ferry' 'Lautta' %}",
     };
 
     var routeGeoJSON = {{ route_geojson|safe }};
@@ -347,6 +717,26 @@
                 type: "line",
                 source: "routes-" + type,
                 paint: paint,
+            });
+
+            // Add transport label along the route line
+            var label = typeLabels[type] || type;
+            map.addLayer({
+                id: "route-" + type + "-label",
+                type: "symbol",
+                source: "routes-" + type,
+                layout: {
+                    "symbol-placement": "line",
+                    "text-field": label,
+                    "text-size": 10,
+                    "text-letter-spacing": 0.12,
+                    "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
+                },
+                paint: {
+                    "text-color": ROUTE_COLORS[type] || "#999",
+                    "text-halo-color": "rgba(0,0,0,0.7)",
+                    "text-halo-width": 2,
+                },
             });
 
             // Extend bounds from route coordinates
@@ -425,8 +815,9 @@
             });
             map.on("click", "photo-dots", function(e) {
                 var props = e.features[0].properties;
+                var coords = e.features[0].geometry.coordinates;
                 var html = '<div style="text-align:center">'
-                    + '<img src="' + props.thumb + '" style="max-width:180px;border-radius:4px;cursor:pointer" onclick="openLightbox(\'' + props.url + '\')">'
+                    + '<img src="' + props.thumb + '" style="max-width:180px;border-radius:4px;cursor:pointer" onclick="openLightbox(\'' + props.url + '\',' + coords[1] + ',' + coords[0] + ')">'
                     + (props.caption ? '<p style="margin:0.25rem 0 0;font-size:0.8rem;color:var(--color-text-muted)">' + props.caption + '</p>' : '')
                     + '</div>';
                 new maplibregl.Popup({ offset: 10, maxWidth: "220px" })
@@ -475,14 +866,76 @@
         }
     });
 
-    window.openLightbox = function(url) {
+    var _lightboxMap = null;
+    var _lightboxMarker = null;
+
+    function _initLightboxMap() {
+        if (_lightboxMap) return;
+        _lightboxMap = new maplibregl.Map({
+            container: "lightbox-map",
+            style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+            center: [10.4515, 51.1657],
+            zoom: 12,
+            attributionControl: false,
+        });
+        _lightboxMap.on("style.load", function () {
+            _lightboxMap.setProjection({ type: "globe" });
+            try { _lightboxMap.setSky({ "atmosphere-blend": 0.85 }); } catch (e) {}
+        });
+    }
+
+    window.openLightbox = function(el) {
+        // Support both element-ref and legacy (url, lat, lng) calls
+        var url, lat, lng, caption;
+        if (typeof el === "string") {
+            // Legacy call from map popup: openLightbox(url)
+            url = el;
+            lat = arguments[1];
+            lng = arguments[2];
+            caption = arguments[3];
+        } else {
+            url = el.dataset.imgUrl;
+            lat = el.dataset.lat ? parseFloat(el.dataset.lat) : null;
+            lng = el.dataset.lng ? parseFloat(el.dataset.lng) : null;
+            caption = el.dataset.caption || "";
+        }
+
         document.getElementById("lightbox-img").src = url;
-        document.getElementById("lightbox").classList.remove("hidden");
+
+        var capEl = document.getElementById("lightbox-caption");
+        if (caption && caption !== "None") {
+            capEl.textContent = caption;
+            capEl.style.display = "";
+        } else {
+            capEl.style.display = "none";
+        }
+
+        var mapWrap = document.getElementById("lightbox-map-wrap");
+        if (lat && lng) {
+            mapWrap.style.display = "";
+            // Show lightbox BEFORE creating the map so the container has real dimensions
+            document.getElementById("lightbox").classList.remove("hidden");
+            _initLightboxMap();
+            // Wait for map to be ready, then update
+            setTimeout(function () {
+                if (_lightboxMarker) _lightboxMarker.remove();
+                _lightboxMarker = new maplibregl.Marker({ color: "#FF9800" })
+                    .setLngLat([lng, lat])
+                    .addTo(_lightboxMap);
+                _lightboxMap.easeTo({ center: [lng, lat], zoom: 13, duration: 600 });
+                _lightboxMap.resize();
+            }, 150);
+        } else {
+            mapWrap.style.display = "none";
+            document.getElementById("lightbox").classList.remove("hidden");
+        }
     };
 
     window.closeLightbox = function() {
         document.getElementById("lightbox").classList.add("hidden");
         document.getElementById("lightbox-img").src = "";
+        var mapWrap = document.getElementById("lightbox-map-wrap");
+        mapWrap.style.display = "none";
     };
 
     window.openVideoPlayer = function(url) {
@@ -497,6 +950,27 @@
         vid.pause();
         vid.src = "";
         document.getElementById("video-player").classList.add("hidden");
+    };
+
+    document.getElementById("lightbox-close").addEventListener("click", closeLightbox);
+    document.getElementById("lightbox").addEventListener("click", function (e) {
+        if (e.target === this) closeLightbox();
+    });
+
+    window.toggleJourneyExpand = function() {
+        var compact = document.getElementById("journey-compact");
+        var expanded = document.getElementById("journey-expanded");
+        var btn = document.getElementById("journey-expand-btn");
+        if (expanded.classList.contains("hidden")) {
+            expanded.classList.remove("hidden");
+            compact.classList.add("hidden");
+            btn.textContent = "▾ " + "{% t 'Weniger' 'Less' 'Vähemmän' %}";
+        } else {
+            expanded.classList.add("hidden");
+            compact.classList.remove("hidden");
+            btn.textContent = "▸ " + "{% t 'Details' 'Details' 'Tiedot' %}";
+        }
+        map.resize();
     };
 
     document.addEventListener("keydown", function(e) {

@@ -127,8 +127,34 @@ a:hover {
     gap: 0.5rem;
 }
 
+.nav-admin-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    padding: 0.535rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+    letter-spacing: 0.02em;
+    line-height: 1;
+}
+
+.nav-admin-link:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: rgba(108,155,207,0.08);
+}
+
+.nav-admin-link.active {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: rgba(108,155,207,0.12);
+}
+
 .nav-btn-group {
-    display: flex;
+    display: inline-flex;
     align-items: stretch;
     border: 1px solid var(--color-border);
     border-radius: 6px;

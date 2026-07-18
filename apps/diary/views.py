@@ -94,8 +94,94 @@ def trip_detail(request, pk):
                 "segments": segs,
             })
 
+    # Compute stats for the hero header
+    from .services.stats import _segment_length_km
+    total_km = 0.0
+    for seg in segments:
+        if seg.route_geometry:
+            total_km += _segment_length_km(seg.route_geometry)
+
+    duration_days = None
+    if trip.outbound_journey and trip.outbound_journey.travel_date:
+        start = trip.outbound_journey.travel_date
+        end = None
+        if trip.return_journey and trip.return_journey.travel_date:
+            end = trip.return_journey.travel_date
+        if end and end >= start:
+            duration_days = (end - start).days + 1
+
+    stats = {
+        "total_distance_km": round(total_km) if total_km > 0 else None,
+        "duration_days": duration_days,
+        "photo_count": images.count(),
+        "country_count": None,  # would need geo lookup; skip for now
+    }
+
+    # Compute date range string for display and OG description
+    date_range_str = None
+    if trip.outbound_journey and trip.outbound_journey.travel_date:
+        start = trip.outbound_journey.travel_date
+        if trip.return_journey and trip.return_journey.travel_date:
+            end = trip.return_journey.travel_date
+            if end >= start:
+                date_range_str = f"{start.strftime('%d.%m.')} – {end.strftime('%d.%m.%Y')}"
+            else:
+                date_range_str = start.strftime('%d.%m.%Y')
+        else:
+            date_range_str = start.strftime('%d.%m.%Y')
+    elif trip.is_event and trip.event_date:
+        date_range_str = trip.event_date.strftime('%d.%m.%Y')
+
+    # Build og_description (always include date_range, even without description)
+    og_description = None
+    if trip.description:
+        og_description = trip.description[:180]
+        if date_range_str:
+            og_description += f" · {date_range_str}"
+    elif date_range_str:
+        og_description = date_range_str
+
+    # Build og_images list: map preview first, then embed_images, then fallback
+    og_images = []
+
+    # Add map preview if it exists
+    import os
+    from django.conf import settings
+    preview_path = f"trips/previews/trip_preview_{trip.pk}.png"
+    if os.path.isfile(os.path.join(settings.MEDIA_ROOT, preview_path)):
+        og_images.append({
+            "url": settings.MEDIA_URL + preview_path,
+            "thumb": settings.MEDIA_URL + preview_path,
+            "width": 630,
+            "height": 630,
+        })
+
+    # Add manually selected embed images
+    embed_qs = trip.embed_images.all()
+    for img in embed_qs:
+        og_images.append({
+            "url": img.image.url,
+            "thumb": img.thumbnail.url if img.thumbnail else img.image.url,
+            "width": 630,
+            "height": 630,
+        })
+
+    # If no embed images selected, use up to 3 random images as fallback
+    if len(og_images) <= 1:  # only map preview, no manual images
+        import random
+        img_list = list(images)
+        random.shuffle(img_list)
+        for img in img_list[:3]:
+            og_images.append({
+                "url": img.image.url,
+                "thumb": img.thumbnail.url if img.thumbnail else img.image.url,
+                "width": 630,
+                "height": 630,
+            })
+
     return render(request, "diary/trip_detail.html", {
         "trip": trip,
+        "stats": stats,
         "images": images,
         "videos": videos,
         "route_geojson": json.dumps({"type": "FeatureCollection", "features": route_data}),
@@ -103,6 +189,9 @@ def trip_detail(request, pk):
         "video_data": json.dumps(video_data),
         "waypoint_data": json.dumps(waypoint_data),
         "journey_info": journey_info,
+        "og_images": og_images,
+        "og_description": og_description,
+        "date_range": date_range_str,
     })
 
 
@@ -110,6 +199,8 @@ def trip_detail(request, pk):
 def dashboard(request):
     trips = Trip.objects.select_related(
         "outbound_journey", "return_journey"
+    ).prefetch_related(
+        "outbound_journey__segments", "return_journey__segments"
     ).all()
     return render(request, "diary/dashboard.html", {"trips": trips})
 
@@ -278,6 +369,23 @@ def _save_trip(request, trip=None):
         for vid_file in request.FILES.getlist("videos"):
             TripVideo.objects.create(trip=trip_obj, video=vid_file)
 
+        # Handle embed images selection
+        embed_image_ids = request.POST.getlist("embed_images")
+        if embed_image_ids:
+            # Only keep at most 3 embed images that belong to this trip
+            valid_ids = TripImage.objects.filter(
+                id__in=embed_image_ids, trip=trip_obj
+            ).values_list("id", flat=True)[:3]
+            trip_obj.embed_images.set(valid_ids)
+
+        # Generate static map preview for OG/Discord (best-effort)
+        if not is_event:
+            try:
+                from .services.map_preview import generate_trip_preview
+                generate_trip_preview(trip_obj)
+            except Exception:
+                pass
+
         return JsonResponse({"success": True, "redirect": "/diary/manage/"})
 
     except Exception as e:
@@ -326,6 +434,7 @@ def _trip_to_json(trip):
         "event_date": trip.event_date.strftime("%d.%m.%Y") if trip.event_date else "",
         "outbound_journey": None,
         "return_journey": None,
+        "embed_image_ids": list(trip.embed_images.values_list("id", flat=True)),
     }
 
     for key, journey in [

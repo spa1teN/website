@@ -65,6 +65,12 @@ class Trip(models.Model):
         blank=True,
         related_name="return_for_trips",
     )
+    embed_images = models.ManyToManyField(
+        "TripImage",
+        blank=True,
+        related_name="embed_for_trips",
+        help_text="Bilder die im Discord/OG-Embed angezeigt werden (max. 3)",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -91,6 +97,32 @@ class Trip(models.Model):
                     journey.segments.values_list("transport_type", flat=True)
                 )
         return types
+
+    @property
+    def outbound_distance_km(self):
+        from .services.stats import _segment_length_km
+
+        if not self.outbound_journey:
+            return None
+        total = sum(
+            _segment_length_km(seg.route_geometry)
+            for seg in self.outbound_journey.segments.all()
+            if seg.route_geometry
+        )
+        return round(total) if total > 0 else None
+
+    @property
+    def return_distance_km(self):
+        from .services.stats import _segment_length_km
+
+        if not self.return_journey:
+            return None
+        total = sum(
+            _segment_length_km(seg.route_geometry)
+            for seg in self.return_journey.segments.all()
+            if seg.route_geometry
+        )
+        return round(total) if total > 0 else None
 
 
 class TripImage(models.Model):

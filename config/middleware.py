@@ -23,3 +23,19 @@ class NginxRemoteUserMiddleware:
         if remote:
             request.META["REMOTE_USER"] = remote
         return self.get_response(request)
+
+
+from django.contrib.auth.middleware import RemoteUserMiddleware as _BaseRemoteUserMiddleware
+
+
+class PersistentRemoteUserMiddleware(_BaseRemoteUserMiddleware):
+    """Like RemoteUserMiddleware but does NOT log out when the header is absent.
+
+    Django's default ``RemoteUserMiddleware.force_logout_if_no_header = True``
+    removes the authenticated user on every request that lacks the
+    ``REMOTE_USER`` header — i.e. on all public pages.  This subclass keeps
+    the session alive so admin buttons are visible everywhere once the user has
+    authenticated via nginx basic-auth on a protected path.
+    """
+
+    force_logout_if_no_header = False

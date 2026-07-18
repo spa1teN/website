@@ -104,13 +104,52 @@ class TripListSerializer(serializers.ModelSerializer):
     lng = serializers.SerializerMethodField()
     travel_date = serializers.SerializerMethodField()
     destination_country = serializers.SerializerMethodField()
+    total_distance_km = serializers.SerializerMethodField()
+    photo_count = serializers.SerializerMethodField()
+    duration_days = serializers.SerializerMethodField()
+    country_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
         fields = [
             "id", "title", "subtitle", "year", "transport_types", "lat", "lng",
             "travel_date", "is_event", "destination_country",
+            "total_distance_km", "photo_count", "duration_days", "country_count",
         ]
+
+    def get_total_distance_km(self, obj):
+        from .services.stats import _segment_length_km
+
+        total = 0.0
+        for journey in (obj.outbound_journey, obj.return_journey):
+            if not journey:
+                continue
+            for seg in journey.segments.all():
+                if seg.route_geometry:
+                    total += _segment_length_km(seg.route_geometry)
+        return round(total)
+
+    def get_photo_count(self, obj):
+        if hasattr(obj, "_images_count"):
+            return obj._images_count
+        return obj.images.count()
+
+    def get_duration_days(self, obj):
+        start_date = end_date = None
+        if obj.outbound_journey and obj.outbound_journey.travel_date:
+            start_date = obj.outbound_journey.travel_date
+        elif obj.event_date:
+            start_date = obj.event_date
+        if obj.return_journey and obj.return_journey.travel_date:
+            end_date = obj.return_journey.travel_date
+        if start_date and end_date and end_date >= start_date:
+            return (end_date - start_date).days + 1
+        return None
+
+    def get_country_count(self, obj):
+        if hasattr(obj, "_country_count"):
+            return obj._country_count
+        return None
 
     def get_year(self, obj):
         return obj.year
@@ -146,7 +185,8 @@ class TripListSerializer(serializers.ModelSerializer):
         return None
 
     def _get_first_coords(self, obj):
-        """Get coordinates from the destination (last waypoint of last outbound segment)."""
+        """Get coordinates from the destination (last waypoint of last outbound
+        segment). For events (no journeys), fall back to the first geotagged image."""
         if obj.outbound_journey:
             segments = list(obj.outbound_journey.segments.all())
             if segments:
@@ -155,4 +195,8 @@ class TripListSerializer(serializers.ModelSerializer):
                     wp = last_seg.waypoints[-1]
                     if wp.get("lat") and wp.get("lng"):
                         return {"lat": wp["lat"], "lng": wp["lng"]}
+        # Fallback for events: use first image with GPS data
+        img = obj.images.exclude(location__isnull=True).first()
+        if img:
+            return {"lat": img.location.y, "lng": img.location.x}
         return None

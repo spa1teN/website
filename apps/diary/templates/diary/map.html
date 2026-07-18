@@ -11,7 +11,10 @@
 
 {% block content %}
 <div id="map-page">
+    <button type="button" id="filter-toggle-btn" class="filter-toggle-btn" aria-label="{% t 'Filter einblenden' 'Show filters' 'Näytä suodattimet' %}"><i class="fa-solid fa-sliders"></i></button>
+
     <div id="filter-panel">
+        <div id="filter-content">
         <div class="map-mode-switch" role="tablist">
             <button type="button" class="map-mode-btn active" data-mode="detailed">{% t 'Reisen' 'Trips' 'Matkat' %}</button>
             <button type="button" class="map-mode-btn" data-mode="visited">{% t 'Besuchte Länder' 'Visited Countries' 'Vieraillut maat' %}</button>
@@ -82,10 +85,12 @@
             <h4>{% t 'Einträge' 'Entries' 'Merkinnät' %}</h4>
             <div id="trip-list"></div>
         </div>
-    </div>
+        </div>{# /filter-content #}
+    </div>{# /filter-panel #}
 
     <div id="map-container">
         <div id="map"></div>
+        <button id="trip-back-btn" class="hidden">&larr; <span id="trip-back-label">{% t 'Alle Reisen' 'All Trips' 'Kaikki matkat' %}</span></button>
         <button id="states-back-btn" class="hidden">&larr; <span id="states-back-label">{% t 'Alle Länder' 'All countries' 'Kaikki maat' %}</span></button>
         {% if user.is_authenticated %}
         <a href="{% url 'diary:dashboard' %}" id="manage-link" class="btn btn-primary btn-sm">{% t 'Verwalten' 'Manage' 'Hallinnoi' %}</a>

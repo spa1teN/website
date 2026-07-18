@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Caspar Sadenius{% endblock %}</title>
+    {% load static %}
+    <link rel="icon" type="image/png" href="{% static 'core/favicon.png' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     {% load static %}
     <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
@@ -25,19 +27,13 @@
                     <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>{% t 'Reisetagebuch' 'Travel Diary' 'Matkapäiväkirja' %}</a></li>
                 </ul>
                 <ul class="nav-auth">
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'core:admin_index' %}" class="nav-admin-link{% if request.resolver_match.url_name == 'admin_index' or request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'trip_create' or request.resolver_match.url_name == 'trip_edit' or request.resolver_match.url_name == 'trip_delete' %} active{% endif %}">Admin</a></li>
+                    {% endif %}
                     <li class="nav-btn-group">
                         {% for lang_option in OTHER_LANGS %}
                         <a href="{% url 'core:set_language' lang_option.code %}" class="nav-btn-group-item lang-btn" aria-label="{{ lang_option.aria }}" title="{{ lang_option.label }}">{{ lang_option.flag }}</a>
                         {% endfor %}
-                        <span class="nav-btn-group-sep"></span>
-                        {% if user.is_authenticated %}
-                        <form method="post" action="{% url 'logout' %}" class="logout-form">
-                            {% csrf_token %}
-                            <button type="submit" class="nav-btn-group-item">Logout</button>
-                        </form>
-                        {% else %}
-                        <a href="{% url 'login' %}" class="nav-btn-group-item">Login</a>
-                        {% endif %}
                     </li>
                 </ul>
             </div>

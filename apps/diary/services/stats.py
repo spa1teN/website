@@ -171,7 +171,7 @@ def _matching_trip_ids(years=None, transports=None, types=None, countries=None):
                 continue
         if transports:
             trip_transport_types = t.transport_types
-            if trip_transport_types and not (trip_transport_types & transports):
+            if not trip_transport_types or not (trip_transport_types & transports):
                 continue
         if countries:
             country = resolve_trip_destination_country(t)
@@ -191,6 +191,20 @@ def _build_geo_index(trip_ids=None):
         key = (country["name"], country["name_de"], country["iso_a2"])
         trip_countries.setdefault(trip_id, set()).add(key)
         all_countries[key] = True
+
+    # Also include destination countries (resolved from journey waypoints),
+    # so countries are counted even without photos/videos/stops resolving there.
+    from ..models import Trip
+
+    trips = Trip.objects.all()
+    if trip_ids is not None:
+        trips = trips.filter(id__in=trip_ids)
+    for t in trips:
+        country = resolve_trip_destination_country(t)
+        if country:
+            key = (country["name"], country["name_de"], country["iso_a2"])
+            all_countries[key] = True
+            trip_countries.setdefault(t.id, set()).add(key)
 
     return {
         "trip_countries": {tid: sorted(v) for tid, v in trip_countries.items()},

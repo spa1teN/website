@@ -3,7 +3,11 @@
 {% block title %}Reisen verwalten - Caspar Sadenius{% endblock %}
 
 {% block content %}
-<div class="page-container">
+<div class="admin-layout">
+    {% include "core/admin_sidebar.html" %}
+    <div class="admin-content">
+
+<div class="page-container" style="max-width:none;padding:0">
     <div class="dashboard-header">
         <h1>Reisen verwalten</h1>
         <div style="display:flex;gap:0.5rem">
@@ -13,14 +17,16 @@
     </div>
 
     {% if trips %}
+    <div class="table-wrapper">
     <table class="data-table">
         <thead>
             <tr>
                 <th>Titel</th>
                 <th>Jahr</th>
                 <th>Transportmittel</th>
+                <th>Strecke (km)</th>
                 <th>Bilder</th>
-                <th>Aktionen</th>
+                <th class="actions-col">Aktionen</th>
             </tr>
         </thead>
         <tbody>
@@ -35,8 +41,11 @@
                     </span>
                     {% endfor %}
                 </td>
+                <td class="dist-col">
+                    {{ trip.outbound_distance_km|default:"—" }}{% if trip.return_distance_km %} / {{ trip.return_distance_km }}{% endif %}
+                </td>
                 <td>{{ trip.images.count }}</td>
-                <td>
+                <td class="actions-col">
                     <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-secondary btn-sm">Bearbeiten</a>
                     <a href="{% url 'diary:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">Löschen</a>
                 </td>
@@ -44,10 +53,88 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
     <p class="empty-state">Noch keine Reisen vorhanden. Erstelle deine erste Reise!</p>
     {% endif %}
 </div>
+
+    </div>{# admin-content #}
+</div>{# admin-layout #}
+
+<style>
+.admin-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - var(--nav-height));
+}
+.admin-sidebar {
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 1.5rem 1rem;
+}
+.admin-sidebar h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin: 0 0 0.75rem;
+    padding: 0 0.5rem;
+}
+.admin-submenu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.admin-submenu-item {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    transition: background 0.15s, color 0.15s;
+}
+.admin-submenu-item:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+}
+.admin-submenu-item.active {
+    background: rgba(108,155,207,0.15);
+    color: var(--color-accent);
+    font-weight: 600;
+}
+.admin-content {
+    padding: 2rem;
+}
+@media (max-width: 768px) {
+    .admin-layout {
+        grid-template-columns: 1fr;
+    }
+    .admin-sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        padding: 0.75rem;
+    }
+    .admin-submenu {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+    .admin-content {
+        padding: 1rem 0.5rem;
+    }
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .data-table th,
+    .data-table td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+}
+</style>
 
 <style>
 .dashboard-header {
@@ -55,11 +142,19 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 600px;
 }
 
 .data-table th,
@@ -67,6 +162,7 @@
     padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
 }
 
 .data-table th {
@@ -74,10 +170,20 @@
     text-transform: uppercase;
     color: var(--color-text-muted);
     letter-spacing: 0.05em;
+    white-space: nowrap;
 }
 
 .data-table tr:hover {
     background: var(--color-surface);
+}
+
+.data-table .dist-col {
+    font-variant-numeric: tabular-nums;
+}
+
+.data-table .actions-col {
+    text-align: right;
+    white-space: nowrap;
 }
 
 .transport-badge {
@@ -89,7 +195,7 @@
 }
 
 .transport-train { background: rgba(21,101,192,0.2); color: #64B5F6; }
-.transport-car { background: rgba(117,117,117,0.2); color: #BDBDBD; }
+.transport-car { background: rgba(156,39,176,0.2); color: #CE93D8; }
 .transport-plane { background: rgba(211,47,47,0.2); color: #EF9A9A; }
 .transport-ferry { background: rgba(46,125,50,0.2); color: #81C784; }
 

@@ -241,11 +241,11 @@
 
     function renderImages(geojson) {
         clearImageMarkers();
-        if (map.getLayer("images-layer")) map.removeLayer("images-layer");
-        if (map.getSource("images")) map.removeSource("images");
 
         if (!geojson || !geojson.features || geojson.features.length === 0) return;
 
+        // Show ALL images as DOM thumbnails immediately (no clustering,
+        // no zoom threshold). Offsets spread overlapping markers apart.
         var offsets = computeImageOffsets(geojson.features);
 
         geojson.features.forEach(function (feature, i) {
@@ -275,7 +275,7 @@
 
             el.addEventListener("click", function (e) {
                 e.stopPropagation();
-                openLightbox(imgUrl);
+                window.openLightbox(imgUrl);
             });
 
             var marker = new maplibregl.Marker({ element: el, offset: offsets[i] })
@@ -289,6 +289,12 @@
     function clearImageMarkers() {
         imageMarkers.forEach(function (m) { m.remove(); });
         imageMarkers = [];
+        // Clean up any stale cluster layer/source artifacts (from old code)
+        var layers = ["images-layer", "images-cluster", "images-cluster-count", "images-unclustered"];
+        layers.forEach(function (id) {
+            if (map.getLayer(id)) map.removeLayer(id);
+        });
+        if (map.getSource("images")) map.removeSource("images");
     }
 
     function renderVideos(geojson) {
@@ -778,6 +784,11 @@
         _updateTransportSectionVisibility();
     }
 
+    var tripBackBtn = document.getElementById("trip-back-btn");
+    if (tripBackBtn) {
+        tripBackBtn.addEventListener("click", function () { selectTrip(""); });
+    }
+
     var statesBackBtn = document.getElementById("states-back-btn");
     if (statesBackBtn) {
         statesBackBtn.addEventListener("click", hideStatesView);
@@ -798,6 +809,14 @@
                 transportLabel(t) + '</span>';
         }).join("");
 
+        var statsHtml = "";
+        var stats = [];
+        if (trip.total_distance_km) stats.push('<span>' + tr('Strecke', 'Distance', 'Matka') + ': <strong>' + trip.total_distance_km + ' km</strong></span>');
+        if (trip.duration_days) stats.push('<span>' + tr('Dauer', 'Duration', 'Kesto') + ': <strong>' + trip.duration_days + ' ' + tr('Tage', 'days', 'pv') + '</strong></span>');
+        if (trip.country_count) stats.push('<span>' + tr('Länder', 'Countries', 'Maita') + ': <strong>' + trip.country_count + '</strong></span>');
+        if (trip.photo_count) stats.push('<span>' + tr('Fotos', 'Photos', 'Kuvia') + ': <strong>' + trip.photo_count + '</strong></span>');
+        if (stats.length) statsHtml = '<div class="trip-info-stats">' + stats.join(' &middot; ') + '</div>';
+
         infoEl.innerHTML =
             '<h4>' + trip.title + '</h4>' +
             (trip.subtitle ? '<div class="trip-info-subtitle">' + trip.subtitle + '</div>' : '') +
@@ -808,6 +827,7 @@
                   transportBadges +
                   '</div>'
                 : '') +
+            statsHtml +
             '<a href="/diary/trip/' + trip.id + '/" class="trip-info-link">Details &rarr;</a>';
 
         infoEl.classList.remove("hidden");
@@ -826,11 +846,16 @@
 
         if (window.matchMedia("(max-width: 768px)").matches) {
             document.getElementById("filter-panel").classList.remove("filter-open");
+            var ftb = document.getElementById("filter-toggle-btn");
+            if (ftb) ftb.classList.remove("filter-open");
         }
 
         document.querySelectorAll(".trip-item").forEach(function (el) {
             el.classList.toggle("active", el.dataset.tripId === String(tripId));
         });
+
+        var tripBackBtn = document.getElementById("trip-back-btn");
+        if (tripBackBtn) tripBackBtn.classList.toggle("hidden", !tripId);
 
         if (!tripId) {
             clearImageMarkers();
@@ -941,6 +966,9 @@
             !(t.destination_country && activeFilters.countries.has(t.destination_country.name))) {
             return false;
         }
+
+        // Events have no transport types — exclude when transport filter is active
+        if (t.is_event && activeFilters.transport.size) return false;
 
         if (!t.is_event && t.transport_types && t.transport_types.length && activeFilters.transport.size) {
             var hasMatch = t.transport_types.some(function (tt) { return activeFilters.transport.has(tt); });
@@ -1266,13 +1294,16 @@
         }
     });
 
-    // Mobile: filter drawer toggle
+    // Mobile: filter drawer toggle (same slide pattern as stats toggle)
     (function () {
-        if (!window.matchMedia("(max-width: 768px)").matches) return;
+        var toggleBtn = document.getElementById("filter-toggle-btn");
         var panel = document.getElementById("filter-panel");
-        panel.querySelector("h3").addEventListener("click", function () {
-            panel.classList.toggle("filter-open");
-        });
+        if (toggleBtn && panel) {
+            toggleBtn.addEventListener("click", function () {
+                panel.classList.toggle("filter-open");
+                toggleBtn.classList.toggle("filter-open");
+            });
+        }
     })();
 
     // --- Stats Panel ---

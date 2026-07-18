@@ -2,6 +2,7 @@
     "FRA": {"name": "Frankfurt am Main", "lat": 50.0333, "lng": 8.5706},
     "MUC": {"name": "München", "lat": 48.3538, "lng": 11.7861},
     "BER": {"name": "Berlin Brandenburg", "lat": 52.3667, "lng": 13.5033},
+    "BJV": {"name": "Milas-Bodrum", "lat": 37.2506, "lng": 27.6643},
     "DUS": {"name": "Düsseldorf", "lat": 51.2895, "lng": 6.7668},
     "HAM": {"name": "Hamburg", "lat": 53.6304, "lng": 9.9882},
     "CGN": {"name": "Köln/Bonn", "lat": 50.8659, "lng": 7.1427},

@@ -57,6 +57,21 @@
     color: var(--color-accent);
 }
 
+#trip-info .trip-info-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.6rem;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.3rem;
+}
+#trip-info .trip-info-stats strong {
+    color: var(--color-text);
+}
+
+/* Toggle button — hidden on desktop, visible on mobile */
+#filter-toggle-btn { display: none; }
+
 #filter-panel {
     width: 260px;
     background: var(--color-surface);
@@ -64,6 +79,14 @@
     padding: 1rem;
     overflow-y: hidden;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Continue the flex chain so #trip-list gets a constrained height and scrolls */
+#filter-content {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
 }
@@ -612,7 +635,7 @@
     display: none;
 }
 
-#states-back-btn {
+#states-back-btn, #trip-back-btn {
     position: absolute;
     top: 1rem;
     left: 1rem;
@@ -628,12 +651,24 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-#states-back-btn:hover {
+/* Stack two back buttons: trip button top-left, states button below */
+#trip-back-btn { top: 1rem; }
+#states-back-btn { top: 3.2rem; }
+
+#states-back-btn:hover, #trip-back-btn:hover {
     color: var(--color-accent);
 }
 
-#states-back-btn.hidden {
+#states-back-btn.hidden, #trip-back-btn.hidden {
     display: none;
+}
+
+@media (max-width: 768px) {
+    #states-back-btn, #trip-back-btn {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.8rem;
+    }
+    #states-back-btn { top: 2.8rem; }
 }
 
 /* Lightbox */
@@ -738,47 +773,60 @@
         width: 100%;
     }
 
+    /* Toggle button — always visible at the left edge, OUTSIDE the panel */
+    #filter-toggle-btn {
+        display: flex;
+        position: fixed;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 64px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 51;
+    }
+
+    #filter-toggle-btn:hover {
+        color: var(--color-accent);
+        background: var(--color-surface-hover);
+    }
+
+    #filter-toggle-btn.filter-open {
+        left: 320px;
+    }
     #filter-panel {
         position: fixed;
-        bottom: 0;
         left: 0;
-        right: 0;
-        width: 100%;
-        height: 48px;
-        overflow: hidden;
-        border-right: none;
-        border-top: 1px solid var(--color-border);
-        padding: 0 1rem;
+        top: var(--nav-height);
+        bottom: 0;
+        width: 320px;
+        max-width: 80vw;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        background: var(--color-bg);
+        border-right: 1px solid var(--color-border);
         z-index: 50;
-        transition: height 0.3s ease;
+        overflow: hidden;
     }
 
     #filter-panel.filter-open {
-        height: 70vh;
+        transform: translateX(0);
+    }
+
+    #filter-content {
+        display: block;
         overflow-y: auto;
-        padding-bottom: 1rem;
-    }
-
-    #filter-panel h3 {
-        height: 48px;
-        min-height: 48px;
-        margin-bottom: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        user-select: none;
-    }
-
-    #filter-panel h3::after {
-        content: "▲";
-        font-size: 0.75rem;
-        color: var(--color-text-muted);
-        margin-left: 0.5rem;
-    }
-
-    #filter-panel.filter-open h3::after {
-        content: "▼";
+        height: 100%;
+        padding: 0.75rem 1rem 1rem;
     }
 
     .trip-list-section {
@@ -791,10 +839,19 @@
     }
 
     #stats-content {
-        padding-bottom: 4rem;
+        padding-bottom: 1rem;
     }
 
     #manage-link {
-        bottom: 64px;
+        bottom: 16px;
+    }
+
+    /* Dropdown menus inside the scrollable panel: use static positioning
+       so they expand the panel content instead of being clipped. */
+    .ms-dropdown-menu {
+        position: static;
+        box-shadow: none;
+        border: none;
+        padding: 0.25rem 0 0 0.5rem;
     }
 }
