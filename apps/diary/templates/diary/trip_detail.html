@@ -606,7 +606,7 @@
 
     {% if videos %}
     <div class="detail-section">
-        <h2>Videos ({{ videos|length }})</h2>
+        <h2>{% t 'Videos' 'Videos' 'Videot' %} ({{ videos|length }})</h2>
         <div class="gallery">
             {% for vid in videos %}
             <div class="gallery-item video-card" onclick="openVideoPlayer('{{ vid.video.url }}')">

@@ -207,6 +207,9 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .filter-section label {
@@ -468,10 +471,10 @@
     opacity: 0.85;
 }
 
-.trip-info-subtitle {
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-    margin-bottom: 0.25rem;
+.yearly-toggle {
+    margin-left: auto;
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
 }
 
 /* Stats panel */
@@ -854,4 +857,22 @@
         border: none;
         padding: 0.25rem 0 0 0.5rem;
     }
+}
+
+/* --- Map Options --- */
+.map-opt-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0.15rem 0;
+}
+.map-opt-check:hover { color: var(--color-text); }
+.map-opt-check input[type="checkbox"] {
+    accent-color: var(--color-accent);
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    margin: 0;
 }

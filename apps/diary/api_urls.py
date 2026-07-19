@@ -8,6 +8,9 @@ urlpatterns = [
     path("videos/", api_views.VideoMarkerListView.as_view(), name="videos"),
     path("trips/", api_views.TripListView.as_view(), name="trips"),
     path("stats/", api_views.StatsView.as_view(), name="stats"),
+    path(
+        "photo-heatmap/", api_views.PhotoHeatmapView.as_view(), name="photo_heatmap"
+    ),
     path("visited-countries/", api_views.VisitedCountriesView.as_view(), name="visited_countries"),
     path("states/", api_views.StatesView.as_view(), name="states"),
 ]

@@ -18,9 +18,36 @@
         <div class="map-mode-switch" role="tablist">
             <button type="button" class="map-mode-btn active" data-mode="detailed">{% t 'Reisen' 'Trips' 'Matkat' %}</button>
             <button type="button" class="map-mode-btn" data-mode="visited">{% t 'Besuchte Länder' 'Visited Countries' 'Vieraillut maat' %}</button>
+            <button type="button" class="map-mode-btn" data-mode="heatmap">{% t 'Fotokarte' 'Photo Map' 'Valokuvakartta' %}</button>
         </div>
 
         <button type="button" id="subdivisions-toggle" class="subdivisions-toggle hidden">{% t 'Regionen anzeigen' 'Show regions' 'Näytä alueet' %}</button>
+
+        <div class="filter-section" id="map-options-section">
+            <h4>{% t 'Karten-Optionen' 'Map Options' 'Karttavaihtoehdot' %}</h4>
+            <div class="ms-dropdown" id="filter-map-display">
+                <button type="button" class="ms-dropdown-toggle">
+                    <span class="ms-dropdown-label">{% t 'Standard' 'Default' 'Oletus' %}</span>
+                    <span class="ms-dropdown-arrow">▾</span>
+                </button>
+                <div class="ms-dropdown-menu" id="map-display-menu">
+                    <label><input type="checkbox" id="opt-hide-borders"> {% t 'Grenzen ausblenden' 'Hide borders' 'Piilota rajat' %}<span class="ms-check">✓</span></label>
+                    <label><input type="checkbox" id="opt-hide-labels"> {% t 'Beschriftungen ausblenden' 'Hide labels' 'Piilota tekstit' %}<span class="ms-check">✓</span></label>
+                </div>
+            </div>
+            <div class="ms-dropdown" id="filter-route-width" style="margin-top:0.4rem;">
+                <button type="button" class="ms-dropdown-toggle">
+                    <span class="ms-dropdown-label">Normal</span>
+                    <span class="ms-dropdown-arrow">▾</span>
+                </button>
+                <div class="ms-dropdown-menu" id="route-width-menu">
+                    <label><input type="radio" name="route-width" value="0.5"> {% t 'Dünn' 'Thin' 'Ohut' %}<span class="ms-check">✓</span></label>
+                    <label><input type="radio" name="route-width" value="1.0" checked> {% t 'Normal' 'Normal' 'Normaali' %}<span class="ms-check">✓</span></label>
+                    <label><input type="radio" name="route-width" value="2.0"> {% t 'Dick' 'Thick' 'Paksu' %}<span class="ms-check">✓</span></label>
+                    <label><input type="radio" name="route-width" value="3.0"> {% t 'Sehr dick' 'Very thick' 'Erittäin paksu' %}<span class="ms-check">✓</span></label>
+                </div>
+            </div>
+        </div>
 
         <div class="filter-title-row">
             <h3>{% t 'Filter' 'Filter' 'Suodatin' %}</h3>
@@ -113,6 +140,11 @@
             </div>
 
             <div class="filter-section">
+                <h4>{% t 'Jahresvergleich' 'Year-over-Year' 'Vuosivertailu' %}</h4>
+                <div id="stats-yearly" class="stats-bars"></div>
+            </div>
+
+            <div class="filter-section">
                 <h4>{% t 'Bilder pro Land' 'Photos per Country' 'Kuvat maittain' %}</h4>
                 <div id="stats-countries" class="stats-bars"></div>
             </div>
@@ -147,6 +179,7 @@
     data-stats-url="{% url 'diary-api:stats' %}"
     data-visited-countries-url="{% url 'diary-api:visited_countries' %}"
     data-states-url="{% url 'diary-api:states' %}"
+    data-heatmap-url="{% url 'diary-api:photo_heatmap' %}"
     data-lang="{{ LANG }}"
 ></script>
 <script src="{% static 'diary/js/map.js' %}"></script>

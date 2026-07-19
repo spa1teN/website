@@ -1,4 +1,5 @@
 import hmac
+import ipaddress
 import json
 from urllib.parse import urlparse
 
@@ -74,12 +75,21 @@ def track_event(request):
     if screen_bucket not in _VALID_SCREEN_BUCKETS:
         screen_bucket = ""
 
+    ip = request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR")
+
+    # Exclude Tailscale network traffic (100.64.0.0/10) — the admin's own
+    # devices connected via Tailscale would otherwise inflate the stats.
+    try:
+        if ipaddress.ip_address(ip) in ipaddress.ip_network("100.64.0.0/10"):
+            return JsonResponse({"ok": True})
+    except ValueError:
+        pass  # malformed IP, let it through to geo resolution
+
     # nginx sits in front as a reverse proxy (see nginx/nginx.conf), so
     # REMOTE_ADDR is nginx's own container IP, not the visitor's. The real
     # client IP arrives via X-Real-IP, set by nginx for every vhost.
     # The IP is read only to resolve a coarse country/city, then discarded -
     # it is not passed to AnalyticsEvent.objects.create() below.
-    ip = request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR")
     country, city, latitude, longitude = resolve_geo(ip)
 
     ua_string = request.META.get("HTTP_USER_AGENT", "")

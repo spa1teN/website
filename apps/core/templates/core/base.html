@@ -23,13 +23,11 @@
             <div class="nav-menu" id="nav-menu">
                 <ul class="nav-links">
                     <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>{% t 'Start' 'Home' 'Etusivu' %}</a></li>
-                    <li><a href="{% url 'links:links' %}" {% if request.resolver_match.app_name == 'links' %}class="active"{% endif %}>{% t 'Über mich' 'About Me' 'Tietoa minusta' %}</a></li>
+                    <li><a href="{% url 'links:links' %}" {% if request.resolver_match.app_name == 'links' and not request.resolver_match.url_name == 'status' %}class="active"{% endif %}>{% t 'Über mich' 'About Me' 'Tietoa minusta' %}</a></li>
+                    <li><a href="{% url 'links:status' %}" {% if request.resolver_match.url_name == 'status' %}class="active"{% endif %}>{% t 'Status' 'Status' 'Tila' %}</a></li>
                     <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>{% t 'Reisetagebuch' 'Travel Diary' 'Matkapäiväkirja' %}</a></li>
                 </ul>
                 <ul class="nav-auth">
-                    {% if user.is_authenticated %}
-                    <li><a href="{% url 'core:admin_index' %}" class="nav-admin-link{% if request.resolver_match.url_name == 'admin_index' or request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'trip_create' or request.resolver_match.url_name == 'trip_edit' or request.resolver_match.url_name == 'trip_delete' %} active{% endif %}">Admin</a></li>
-                    {% endif %}
                     <li class="nav-btn-group">
                         {% for lang_option in OTHER_LANGS %}
                         <a href="{% url 'core:set_language' lang_option.code %}" class="nav-btn-group-item lang-btn" aria-label="{{ lang_option.aria }}" title="{{ lang_option.label }}">{{ lang_option.flag }}</a>
@@ -46,6 +44,9 @@
 
     {% if request.resolver_match.app_name != 'diary' %}
     <footer class="site-footer">
+        {% if user.is_authenticated %}
+        <a href="{% url 'core:admin_index' %}" class="footer-admin-btn">{% t 'Admin' 'Admin' 'Admin' %}</a>
+        {% endif %}
         <a href="{% url 'core:privacy' %}">{% t 'Datenschutzerklärung' 'Privacy Policy' 'Tietosuojaseloste' %}</a>
     </footer>
     {% endif %}

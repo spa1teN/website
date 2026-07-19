@@ -1,16 +1,17 @@
 {% extends "core/base.html" %}
+{% load i18n_extra %}
 
-{% block title %}Reise löschen - Caspar Sadenius{% endblock %}
+{% block title %}{% t 'Reise löschen' 'Delete Trip' 'Poista matka' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="page-container" style="max-width: 500px;">
-    <h1>Reise löschen</h1>
-    <p>Möchtest du die Reise <strong>{{ trip.title }}</strong> wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</p>
+    <h1>{% t 'Reise löschen' 'Delete Trip' 'Poista matka' %}</h1>
+    <p>{% t 'Möchtest du die Reise' 'Do you really want to delete the trip' 'Haluatko varmasti poistaa matkan' %} <strong>{{ trip.title }}</strong> {% t 'wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.' '? This action cannot be undone.' '? Tätä toimintoa ei voi peruuttaa.' %}</p>
     <form method="post" style="margin-top: 1.5rem;">
         {% csrf_token %}
         <div class="form-actions">
-            <button type="submit" class="btn btn-danger">Ja, löschen</button>
-            <a href="{% url 'diary:dashboard' %}" class="btn btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn btn-danger">{% t 'Ja, löschen' 'Yes, delete' 'Kyllä, poista' %}</button>
+            <a href="{% url 'diary:dashboard' %}" class="btn btn-secondary">{% t 'Abbrechen' 'Cancel' 'Peruuta' %}</a>
         </div>
     </form>
 </div>

@@ -6,6 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 SECRET_KEY = config("SECRET_KEY")
 
 INSTALLED_APPS = [
+    "modeltranslation",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "config.middleware.SessionLanguageMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -80,6 +82,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "de"
 TIME_ZONE = "Europe/Berlin"
+
+LANGUAGES = (
+    ("de", "German"),
+    ("en", "English"),
+    ("fi", "Finnish"),
+)
+MODELTRANSLATION_DEFAULT_LANGUAGE = "de"
+MODELTRANSLATION_LANGUAGES = ("de", "en", "fi")
+MODELTRANSLATION_FALLBACK_LANGUAGES = ("en", "fi")
 USE_I18N = True
 USE_TZ = True
 

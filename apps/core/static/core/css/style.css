@@ -203,12 +203,17 @@ a:hover {
 }
 
 .site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
     text-align: center;
     padding: 1.25rem 1rem;
     font-size: 0.85rem;
     color: var(--color-text-muted);
     border-top: 1px solid var(--color-border);
+    gap: 0.5rem;
+    position: relative;
 }
 
 .site-footer a {
@@ -217,6 +222,19 @@ a:hover {
 
 .site-footer a:hover {
     color: var(--color-accent);
+}
+
+.footer-admin-btn {
+    border: 1px solid var(--color-accent);
+    border-radius: 4px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.8rem;
+    position: absolute;
+    left: 1rem;
+}
+.footer-admin-btn:hover {
+    background: var(--color-accent);
+    color: #fff !important;
 }
 
 .page-container {

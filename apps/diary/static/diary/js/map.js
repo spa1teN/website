@@ -51,6 +51,7 @@
     var currentPopup = null;
     var currentMode = "detailed";
     var refreshStatsIfOpen = function () {};
+    var routeWidthMultiplier = 1.0;
 
     function _buildStatsParams() {
         var params = new URLSearchParams();
@@ -60,6 +61,7 @@
         activeFilters.countries.forEach(function (c) { params.append("country", c); });
         return params;
     }
+    var _buildFilterParams = _buildStatsParams;
 
     // --- Data fetching ---
 
@@ -124,9 +126,9 @@
             type: "circle",
             source: "trips-source",
             paint: {
-                "circle-radius": 3.5,
+                "circle-radius": 2,
                 "circle-color": ["case", ["get", "isEvent"], "#FF9800", "#ffffff"],
-                "circle-stroke-width": 3,
+                "circle-stroke-width": 1.5,
                 "circle-stroke-color": ["case", ["get", "isEvent"], "#c8660a", "#6c9bcf"],
             },
         });
@@ -135,6 +137,7 @@
             id: "trip-labels",
             type: "symbol",
             source: "trips-source",
+            minzoom: 3,
             layout: {
                 "icon-image": "label-bg",
                 "icon-text-fit": "both",
@@ -371,8 +374,8 @@
 
             var paint = {
                 "line-color": ROUTE_COLORS[type] || "#999",
-                "line-width": type === "plane" ? 1.5 : 2,
-                "line-opacity": 0.9,
+                "line-width": (type === "plane" ? 0.75 : 1) * routeWidthMultiplier,
+                "line-opacity": 0.6,
             };
             if (ROUTE_DASH[type]) {
                 paint["line-dasharray"] = ROUTE_DASH[type];
@@ -467,7 +470,7 @@
             type: "line",
             source: "visited-countries",
             layout: { visibility: "none" },
-            paint: { "line-color": "#6c9bcf", "line-width": 1.5 },
+            paint: { "line-color": "#6c9bcf", "line-width": 0.75 },
         }, map.getLayer("trip-circles") ? "trip-circles" : undefined);
     }
 
@@ -509,6 +512,51 @@
         var vis = visible ? "visible" : "none";
         if (map.getLayer("visited-countries-fill")) map.setLayoutProperty("visited-countries-fill", "visibility", vis);
         if (map.getLayer("visited-countries-outline")) map.setLayoutProperty("visited-countries-outline", "visibility", vis);
+    }
+
+    function ensurePhotoHeatmapLayer(geojson) {
+        if (map.getSource("photo-heatmap")) {
+            map.getSource("photo-heatmap").setData(geojson);
+            return;
+        }
+        map.addSource("photo-heatmap", { type: "geojson", data: geojson });
+        map.addLayer({
+            id: "photo-heatmap-layer",
+            type: "heatmap",
+            source: "photo-heatmap",
+            maxzoom: 15,
+            paint: {
+                "heatmap-weight": 1,
+                "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 9, 3],
+                "heatmap-color": [
+                    "interpolate", ["linear"], ["heatmap-density"],
+                    0, "rgba(33,102,172,0)",
+                    0.2, "rgb(103,169,207)",
+                    0.4, "rgb(209,229,240)",
+                    0.6, "rgb(253,219,199)",
+                    0.8, "rgb(239,138,98)",
+                    1, "rgb(178,24,43)"
+                ],
+                "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 12, 9, 24],
+                "heatmap-opacity": 0.85,
+            },
+        }, map.getLayer("trip-circles") ? "trip-circles" : undefined);
+    }
+
+    function setHeatmapLayerVisibility(visible) {
+        var vis = visible ? "visible" : "none";
+        if (map.getLayer("photo-heatmap-layer")) map.setLayoutProperty("photo-heatmap-layer", "visibility", vis);
+    }
+
+    function loadPhotoHeatmap(callback) {
+        if (!config.heatmapUrl) return;
+        var qs = _buildFilterParams().toString();
+        fetch(config.heatmapUrl + (qs ? "?" + qs : ""))
+            .then(function (r) { return r.json(); })
+            .then(function (geojson) {
+                ensurePhotoHeatmapLayer(geojson);
+                if (callback) callback(geojson);
+            });
     }
 
     function renderVisitedList(geojson) {
@@ -615,26 +663,42 @@
             b.classList.toggle("active", b.dataset.mode === mode);
         });
 
+        var isSpecial = mode === "visited" || mode === "heatmap";
         ["type-filter-section", "country-filter-section", "entries-section"].forEach(function (id) {
             var el = document.getElementById(id);
-            if (el) el.classList.toggle("hidden", mode === "visited");
+            if (el) el.classList.toggle("hidden", isSpecial);
         });
 
         var subdivisionsToggle = document.getElementById("subdivisions-toggle");
         if (subdivisionsToggle) subdivisionsToggle.classList.toggle("hidden", mode !== "visited");
 
+        setVisitedLayerVisibility(false);
+        setHeatmapLayerVisibility(false);
+
         if (mode === "visited") {
             selectTrip("");
             setOverviewLayersVisibility(false);
-            setVisitedLayerVisibility(false);
             loadFilteredVisitedCountries(function (geojson) {
                 if (currentMode !== "visited") return;
                 setVisitedLayerVisibility(true);
             });
             _fitToContentBounds({ padding: 60, maxZoom: 8 });
+        } else if (mode === "heatmap") {
+            selectTrip("");
+            setOverviewLayersVisibility(false);
+            loadPhotoHeatmap(function (geojson) {
+                if (currentMode !== "heatmap") return;
+                setHeatmapLayerVisibility(true);
+                var bounds = new maplibregl.LngLatBounds();
+                if (geojson.features && geojson.features.length) {
+                    geojson.features.forEach(function (f) {
+                        bounds.extend(f.geometry.coordinates);
+                    });
+                    map.fitBounds(bounds, { padding: 60, maxZoom: 10 });
+                }
+            });
         } else {
             hideStatesView();
-            setVisitedLayerVisibility(false);
             setOverviewLayersVisibility(true);
             applyFilters();
         }
@@ -670,7 +734,7 @@
             source: "states",
             paint: {
                 "line-color": ["case", ["get", "visited"], "#6c9bcf", "rgba(255,255,255,0.25)"],
-                "line-width": 1,
+                "line-width": 0.5,
             },
         }, map.getLayer("trip-circles") ? "trip-circles" : undefined);
     }
@@ -1047,6 +1111,22 @@
         _updateDropdownLabel(document.getElementById("filter-year"), tr("Alle Jahre", "All years", "Kaikki vuodet"));
         _updateDropdownLabel(document.getElementById("filter-country"), tr("Alle Länder", "All countries", "Kaikki maat"));
 
+        // Reset map options
+        var hideBorders = document.getElementById("opt-hide-borders");
+        var hideLabels = document.getElementById("opt-hide-labels");
+        if (hideBorders) { hideBorders.checked = false; bordersHidden = false; applyBorders(); }
+        if (hideLabels) { hideLabels.checked = false; labelsHidden = false; applyLabels(); }
+        // Reset map display dropdown label and check states
+        var mdMenu = document.getElementById("map-display-menu");
+        if (mdMenu) { _syncLabelStates(mdMenu); _updateMapDisplayLabel(); }
+        if (document.getElementById("filter-route-width")) {
+            var menu = document.getElementById("route-width-menu");
+            var normalRb = menu.querySelector('input[value="1.0"]');
+            if (normalRb) { normalRb.checked = true; _syncRadioLabels(menu); }
+            routeWidthMultiplier = 1.0;
+            _updateDropdownLabel(document.getElementById("filter-route-width"), "Normal");
+        }
+
         applyFilters();
     }
 
@@ -1073,6 +1153,14 @@
             if (label.dataset.color) {
                 label.style.setProperty("--label-color", label.dataset.color);
             }
+        });
+    }
+
+    function _syncRadioLabels(menu) {
+        menu.querySelectorAll("label").forEach(function (label) {
+            var rb = label.querySelector('input[type="radio"]');
+            if (!rb) return;
+            label.classList.toggle("selected", rb.checked);
         });
     }
 
@@ -1404,6 +1492,37 @@
                             color: function (i) { return i.color; },
                         }
                     );
+                    if (data.yearly_stats && data.yearly_stats.length > 1) {
+                        var yearlyMode = document.getElementById("stats-yearly")._mode || "trips";
+                        document.getElementById("stats-yearly")._data = data.yearly_stats;
+                        renderYearlyBars(data.yearly_stats, yearlyMode);
+                        var yearlySection = document.getElementById("stats-yearly").parentElement;
+                        var existingToggle = yearlySection.querySelector(".yearly-toggle");
+                        if (!existingToggle) {
+                            var btn = document.createElement("button");
+                            btn.type = "button";
+                            btn.className = "yearly-toggle";
+                            btn.style.cssText = "font-size:0.75rem;padding:2px 8px;border:1px solid var(--color-border);border-radius:4px;background:var(--color-surface);color:var(--color-text);cursor:pointer;margin-bottom:0.5rem;";
+                            btn.textContent = tr("km", "km", "km");
+                            btn.addEventListener("click", function() {
+                                var current = document.getElementById("stats-yearly")._mode || "trips";
+                                var next = current === "trips" ? "km" : "trips";
+                                document.getElementById("stats-yearly")._mode = next;
+                                btn.textContent = next === "trips" ? tr("km", "km", "km") : tr("Reisen", "Trips", "Matkat");
+                                renderYearlyBars(document.getElementById("stats-yearly")._data, next);
+                            });
+                            var heading = yearlySection.querySelector("h4");
+                            if (heading) heading.appendChild(btn);
+                        }
+                    }
+
+                    function renderYearlyBars(stats, mode) {
+                        renderBars(document.getElementById("stats-yearly"), stats, {
+                            name: function (i) { return i.year; },
+                            value: function (i) { return mode === "km" ? (i.distance_km || 0) : i.trips; },
+                            formatValue: function (v) { return mode === "km" ? formatNumber(v) + " km" : v + " " + tr("Reisen", "trips", "matkaa"); },
+                        });
+                    }
                 });
 
             if (config.visitedCountriesUrl) {
@@ -1423,6 +1542,133 @@
             if (willOpen) {
                 loadStats();
             }
+        });
+    })();
+
+    // --- Map Options (borders, labels, route thickness) ---
+    (function () {
+        var borderLayers = [];
+        var labelLayers = [];
+
+        // Discover border and label layers from the style
+        function discoverLayers() {
+            var style = map.getStyle();
+            if (!style || !style.layers) return;
+            borderLayers = [];
+            labelLayers = [];
+            style.layers.forEach(function (layer) {
+                var id = layer.id || "";
+                // Carto dark-matter-gl style uses these naming conventions
+                if (id.indexOf("admin") !== -1 || id.indexOf("boundary") !== -1) {
+                    borderLayers.push(id);
+                }
+                if (id.indexOf("label") !== -1 || id.indexOf("place") !== -1 || id.indexOf("road") !== -1) {
+                    // Only match text/symbol label layers, not line layers
+                    if (layer.type === "symbol") {
+                        labelLayers.push(id);
+                    }
+                }
+            });
+        }
+
+        var bordersHidden = false;
+        var labelsHidden = false;
+
+        function applyBorders() {
+            if (borderLayers.length === 0) discoverLayers();
+            borderLayers.forEach(function (id) {
+                if (map.getLayer(id)) {
+                    map.setLayoutProperty(id, "visibility", bordersHidden ? "none" : "visible");
+                }
+            });
+        }
+
+        function applyLabels() {
+            if (labelLayers.length === 0) discoverLayers();
+            labelLayers.forEach(function (id) {
+                if (map.getLayer(id)) {
+                    map.setLayoutProperty(id, "visibility", labelsHidden ? "none" : "visible");
+                }
+            });
+        }
+
+        var hideBorders = document.getElementById("opt-hide-borders");
+        var hideLabels = document.getElementById("opt-hide-labels");
+
+        // Map display options dropdown (borders + labels checkboxes)
+        var mdDropdown = document.getElementById("filter-map-display");
+        var mdMenu = document.getElementById("map-display-menu");
+        if (mdDropdown && mdMenu) {
+            var mdToggle = mdDropdown.querySelector(".ms-dropdown-toggle");
+            mdToggle.addEventListener("click", function (e) {
+                e.stopPropagation();
+                document.querySelectorAll(".ms-dropdown.open").forEach(function (d) { d.classList.remove("open"); });
+                mdDropdown.classList.toggle("open");
+            });
+            mdMenu.addEventListener("click", function (e) { e.stopPropagation(); });
+            mdMenu.addEventListener("change", function () {
+                _syncLabelStates(mdMenu);
+                _updateMapDisplayLabel();
+            });
+        }
+
+        function _updateMapDisplayLabel() {
+            if (!mdDropdown) return;
+            var checked = [];
+            if (hideBorders && hideBorders.checked) checked.push(1);
+            if (hideLabels && hideLabels.checked) checked.push(1);
+            var labelEl = mdDropdown.querySelector(".ms-dropdown-label");
+            if (!labelEl) return;
+            if (checked.length === 0) {
+                labelEl.textContent = tr("Standard", "Default", "Oletus");
+            } else if (checked.length === 1) {
+                labelEl.textContent = tr("1 Option aktiv", "1 option active", "1 valinta aktiivinen");
+            } else {
+                labelEl.textContent = checked.length + " " + tr("Optionen aktiv", "options active", "valintaa aktiivisena");
+            }
+        }
+
+        if (hideBorders) {
+            hideBorders.addEventListener("change", function () {
+                bordersHidden = hideBorders.checked;
+                applyBorders();
+                _updateMapDisplayLabel();
+            });
+        }
+
+        if (hideLabels) {
+            hideLabels.addEventListener("change", function () {
+                labelsHidden = hideLabels.checked;
+                applyLabels();
+                _updateMapDisplayLabel();
+            });
+        }
+
+        // Route width dropdown (radio buttons)
+        var rwDropdown = document.getElementById("filter-route-width");
+        if (rwDropdown) {
+            var rwToggle = rwDropdown.querySelector(".ms-dropdown-toggle");
+            var rwMenu = document.getElementById("route-width-menu");
+            rwToggle.addEventListener("click", function (e) {
+                e.stopPropagation();
+                document.querySelectorAll(".ms-dropdown.open").forEach(function (d) { d.classList.remove("open"); });
+                rwDropdown.classList.toggle("open");
+            });
+            rwMenu.addEventListener("click", function (e) { e.stopPropagation(); });
+            rwMenu.addEventListener("change", function () {
+                var checked = rwMenu.querySelector('input[name="route-width"]:checked');
+                if (checked) {
+                    routeWidthMultiplier = parseFloat(checked.value);
+                    _syncRadioLabels(rwMenu);
+                    _updateDropdownLabel(rwDropdown, checked.parentElement.textContent.trim());
+                    if (allRoutesGeoJSON) applyFilters();
+                }
+            });
+        }
+
+        // Discover layers once the style is loaded
+        map.on("style.load", function () {
+            discoverLayers();
         });
     })();
 

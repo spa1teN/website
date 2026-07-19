@@ -2,7 +2,33 @@ from django.contrib.gis.db import models as gis_models
 from django.db import models
 
 
-class Journey(models.Model):
+class TranslationFallbackMixin:
+    """FI→EN→DE fallback chain for translated model fields.
+
+    Usage::
+
+        obj.get_translated("title")           # uses active language
+        obj.get_translated("title", lang="fi")# explicit language
+    """
+
+    def get_translated(self, field_name, lang=None):
+        if lang is None:
+            from django.utils.translation import get_language
+            lang = get_language()
+
+        candidates = [lang]
+        if lang == "fi":
+            candidates.append("en")
+        candidates.append("de")
+
+        for candidate_lang in candidates:
+            raw = getattr(self, f"{field_name}_{candidate_lang}", None)
+            if raw:
+                return raw
+        return ""
+
+
+class Journey(models.Model, TranslationFallbackMixin):
     travel_date = models.DateField()
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -45,7 +71,7 @@ class JourneySegment(models.Model):
         return f"{self.get_transport_type_display()} Abschnitt #{self.order}"
 
 
-class Trip(models.Model):
+class Trip(models.Model, TranslationFallbackMixin):
     title = models.CharField(max_length=255)
     subtitle = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
@@ -78,7 +104,7 @@ class Trip(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.title
+        return self.title_de or str(self.pk)
 
     @property
     def year(self):
@@ -125,7 +151,7 @@ class Trip(models.Model):
         return round(total) if total > 0 else None
 
 
-class TripImage(models.Model):
+class TripImage(models.Model, TranslationFallbackMixin):
     trip = models.ForeignKey(
         Trip, on_delete=models.CASCADE, related_name="images"
     )
@@ -138,7 +164,7 @@ class TripImage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.caption or f"Bild zu {self.trip.title}"
+        return self.caption_de or f"Bild zu {self.trip.title_de}"
 
     def _generate_thumbnail(self):
         import os
@@ -190,7 +216,7 @@ class TripImage(models.Model):
                 super().save(update_fields=update_fields)
 
 
-class TripVideo(models.Model):
+class TripVideo(models.Model, TranslationFallbackMixin):
     trip = models.ForeignKey(
         Trip, on_delete=models.CASCADE, related_name="videos"
     )
@@ -200,7 +226,7 @@ class TripVideo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.caption or f"Video zu {self.trip.title}"
+        return self.caption_de or f"Video zu {self.trip.title_de}"
 
 
 def _invalidate_stats_cache(*args, **kwargs):
@@ -208,6 +234,7 @@ def _invalidate_stats_cache(*args, **kwargs):
 
     cache.delete("diary_stats_de")
     cache.delete("diary_stats_en")
+    cache.delete("diary_stats_fi")
     cache.delete("diary_geo_index")
     cache.delete("diary_state_index")
 

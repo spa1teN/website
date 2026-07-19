@@ -1,7 +1,7 @@
 {% extends "core/base.html" %}
-{% load static l10n %}
+{% load static l10n i18n_extra %}
 
-{% block title %}{% if editing %}Reise bearbeiten{% else %}Neue Reise{% endif %} - Caspar Sadenius{% endblock %}
+{% block title %}{% if editing %}{% t 'Reise bearbeiten' 'Edit Trip' 'Muokkaa matkaa' %}{% else %}{% t 'Neue Reise' 'New Trip' 'Uusi matka' %}{% endif %} - Caspar Sadenius{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
@@ -226,11 +226,16 @@ textarea.form-control { resize: vertical; }
 .modal-overlay.hidden { display: none; }
 .modal-box {
     background: var(--color-surface); border: 1px solid var(--color-border);
-    border-radius: 8px; padding: 1.25rem; width: 540px; max-width: 95vw;
+    border-radius: 8px; padding: 1.25rem; width: min(90vw, 1000px); max-width: 95vw;
 }
 .modal-box h4 { margin: 0 0 0.2rem; }
 .modal-box p { margin: 0 0 0.5rem; }
-#location-picker-map { height: 340px; border-radius: 4px; margin: 0.75rem 0; }
+#location-picker-map { height: min(55vh, 500px); border-radius: 4px; margin: 0.75rem 0; }
+.location-search-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+.location-search-row input { flex: 1; padding: 0.45rem 0.6rem; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg); color: var(--color-text); font-size: 0.9rem; }
+.location-results { max-height: 160px; overflow-y: auto; margin-bottom: 0.5rem; }
+.location-results .loc-result { padding: 0.35rem 0.5rem; cursor: pointer; border-radius: 3px; font-size: 0.85rem; }
+.location-results .loc-result:hover { background: var(--color-surface-hover); }
 .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
 
 @media (max-width: 768px) {
@@ -243,38 +248,38 @@ textarea.form-control { resize: vertical; }
 
 {% block content %}
 <div class="trip-form-container">
-    <h1>{% if editing %}Reise bearbeiten{% else %}Neue Reise{% endif %}</h1>
+    <h1>{% if editing %}{% t 'Reise bearbeiten' 'Edit Trip' 'Muokkaa matkaa' %}{% else %}{% t 'Neue Reise' 'New Trip' 'Uusi matka' %}{% endif %}</h1>
 
     <form id="trip-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="form-section">
-            <h2>Allgemein</h2>
+            <h2>{% t 'Allgemein' 'General' 'Yleistä' %}</h2>
             <div class="form-group">
-                <label for="id_title">Titel</label>
+                <label for="id_title">{% t 'Titel' 'Title' 'Otsikko' %}</label>
                 {{ form.title }}
             </div>
             <div class="form-group">
-                <label for="id_subtitle">Untertitel</label>
+                <label for="id_subtitle">{% t 'Untertitel' 'Subtitle' 'Alaotsikko' %}</label>
                 {{ form.subtitle }}
             </div>
             <div class="form-group">
-                <label>Typ</label>
+                <label>{% t 'Typ' 'Type' 'Tyyppi' %}</label>
                 <div style="display:flex; gap:1.5rem;">
                     <label style="color:var(--color-text); cursor:pointer;">
-                        <input type="radio" name="trip_type" value="trip" id="type-trip" style="margin-right:0.35rem;" checked> Reise
+                        <input type="radio" name="trip_type" value="trip" id="type-trip" style="margin-right:0.35rem;" checked> {% t 'Reise' 'Trip' 'Matka' %}
                     </label>
                     <label style="color:var(--color-text); cursor:pointer;">
-                        <input type="radio" name="trip_type" value="event" id="type-event" style="margin-right:0.35rem;"> Event
+                        <input type="radio" name="trip_type" value="event" id="type-event" style="margin-right:0.35rem;"> {% t 'Event' 'Event' 'Tapahtuma' %}
                     </label>
                 </div>
             </div>
             <div class="form-group" id="event-date-group" style="display:none">
-                <label for="event-date-input">Datum</label>
-                <input type="text" class="form-control" id="event-date-input" placeholder="TT.MM.JJJJ">
+                <label for="event-date-input">{% t 'Datum' 'Date' 'Päivämäärä' %}</label>
+                <input type="text" class="form-control" id="event-date-input" placeholder="DD.MM.YYYY">
             </div>
             <div class="form-group">
-                <label for="id_description">Beschreibung</label>
+                <label for="id_description">{% t 'Beschreibung' 'Description' 'Kuvaus' %}</label>
                 {{ form.description }}
             </div>
         </div>
@@ -283,26 +288,26 @@ textarea.form-control { resize: vertical; }
         <div id="trip-map-section">
             <div class="form-section">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-                    <h2 style="margin:0">Routenplanung</h2>
+                    <h2 style="margin:0">{% t 'Routenplanung' 'Route Planning' 'Reitinsuunnittelu' %}</h2>
                     <div class="journey-tabs" id="journey-tabs">
-                        <button type="button" class="journey-tab active" data-journey="outbound" onclick="switchJourneyTab('outbound')">Hinreise</button>
-                        <button type="button" class="journey-tab" data-journey="return" onclick="switchJourneyTab('return')">Rückreise</button>
+                        <button type="button" class="journey-tab active" data-journey="outbound" onclick="switchJourneyTab('outbound')">{% t 'Hinreise' 'Outbound' 'Menomatka' %}</button>
+                        <button type="button" class="journey-tab" data-journey="return" onclick="switchJourneyTab('return')">{% t 'Rückreise' 'Return' 'Paluumatka' %}</button>
                     </div>
                 </div>
                 <div class="planning-layout">
                     <div id="planning-map"></div>
                     <div class="planning-sidebar" id="planning-sidebar">
                         <div class="journey-date-row">
-                            <input type="text" class="form-control" id="outbound-date" name="outbound_date" placeholder="Hinreise TT.MM.JJJJ" maxlength="10">
+                            <input type="text" class="form-control" id="outbound-date" name="outbound_date" placeholder="{% t 'Hinreise' 'Outbound' 'Menomatka' %} DD.MM.YYYY" maxlength="10">
                         </div>
                         <div class="journey-date-row" id="return-date-row" style="display:none">
-                            <input type="text" class="form-control" id="return-date" name="return_date" placeholder="Rückreise TT.MM.JJJJ" maxlength="10">
-                            <button type="button" class="btn btn-secondary btn-sm" style="margin-top:4px" onclick="copyOutboundAsReturn()">← Hinreise umgekehrt</button>
+                            <input type="text" class="form-control" id="return-date" name="return_date" placeholder="{% t 'Rückreise' 'Return' 'Paluumatka' %} DD.MM.YYYY" maxlength="10">
+                            <button type="button" class="btn btn-secondary btn-sm" style="margin-top:4px" onclick="copyOutboundAsReturn()">← {% t 'Hinreise umgekehrt' 'Reverse outbound' 'Menomatka käänteisenä' %}</button>
                         </div>
                         <div class="segment-list" id="outbound-segments"></div>
                         <div class="segment-list" id="return-segments" style="display:none"></div>
-                        <button type="button" class="btn btn-secondary btn-sm btn-add-segment" id="add-segment-btn" onclick="addSegment()">+ Abschnitt</button>
-                        <div class="map-click-hint">Klick auf die Karte → Wegpunkt zum aktiven Abschnitt</div>
+                        <button type="button" class="btn btn-secondary btn-sm btn-add-segment" id="add-segment-btn" onclick="addSegment()">+ {% t 'Abschnitt' 'Segment' 'Osuus' %}</button>
+                        <div class="map-click-hint">{% t 'Klick auf die Karte → Wegpunkt zum aktiven Abschnitt' 'Click the map → waypoint for the active segment' 'Klikkaa karttaa → reittipiste aktiiviselle osuudelle' %}</div>
                     </div>
                 </div>
             </div>
@@ -310,11 +315,11 @@ textarea.form-control { resize: vertical; }
 
         <!-- Videos -->
         <div class="form-section">
-            <h2>Videos</h2>
+            <h2>{% t 'Videos' 'Videos' 'Videot' %}</h2>
 
             {% if existing_videos %}
             <div class="existing-images">
-                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">Vorhandene Videos</h4>
+                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">{% t 'Vorhandene Videos' 'Existing Videos' 'Olemassa olevat videot' %}</h4>
                 <div class="image-preview-list" id="existing-video-list">
                     {% for vid in existing_videos %}
                     <div class="image-preview" id="existing-vid-{{ vid.id }}" style="width:auto; padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem;">
@@ -328,7 +333,7 @@ textarea.form-control { resize: vertical; }
             {% endif %}
 
             <div class="image-upload-zone" id="video-upload-zone" onclick="document.getElementById('video-input').click()">
-                Klicke hier oder ziehe Videos hierher
+                {% t 'Klicke hier oder ziehe Videos hierher' 'Click here or drag videos here' 'Klikkaa tähän tai vedä videot tähän' %}
             </div>
             <input type="file" id="video-input" name="videos" multiple accept="video/*" style="display:none">
             <div class="image-preview-list" id="video-previews"></div>
@@ -336,11 +341,11 @@ textarea.form-control { resize: vertical; }
 
         <!-- Images -->
         <div class="form-section">
-            <h2>Bilder</h2>
+            <h2>{% t 'Bilder' 'Images' 'Kuvat' %}</h2>
 
             {% if existing_images %}
             <div class="existing-images">
-                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">Vorhandene Bilder</h4>
+                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">{% t 'Vorhandene Bilder' 'Existing Images' 'Olemassa olevat kuvat' %}</h4>
                 <div class="image-preview-list" id="existing-image-list">
                     {% for img in existing_images %}
                     <div class="image-preview" id="existing-img-{{ img.id }}">
@@ -350,23 +355,23 @@ textarea.form-control { resize: vertical; }
                             data-img-id="{{ img.id }}"
                             data-lat="{% if img.location %}{{ img.location.y|unlocalize }}{% endif %}"
                             data-lng="{% if img.location %}{{ img.location.x|unlocalize }}{% endif %}"
-                            title="{% if img.location %}Ort ändern{% else %}Ort setzen{% endif %}">
+                            title="{% if img.location %}{% t 'Ort ändern' 'Change location' 'Vaihda sijainti' %}{% else %}{% t 'Ort setzen' 'Set location' 'Aseta sijainti' %}{% endif %}">
                             <span class="loc-dot {% if img.location %}has-location{% endif %}">&#x1F4CD;</span>
                         </button>
                         <button type="button" class="embed-toggle-btn" data-img-id="{{ img.id }}"
-                            title="Für Discord/Embed-Vorschau auswählen (max. 3)"
+                            title="{% t 'Für Discord/Embed-Vorschau auswählen (max. 3)' 'Select for Discord/embed preview (max. 3)' 'Valitse Discord/embed-esikatseluun (max. 3)' %}"
                             onclick="toggleEmbedImage(this, {{ img.id }})">
                             ★
                         </button>
                     </div>
                     {% endfor %}
                 </div>
-                <p class="embed-hint" style="font-size:0.72rem;color:var(--color-text-muted);margin-top:0.35rem">★ = Für Link-Vorschau (Discord). Maximal 3 Bilder auswählbar.</p>
+                <p class="embed-hint" style="font-size:0.72rem;color:var(--color-text-muted);margin-top:0.35rem">{% t '★ = Für Link-Vorschau (Discord). Maximal 3 Bilder auswählbar.' '★ = For link preview (Discord). Up to 3 images selectable.' '★ = Linkki-esikatseluun (Discord). Enintään 3 kuvaa valittavissa.' %}</p>
             </div>
             {% endif %}
 
             <div class="image-upload-zone" id="upload-zone" onclick="document.getElementById('image-input').click()">
-                Klicke hier oder ziehe Bilder hierher
+                {% t 'Klicke hier oder ziehe Bilder hierher' 'Click here or drag images here' 'Klikkaa tähän tai vedä kuvat tähän' %}
             </div>
             <input type="file" id="image-input" name="images" multiple accept="image/*" style="display:none">
             <div class="image-preview-list" id="image-previews"></div>
@@ -375,19 +380,24 @@ textarea.form-control { resize: vertical; }
         <div id="form-error" style="display:none; background:rgba(207,108,108,0.15); border:1px solid var(--color-danger); color:var(--color-danger); padding:0.75rem; border-radius:6px; margin-bottom:1rem;"></div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary" id="submit-btn">{% if editing %}Speichern{% else %}Erstellen{% endif %}</button>
-            <a href="{% url 'diary:dashboard' %}" class="btn btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn btn-primary" id="submit-btn">{% if editing %}{% t 'Speichern' 'Save' 'Tallenna' %}{% else %}{% t 'Erstellen' 'Create' 'Luo' %}{% endif %}</button>
+            <a href="{% url 'diary:dashboard' %}" class="btn btn-secondary">{% t 'Abbrechen' 'Cancel' 'Peruuta' %}</a>
         </div>
     </form>
 </div>
 <div id="location-modal" class="modal-overlay hidden">
     <div class="modal-box">
-        <h4>Ort auf der Karte wählen</h4>
-        <p style="font-size:0.8rem; color:var(--color-text-muted);">Klick auf die Karte setzt den Ort des Fotos.</p>
+        <h4>{% t 'Ort auf der Karte wählen' 'Choose location on the map' 'Valitse sijainti kartalta' %}</h4>
+        <p style="font-size:0.8rem; color:var(--color-text-muted);">{% t 'Klick auf die Karte setzt den Ort des Fotos. Suche nach einem Ort oder klicke direkt auf die Karte.' 'Click on the map to set the photo location. Search for a place or click directly on the map.' 'Klikkaa karttaa asettaaksesi kuvan sijainnin. Etsi paikkaa tai klikkaa suoraan karttaa.' %}</p>
+        <div class="location-search-row">
+            <input type="text" id="location-search-input" placeholder="{% t 'Ort suchen (z.B. Berlin, Paris)...' 'Search location (e.g. Berlin, Paris)...' 'Etsi sijaintia (esim. Berliini, Pariisi)...' %}" autocomplete="off">
+            <button type="button" id="location-search-btn" class="btn btn-sm btn-secondary">{% t 'Suchen' 'Search' 'Etsi' %}</button>
+        </div>
+        <div id="location-results" class="location-results" style="display:none;"></div>
         <div id="location-picker-map"></div>
         <div class="modal-actions">
-            <button type="button" id="location-save-btn" class="btn btn-primary">Speichern</button>
-            <button type="button" onclick="closeLocationModal()" class="btn btn-secondary">Abbrechen</button>
+            <button type="button" id="location-save-btn" class="btn btn-primary">{% t 'Speichern' 'Save' 'Tallenna' %}</button>
+            <button type="button" onclick="closeLocationModal()" class="btn btn-secondary">{% t 'Abbrechen' 'Cancel' 'Peruuta' %}</button>
         </div>
     </div>
 </div>
@@ -1141,7 +1151,59 @@ try {
 
     window.closeLocationModal = function() {
         document.getElementById("location-modal").classList.add("hidden");
+        document.getElementById("location-results").style.display = "none";
+        document.getElementById("location-search-input").value = "";
     };
+
+    // -- Location search --
+    (function() {
+        var searchInput = document.getElementById("location-search-input");
+        var searchBtn = document.getElementById("location-search-btn");
+        var resultsDiv = document.getElementById("location-results");
+
+        function doSearch() {
+            var q = searchInput.value.trim();
+            if (!q || q.length < 2) return;
+            var url = "https://nominatim.openstreetmap.org/search?format=json&limit=5&q=" + encodeURIComponent(q);
+            fetch(url, { headers: { "Accept-Language": "de" } })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    resultsDiv.innerHTML = "";
+                    if (!data.length) {
+                        resultsDiv.innerHTML = "<div class='loc-result' style='color:var(--color-text-muted);'>Keine Ergebnisse.</div>";
+                        resultsDiv.style.display = "block";
+                        return;
+                    }
+                    data.forEach(function(item) {
+                        var div = document.createElement("div");
+                        div.className = "loc-result";
+                        div.textContent = item.display_name;
+                        div.addEventListener("click", function() {
+                            var lat = parseFloat(item.lat);
+                            var lon = parseFloat(item.lon);
+                            locModal.lngLat = { lat: lat, lng: lon };
+                            locModal.map.setCenter([lon, lat]);
+                            locModal.map.setZoom(13);
+                            if (locModal.marker) locModal.marker.setLngLat([lon, lat]);
+                            else locModal.marker = new maplibregl.Marker().setLngLat([lon, lat]).addTo(locModal.map);
+                            resultsDiv.style.display = "none";
+                            searchInput.value = "";
+                        });
+                        resultsDiv.appendChild(div);
+                    });
+                    resultsDiv.style.display = "block";
+                })
+                .catch(function() {
+                    resultsDiv.innerHTML = "<div class='loc-result' style='color:var(--color-danger);'>Suchfehler — bitte erneut versuchen.</div>";
+                    resultsDiv.style.display = "block";
+                });
+        }
+
+        searchBtn.addEventListener("click", doSearch);
+        searchInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") { e.preventDefault(); doSearch(); }
+        });
+    })();
 
     document.getElementById("location-save-btn").addEventListener("click", function() {
         if (!locModal.lngLat) return;

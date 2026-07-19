@@ -480,6 +480,71 @@ def compute_distance_by_transport(lang, trip_ids=None):
     return result, sum(totals.values())
 
 
+def compute_yearly_stats(lang, trip_ids=None):
+    """Return per-year aggregations: [{year, trips, distance_km, countries, photos}]."""
+    from ..models import Trip, TripImage
+
+    trips = Trip.objects.filter(is_event=False)
+    if trip_ids is not None:
+        trips = trips.filter(id__in=trip_ids)
+
+    by_year = {}
+    for t in trips:
+        y = t.year
+        if y is None:
+            continue
+        y = str(y)
+        if y not in by_year:
+            by_year[y] = {"year": y, "trips": 0, "distance_km": 0, "countries": set(), "photos": 0}
+        by_year[y]["trips"] += 1
+        by_year[y]["distance_km"] += (t.outbound_distance_km or 0) + (t.return_distance_km or 0)
+        country = resolve_trip_destination_country(t)
+        if country:
+            by_year[y]["countries"].add(country["iso_a2"])
+
+    if trip_ids is not None:
+        images = TripImage.objects.filter(trip_id__in=trip_ids, taken_at__isnull=False)
+    else:
+        images = TripImage.objects.exclude(taken_at__isnull=True)
+    for img in images:
+        y = str(img.taken_at.year)
+        if y in by_year:
+            by_year[y]["photos"] += 1
+
+    result = []
+    for y in sorted(by_year.keys()):
+        entry = by_year[y]
+        result.append({
+            "year": entry["year"],
+            "trips": entry["trips"],
+            "distance_km": round(entry["distance_km"]),
+            "countries": len(entry["countries"]),
+            "photos": entry["photos"],
+        })
+    return result
+
+
+def compute_photo_heatmap(trip_ids=None):
+    """Return GeoJSON FeatureCollection of image points for heatmap rendering."""
+    from ..models import TripImage
+
+    images = TripImage.objects.exclude(location__isnull=True)
+    if trip_ids is not None:
+        images = images.filter(trip_id__in=trip_ids)
+
+    features = []
+    for img in images:
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [img.location.x, img.location.y],
+            },
+            "properties": {"id": img.id, "trip_id": img.trip_id},
+        })
+    return {"type": "FeatureCollection", "features": features}
+
+
 def compute_stats(lang, years=None, transports=None, types=None, countries=None):
     filtered = bool(years or transports or types or countries)
     cache_key = f"diary_stats_{lang}"
@@ -517,6 +582,7 @@ def compute_stats(lang, years=None, transports=None, types=None, countries=None)
         "images_by_country": images_by_country,
         "distance_by_transport": distance_by_transport,
         "summary": summary,
+        "yearly_stats": compute_yearly_stats(lang, trip_ids=trip_ids),
     }
     if not filtered:
         cache.set(cache_key, data, timeout=3600)

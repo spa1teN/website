@@ -67,7 +67,10 @@ def trip_detail(request, pk):
         video_data.append(entry)
 
     lang = request.session.get("lang", "de")
-    if lang == "en":
+    if lang == "fi":
+        transport_labels = {"train": "Juna", "car": "Auto / Bussi", "plane": "Lentokone", "ferry": "Lautta"}
+        journey_labels = [("Menomatka", "outbound_journey"), ("Paluumatka", "return_journey")]
+    elif lang == "en":
         transport_labels = {"train": "Train", "car": "Car / Bus", "plane": "Plane", "ferry": "Ferry"}
         journey_labels = [("Outbound", "outbound_journey"), ("Return", "return_journey")]
     else:
@@ -197,12 +200,28 @@ def trip_detail(request, pk):
 
 @login_required
 def dashboard(request):
+    sort = request.GET.get("sort", "date_desc")
     trips = Trip.objects.select_related(
         "outbound_journey", "return_journey"
     ).prefetch_related(
         "outbound_journey__segments", "return_journey__segments"
     ).all()
-    return render(request, "diary/dashboard.html", {"trips": trips})
+
+    sort_options = {
+        "date_asc": "outbound_journey__travel_date",
+        "date_desc": "-outbound_journey__travel_date",
+        "title_asc": "title_de",
+        "title_desc": "-title_de",
+        "created_asc": "created_at",
+        "created_desc": "-created_at",
+    }
+    order_by = sort_options.get(sort, "-created_at")
+    trips = trips.order_by(order_by)
+
+    return render(request, "diary/dashboard.html", {
+        "trips": trips,
+        "current_sort": sort,
+    })
 
 
 @login_required

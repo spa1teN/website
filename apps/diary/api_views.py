@@ -7,9 +7,11 @@ from .models import JourneySegment, Trip, TripImage, TripVideo
 from .serializers import ImageMarkerSerializer, RouteSerializer, TripListSerializer, VideoMarkerSerializer
 from .services.stats import (
     compute_all_states_geojson,
+    compute_photo_heatmap,
     compute_states_geojson,
     compute_stats,
     compute_visited_countries_geojson,
+    _matching_trip_ids,
 )
 
 
@@ -151,4 +153,20 @@ class StatesView(APIView):
             data = compute_states_geojson(lang, country, years=years or None, transports=transports or None)
         else:
             data = compute_all_states_geojson(lang, years=years or None, transports=transports or None)
+        return Response(data)
+
+
+class PhotoHeatmapView(APIView):
+    def get(self, request):
+        years = set(request.GET.getlist("year"))
+        transports = set(request.GET.getlist("transport"))
+        types = set(request.GET.getlist("type"))
+        countries = set(request.GET.getlist("country"))
+        trip_ids = _matching_trip_ids(
+            years=years or None,
+            transports=transports or None,
+            types=types or None,
+            countries=countries or None,
+        )
+        data = compute_photo_heatmap(trip_ids=trip_ids)
         return Response(data)

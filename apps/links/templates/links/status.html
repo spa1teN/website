@@ -1,0 +1,265 @@
+{% extends "core/base.html" %}
+{% load i18n_extra %}
+{% load static %}
+
+{% block title %}{% t 'Status' 'Status' 'Tila' %} - Caspar Sadenius{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'core/css/status.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>{% t 'Status' 'Status' 'Tila' %}</h1>
+
+    {# ── Tausendsassa ── #}
+    <div class="status-card">
+        <h2>
+            Tausendsassa
+            <span class="dot {% if tausendsassa.available and tausendsassa.bot.gateway_status == 'connected' %}ok{% else %}bad{% endif %}"></span>
+            <span class="status-chip {% if tausendsassa.available and tausendsassa.bot.gateway_status == 'connected' %}ok{% else %}bad{% endif %}">
+                {% if tausendsassa.available and tausendsassa.bot.gateway_status == 'connected' %}{% t 'Online' 'Online' 'Online' %}{% else %}{% t 'Offline' 'Offline' 'Offline' %}{% endif %}
+            </span>
+            {% if tausendsassa.available and tausendsassa.bot.latency_ms %}<span class="h2-right">{{ tausendsassa.bot.latency_ms }} ms</span>{% endif %}
+        </h2>
+
+        {% if tausendsassa.available %}
+        {% if tausendsassa.bot.loaded_cogs %}
+        <div class="cog-row">
+            {% for cog in tausendsassa.bot.loaded_cogs %}
+            <span class="cog-chip ok">{{ cog }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="stat-row">
+            <div class="stat-tile">
+                <span class="stat-num">{{ tausendsassa.stats.guild_count }}</span>
+                <span class="stat-lbl">{% t 'Server' 'Servers' 'Palvelimet' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{{ tausendsassa.stats.total_members }}</span>
+                <span class="stat-lbl">{% t 'Mitglieder' 'Members' 'Jäsenet' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{{ tausendsassa.feeds.active }}</span>
+                <span class="stat-lbl">{% t 'Feeds' 'Feeds' 'Syötteet' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{{ tausendsassa.calendars.count }}</span>
+                <span class="stat-lbl">{% t 'Kalender' 'Calendars' 'Kalenterit' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{{ tausendsassa.map.total_pins }}</span>
+                <span class="stat-lbl">{% t 'Pins' 'Pins' 'Nastat' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{{ tausendsassa.map.guild_count }}</span>
+                <span class="stat-lbl">{% t 'Maps' 'Maps' 'Kartat' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{{ tausendsassa.moderation.guilds_configured }}</span>
+                <span class="stat-lbl">{% t 'Mod-Logs' 'Mod Logs' 'Mod-lokit' %}</span>
+            </div>
+        </div>
+
+        <div class="activity-line">
+            {% t 'Letzte 15 min:' 'Last 15 min:' 'Viimeiset 15 min:' %}
+            <strong>{{ tausendsassa.counters.slash_commands_15m }}</strong> Slash-Commands ·
+            <strong>{{ tausendsassa.counters.interactions_15m }}</strong> {% t 'Interaktionen' 'Interactions' 'Vuorovaikutukset' %} ·
+            <strong>{{ tausendsassa.web_views_1h }}</strong> {% t 'Web (1h)' 'Web (1h)' 'Verkko (1h)' %}
+        </div>
+
+        {% if ts_log or ts_err %}
+        <div class="log-spark">
+            <canvas id="ts-log-canvas" height="50" data-err="{{ ts_err|safe }}"></canvas>
+        </div>
+        {% endif %}
+
+        <div class="status-links">
+            <a href="https://discord.com/discovery/applications/1398477775828029645" target="_blank" rel="noopener" class="status-link"><i class="fa-brands fa-discord"></i> Discovery</a>
+            <a href="https://tausendsassa.casparsadenius.de" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-globe"></i> Interface</a>
+            <a href="https://github.com/spa1teN/Tausendsassa" target="_blank" rel="noopener" class="status-link"><i class="fa-brands fa-github"></i> GitHub</a>
+            <a href="https://tausendsassa.casparsadenius.de/terms" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-file-contract"></i> {% t 'ToS' 'ToS' 'Käyttöehdot' %}</a>
+            <a href="https://tausendsassa.casparsadenius.de/privacy" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-shield-halved"></i> {% t 'Datenschutz' 'Privacy' 'Tietosuoja' %}</a>
+        </div>
+        {% else %}
+        <div class="status-offline">{% t 'Tausendsassa ist derzeit nicht erreichbar.' 'Tausendsassa is currently unavailable.' 'Tausendsassa ei ole tällä hetkellä tavoitettavissa.' %}</div>
+        {% endif %}
+    </div>
+
+    {# ── RoaringBot ── #}
+    <div class="status-card">
+        <h2>
+            RoaringBot
+            <span class="dot {% if roaringbot.available and roaringbot.bot.gateway_status == 'connected' %}ok{% else %}bad{% endif %}"></span>
+            <span class="status-chip {% if roaringbot.available and roaringbot.bot.gateway_status == 'connected' %}ok{% else %}bad{% endif %}">
+                {% if roaringbot.available and roaringbot.bot.gateway_status == 'connected' %}{% t 'Online' 'Online' 'Online' %}{% else %}{% t 'Offline' 'Offline' 'Offline' %}{% endif %}
+            </span>
+            {% if roaringbot.available and roaringbot.bot.latency_ms %}<span class="h2-right">{{ roaringbot.bot.latency_ms }} ms</span>{% endif %}
+        </h2>
+
+        {% if roaringbot.available %}
+        {% if roaringbot.bot.loaded_cogs %}
+        <div class="cog-row">
+            {% for cog in roaringbot.bot.loaded_cogs %}
+            <span class="cog-chip ok">{{ cog }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="stat-row">
+            <div class="stat-tile">
+                <span class="stat-num">{{ roaringbot.bot.guild_count }}</span>
+                <span class="stat-lbl">{% t 'Server' 'Servers' 'Palvelimet' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{{ roaringbot.bot.member_count|default:"-" }}</span>
+                <span class="stat-lbl">{% t 'Mitglieder' 'Members' 'Jäsenet' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{% if roaringbot.esports.monitoring_enabled %}{% t 'Aktiv' 'Active' 'Aktiivinen' %}{% else %}{% t 'Inaktiv' 'Inactive' 'Epäaktiivinen' %}{% endif %}</span>
+                <span class="stat-lbl">{% t 'Match-Cog' 'Match Cog' 'Ottelu-Cog' %}</span>
+            </div>
+            <div class="stat-tile">
+                <span class="stat-num">{{ roaringbot.counters.log_messages_15m }}</span>
+                <span class="stat-lbl">{% t 'Logs (15m)' 'Logs (15m)' 'Lokit (15m)' %}</span>
+            </div>
+        </div>
+
+        {% if rb_log or rb_err %}
+        <div class="log-spark">
+            <canvas id="rb-log-canvas" height="50" data-err="{{ rb_err|safe }}"></canvas>
+        </div>
+        {% endif %}
+
+        {% if roaringbot.esports.next_matches %}
+        <div class="match-section">
+            <div class="card-sub">{% t 'Anstehende Matches' 'Upcoming Matches' 'Tulevat ottelut' %}</div>
+            <div class="match-cards" id="rb-match-cards"></div>
+        </div>
+        {% endif %}
+
+        <div class="status-links">
+            <a href="https://discord.gg/roaringbears" target="_blank" rel="noopener" class="status-link"><i class="fa-brands fa-discord"></i> Roaring Bears</a>
+            <a href="https://wannspieltbig.de" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-gamepad"></i> wannspieltbig.de</a>
+        </div>
+        {% else %}
+        <div class="status-offline">{% t 'RoaringBot ist derzeit nicht erreichbar.' 'RoaringBot is currently unavailable.' 'RoaringBot ei ole tällä hetkellä tavoitettavissa.' %}</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var LANG = "{{ LANG }}";
+    function tr(de, en, fi) {
+        if (LANG === "en") return en;
+        if (LANG === "fi") return fi !== undefined ? fi : en;
+        return de;
+    }
+
+    // ── Match cards (client-side for time formatting) ──
+    var matches = {{ rb_matches_json|safe }};
+    var container = document.getElementById('rb-match-cards');
+    if (container && matches.length) {
+        container.innerHTML = matches.map(function(m) {
+            var cls = 'match-card' + (m.is_live ? ' live' : '') + ((m.issues||[]).length ? ' error' : '');
+            var timeHtml = m.is_live ? '<span class="live-badge">● LIVE</span>' : formatMatchTime(m.start_time);
+            var scoreHtml = '';
+            if (m.live_score) {
+                scoreHtml = '<div class="match-score">' + esc(String(m.live_score.score).replace('-',' : '))
+                    + '<span class="match-score-sub">Maps ' + esc(m.live_score.maps) + '</span></div>';
+            }
+            var dotsHtml;
+            if (m.cleanly_finished) {
+                dotsHtml = '<div class="status-dots"><span class="dot-group"><span class="sdot ok"></span><span class="dot-label">' + tr('Match beendet', 'Match finished', 'Ottelu päättynyt') + '</span></span></div>';
+            } else {
+                dotsHtml = '<div class="status-dots">'
+                    + '<span class="dot-group">'
+                    + '<span class="sdot ' + (m.has_discord_event ? 'ok' : 'bad') + '"></span>'
+                    + '<span class="sdot ' + (m.voice_event_ok ? 'ok' : (m.voice_event_at ? 'warn' : 'muted')) + '"></span>'
+                    + '<span class="dot-label">Event</span></span>'
+                    + '<span class="dot-group">'
+                    + '<span class="sdot ' + (m.reminder_ok ? 'ok' : (m.reminder_at ? 'warn' : 'muted')) + '"></span>'
+                    + '<span class="dot-label">Reminder</span></span>';
+                if ((m.game||'').toLowerCase() === 'cs') {
+                    dotsHtml += '<span class="dot-group">'
+                        + '<span class="sdot ' + (m.tracking_ok ? 'ok' : (m.tracking_at ? 'warn' : 'muted')) + '"></span>'
+                        + '<span class="dot-label">Tracker</span></span>';
+                }
+                dotsHtml += '</div>';
+            }
+            return '<a href="' + esc(m.detail_url || 'https://wannspieltbig.de') + '" target="_blank" rel="noopener" class="' + cls + '">'
+                + '<div class="match-top"><span class="match-game-badge">' + esc(m.game) + '</span><span class="match-when">' + timeHtml + '</span></div>'
+                + '<div class="match-teams">' + esc(m.teams) + '</div>'
+                + (m.tournament ? '<div class="match-tournament">' + esc(m.tournament) + '</div>' : '')
+                + scoreHtml + dotsHtml + '</a>';
+        }).join('');
+    }
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+
+    function formatMatchTime(iso) {
+        if (!iso) return '–';
+        var d = new Date(iso);
+        var now = new Date();
+        var hh = String(d.getHours()).padStart(2,'0');
+        var mm = String(d.getMinutes()).padStart(2,'0');
+        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        var tomorrow = new Date(today.getTime() + 86400000);
+        var locale = LANG === "fi" ? "fi-FI" : (LANG === "en" ? "en-US" : "de-DE");
+        if (d >= today && d < tomorrow) return tr('Heute', 'Today', 'Tänään') + ' ' + hh + ':' + mm;
+        if (d >= tomorrow && d < new Date(tomorrow.getTime() + 86400000)) return tr('Morgen', 'Tomorrow', 'Huomenna') + ' ' + hh + ':' + mm;
+        return d.toLocaleDateString(locale, {day:'2-digit',month:'2-digit'}) + ' ' + hh + ':' + mm;
+    }
+
+    // ── Dual-series sparklines ──
+    function sparkline(canvasId, messages, errors) {
+        var c = document.getElementById(canvasId);
+        if (!c) return;
+        var hasMsgs = messages && messages.length;
+        var hasErrs = errors && errors.length;
+        if (!hasMsgs && !hasErrs) return;
+        var ctx = c.getContext('2d');
+        var dpr = window.devicePixelRatio || 1;
+        var w = c.parentElement.clientWidth - 4, h = 50;
+        c.width = w * dpr; c.height = h * dpr;
+        c.style.width = w + 'px'; c.style.height = h + 'px';
+        ctx.scale(dpr, dpr);
+        var pad = { top: 6, right: 4, bottom: 10, left: 4 };
+        var pw = w - pad.left - pad.right, ph = h - pad.top - pad.bottom;
+        var max = 1;
+        function scan(pts) { if (pts) pts.forEach(function(p) { if (p.v > max) max = p.v; }); }
+        scan(messages); scan(errors);
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(w - pad.right, pad.top); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ph); ctx.lineTo(w - pad.right, pad.top + ph); ctx.stroke();
+        function draw(pts, color, fill) {
+            if (!pts || !pts.length) return;
+            var vals = pts.map(function(p) { return p.v; });
+            var step = pw / (vals.length - 1 || 1);
+            ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ph);
+            for (var i = 0; i < vals.length; i++) {
+                var x = pad.left + step * i, y = pad.top + ph * (1 - vals[i] / max);
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(w - pad.right, pad.top + ph); ctx.closePath();
+            ctx.fillStyle = fill; ctx.fill();
+            ctx.beginPath();
+            for (var i = 0; i < vals.length; i++) {
+                var x = pad.left + step * i, y = pad.top + ph * (1 - vals[i] / max);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+        draw(errors, '#cf6c6c', 'rgba(207,108,108,0.10)');
+        draw(messages, '#6c9bcf', 'rgba(108,155,207,0.10)');
+    }
+    sparkline('ts-log-canvas', {{ ts_log_json|safe }}, {{ ts_err_json|safe }});
+    sparkline('rb-log-canvas', {{ rb_log_json|safe }}, {{ rb_err_json|safe }});
+})();
+</script>
+{% endblock %}

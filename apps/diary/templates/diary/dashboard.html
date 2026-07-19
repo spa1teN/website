@@ -1,6 +1,7 @@
 {% extends "core/base.html" %}
+{% load i18n_extra %}
 
-{% block title %}Reisen verwalten - Caspar Sadenius{% endblock %}
+{% block title %}{% t 'Reisen verwalten' 'Manage Trips' 'Hallitse matkoja' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="admin-layout">
@@ -9,10 +10,20 @@
 
 <div class="page-container" style="max-width:none;padding:0">
     <div class="dashboard-header">
-        <h1>Reisen verwalten</h1>
-        <div style="display:flex;gap:0.5rem">
-            <a href="{% url 'diary:map' %}" class="btn btn-secondary">Zur Karte</a>
-            <a href="{% url 'diary:trip_create' %}" class="btn btn-primary">Neue Reise</a>
+        <h1>{% t 'Reisen verwalten' 'Manage Trips' 'Hallitse matkoja' %}</h1>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+            <div style="display:flex;gap:0.3rem;font-size:0.85rem;color:var(--color-text-muted);">
+                <span>{% t 'Sortieren:' 'Sort:' 'Lajittele:' %}</span>
+                <a href="?sort=date_desc" class="sort-link {% if current_sort == 'date_desc' %}active{% endif %}">{% t 'Neueste' 'Newest' 'Uusimmat' %}</a>
+                <span style="color:var(--color-border);">|</span>
+                <a href="?sort=date_asc" class="sort-link {% if current_sort == 'date_asc' %}active{% endif %}">{% t 'Älteste' 'Oldest' 'Vanhimmat' %}</a>
+                <span style="color:var(--color-border);">|</span>
+                <a href="?sort=title_asc" class="sort-link {% if current_sort == 'title_asc' %}active{% endif %}">{% t 'Titel A-Z' 'Title A-Z' 'Otsikko A-Ö' %}</a>
+                <span style="color:var(--color-border);">|</span>
+                <a href="?sort=title_desc" class="sort-link {% if current_sort == 'title_desc' %}active{% endif %}">{% t 'Titel Z-A' 'Title Z-A' 'Otsikko Ö-A' %}</a>
+            </div>
+            <a href="{% url 'diary:map' %}" class="btn btn-secondary">{% t 'Zur Karte' 'To Map' 'Kartalle' %}</a>
+            <a href="{% url 'diary:trip_create' %}" class="btn btn-primary">{% t 'Neue Reise' 'New Trip' 'Uusi matka' %}</a>
         </div>
     </div>
 
@@ -21,12 +32,12 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Titel</th>
-                <th>Jahr</th>
-                <th>Transportmittel</th>
-                <th>Strecke (km)</th>
-                <th>Bilder</th>
-                <th class="actions-col">Aktionen</th>
+                <th>{% t 'Titel' 'Title' 'Otsikko' %}</th>
+                <th>{% t 'Jahr' 'Year' 'Vuosi' %}</th>
+                <th>{% t 'Transportmittel' 'Transport' 'Kulkuväline' %}</th>
+                <th>{% t 'Strecke (km)' 'Distance (km)' 'Matka (km)' %}</th>
+                <th>{% t 'Bilder' 'Photos' 'Kuvat' %}</th>
+                <th class="actions-col">{% t 'Aktionen' 'Actions' 'Toiminnot' %}</th>
             </tr>
         </thead>
         <tbody>
@@ -37,7 +48,7 @@
                 <td>
                     {% for t in trip.transport_types %}
                     <span class="transport-badge transport-{{ t }}">
-                        {% if t == "train" %}Zug{% elif t == "car" %}Auto{% elif t == "plane" %}Flug{% elif t == "ferry" %}Fähre{% endif %}
+                        {% if t == "train" %}{% t 'Zug' 'Train' 'Juna' %}{% elif t == "car" %}{% t 'Auto' 'Car' 'Auto' %}{% elif t == "plane" %}{% t 'Flug' 'Plane' 'Lentokone' %}{% elif t == "ferry" %}{% t 'Fähre' 'Ferry' 'Lautta' %}{% endif %}
                     </span>
                     {% endfor %}
                 </td>
@@ -46,8 +57,8 @@
                 </td>
                 <td>{{ trip.images.count }}</td>
                 <td class="actions-col">
-                    <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-secondary btn-sm">Bearbeiten</a>
-                    <a href="{% url 'diary:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">Löschen</a>
+                    <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-secondary btn-sm">{% t 'Bearbeiten' 'Edit' 'Muokkaa' %}</a>
+                    <a href="{% url 'diary:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">{% t 'Löschen' 'Delete' 'Poista' %}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -55,7 +66,7 @@
     </table>
     </div>
     {% else %}
-    <p class="empty-state">Noch keine Reisen vorhanden. Erstelle deine erste Reise!</p>
+    <p class="empty-state">{% t 'Noch keine Reisen vorhanden. Erstelle deine erste Reise!' 'No trips yet. Create your first trip!' 'Ei vielä matkoja. Luo ensimmäinen matkasi!' %}</p>
     {% endif %}
 </div>
 
@@ -209,5 +220,9 @@
     padding: 3rem;
     color: var(--color-text-muted);
 }
+
+.sort-link { color: var(--color-text-muted); text-decoration: none; }
+.sort-link:hover { color: var(--color-accent); }
+.sort-link.active { color: var(--color-accent); font-weight: 600; }
 </style>
 {% endblock %}

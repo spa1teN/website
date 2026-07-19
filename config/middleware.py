@@ -39,3 +39,27 @@ class PersistentRemoteUserMiddleware(_BaseRemoteUserMiddleware):
     """
 
     force_logout_if_no_header = False
+
+
+from django.utils import translation as dj_translation
+
+
+class SessionLanguageMiddleware:
+    """Activate django-modeltranslation language from the session ``lang`` key.
+
+    Placed after ``SessionMiddleware`` so ``request.session`` is available.
+    Calls ``translation.activate(lang)`` to make ``obj.translated_field``
+    return the visitor's chosen language, then deactivates after the response.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        lang = request.session.get("lang", "de")
+        if lang not in ("de", "en", "fi"):
+            lang = "de"
+        dj_translation.activate(lang)
+        response = self.get_response(request)
+        dj_translation.deactivate()
+        return response
