@@ -53,6 +53,11 @@ def _get_bot_history(series: str) -> list:
 
 
 def status(request):
+    """Legacy view — kept for backward compatibility. URL now redirects to /status/."""
+    return status_overview(request)
+
+
+def status_overview(request):
     ts_data = _get_tausendsassa_public()
     rb_data = _get_roaringbot_public()
     ts_log = _get_bot_history("tausendsassa_log_messages_15m")
@@ -60,6 +65,7 @@ def status(request):
     rb_log = _get_bot_history("roaringbot_log_messages_15m")
     rb_err = _get_bot_history("roaringbot_log_errors_15m")
     return render(request, "links/status.html", {
+        "bot_filter": None,
         "tausendsassa": ts_data,
         "roaringbot": rb_data,
         "ts_log_json": json.dumps(ts_log),
@@ -67,6 +73,38 @@ def status(request):
         "rb_log_json": json.dumps(rb_log),
         "rb_err_json": json.dumps(rb_err),
         "rb_matches_json": json.dumps(rb_data.get("esports", {}).get("next_matches", [])),
+    })
+
+
+def status_roaringbot(request):
+    rb_data = _get_roaringbot_public()
+    rb_log = _get_bot_history("roaringbot_log_messages_15m")
+    rb_err = _get_bot_history("roaringbot_log_errors_15m")
+    return render(request, "links/status.html", {
+        "bot_filter": "roaringbot",
+        "tausendsassa": {"available": False},
+        "roaringbot": rb_data,
+        "ts_log_json": "[]",
+        "ts_err_json": "[]",
+        "rb_log_json": json.dumps(rb_log),
+        "rb_err_json": json.dumps(rb_err),
+        "rb_matches_json": json.dumps(rb_data.get("esports", {}).get("next_matches", [])),
+    })
+
+
+def status_tausendsassa(request):
+    ts_data = _get_tausendsassa_public()
+    ts_log = _get_bot_history("tausendsassa_log_messages_15m")
+    ts_err = _get_bot_history("tausendsassa_log_errors_15m")
+    return render(request, "links/status.html", {
+        "bot_filter": "tausendsassa",
+        "tausendsassa": ts_data,
+        "roaringbot": {"available": False},
+        "ts_log_json": json.dumps(ts_log),
+        "ts_err_json": json.dumps(ts_err),
+        "rb_log_json": "[]",
+        "rb_err_json": "[]",
+        "rb_matches_json": "[]",
     })
 
 

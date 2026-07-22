@@ -10,9 +10,13 @@
 
 {% block content %}
 <div class="page-container">
-    <h1>{% t 'Status' 'Status' 'Tila' %}</h1>
+    {% if bot_filter %}
+    <p class="status-backlink"><a href="{% url 'status:overview' %}">← {% t 'Zurück zur Status-Übersicht' 'Back to status overview' 'Takaisin tilan yleisnäkymään' %}</a></p>
+    {% endif %}
+    <h1>{% if bot_filter == 'roaringbot' %}RoaringBot{% elif bot_filter == 'tausendsassa' %}Tausendsassa{% else %}{% t 'Status' 'Status' 'Tila' %}{% endif %}</h1>
 
     {# ── Tausendsassa ── #}
+    {% if not bot_filter or bot_filter == 'tausendsassa' %}
     <div class="status-card">
         <h2>
             Tausendsassa
@@ -87,8 +91,10 @@
         <div class="status-offline">{% t 'Tausendsassa ist derzeit nicht erreichbar.' 'Tausendsassa is currently unavailable.' 'Tausendsassa ei ole tällä hetkellä tavoitettavissa.' %}</div>
         {% endif %}
     </div>
+    {% endif %}
 
     {# ── RoaringBot ── #}
+    {% if not bot_filter or bot_filter == 'roaringbot' %}
     <div class="status-card">
         <h2>
             RoaringBot
@@ -148,6 +154,7 @@
         <div class="status-offline">{% t 'RoaringBot ist derzeit nicht erreichbar.' 'RoaringBot is currently unavailable.' 'RoaringBot ei ole tällä hetkellä tavoitettavissa.' %}</div>
         {% endif %}
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
