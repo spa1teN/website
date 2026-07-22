@@ -448,7 +448,14 @@ def _trip_to_json(trip):
     """Convert a trip to JSON for the edit form."""
     result = {
         "title": trip.title,
+        "title_en": trip.title_en or "",
+        "title_fi": trip.title_fi or "",
+        "subtitle": trip.subtitle,
+        "subtitle_en": trip.subtitle_en or "",
+        "subtitle_fi": trip.subtitle_fi or "",
         "description": trip.description,
+        "description_en": trip.description_en or "",
+        "description_fi": trip.description_fi or "",
         "is_event": trip.is_event,
         "event_date": trip.event_date.strftime("%d.%m.%Y") if trip.event_date else "",
         "outbound_journey": None,

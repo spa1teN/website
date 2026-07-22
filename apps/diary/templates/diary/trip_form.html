@@ -97,6 +97,37 @@ textarea.form-control { resize: vertical; }
 
 .map-click-hint { font-size: 0.72rem; color: var(--color-text-muted); }
 
+/* ── Language tabs ─────────────────────────────────────── */
+.lang-tabs {
+    display: inline-flex;
+    gap: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid rgba(108,155,207,0.5);
+    margin-bottom: 1rem;
+}
+.lang-tab {
+    padding: 0.35rem 0.9rem;
+    background: rgba(108,155,207,0.1);
+    border: none;
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-family: inherit;
+    font-weight: 500;
+    min-width: 44px;
+    text-align: center;
+}
+.lang-tab:not(:last-child) { border-right: 1px solid rgba(108,155,207,0.3); }
+.lang-tab.active {
+    background: #6c9bcf;
+    color: #fff;
+    font-weight: 600;
+}
+.lang-tab:not(.active):hover {
+    background: rgba(108,155,207,0.2);
+}
+
 @media (max-width: 768px) {
     .planning-layout { grid-template-columns: 1fr; }
     #planning-map { height: 50vh; min-height: 280px; border-radius: 8px 8px 0 0; }
@@ -255,14 +286,62 @@ textarea.form-control { resize: vertical; }
 
         <div class="form-section">
             <h2>{% t 'Allgemein' 'General' 'Yleistä' %}</h2>
-            <div class="form-group">
-                <label for="id_title">{% t 'Titel' 'Title' 'Otsikko' %}</label>
-                {{ form.title }}
+
+            <!-- Language tabs -->
+            <div class="lang-tabs" id="lang-tabs">
+                <button type="button" class="lang-tab active" data-lang="de" onclick="switchLangTab('de')">DE</button>
+                <button type="button" class="lang-tab" data-lang="en" onclick="switchLangTab('en')">EN</button>
+                <button type="button" class="lang-tab" data-lang="fi" onclick="switchLangTab('fi')">FI</button>
             </div>
-            <div class="form-group">
-                <label for="id_subtitle">{% t 'Untertitel' 'Subtitle' 'Alaotsikko' %}</label>
-                {{ form.subtitle }}
+
+            <!-- DE fields (visible by default) -->
+            <div class="lang-fields lang-de" id="lang-fields-de">
+                <div class="form-group">
+                    <label for="id_title">{% t 'Titel' 'Title' 'Otsikko' %}</label>
+                    {{ form.title }}
+                </div>
+                <div class="form-group">
+                    <label for="id_subtitle">{% t 'Untertitel' 'Subtitle' 'Alaotsikko' %}</label>
+                    {{ form.subtitle }}
+                </div>
+                <div class="form-group">
+                    <label for="id_description">{% t 'Beschreibung' 'Description' 'Kuvaus' %}</label>
+                    {{ form.description }}
+                </div>
             </div>
+
+            <!-- EN fields (hidden by default) -->
+            <div class="lang-fields lang-en" id="lang-fields-en" style="display:none">
+                <div class="form-group">
+                    <label for="id_title_en">Title</label>
+                    {{ form.title_en }}
+                </div>
+                <div class="form-group">
+                    <label for="id_subtitle_en">Subtitle</label>
+                    {{ form.subtitle_en }}
+                </div>
+                <div class="form-group">
+                    <label for="id_description_en">Description</label>
+                    {{ form.description_en }}
+                </div>
+            </div>
+
+            <!-- FI fields (hidden by default) -->
+            <div class="lang-fields lang-fi" id="lang-fields-fi" style="display:none">
+                <div class="form-group">
+                    <label for="id_title_fi">Otsikko</label>
+                    {{ form.title_fi }}
+                </div>
+                <div class="form-group">
+                    <label for="id_subtitle_fi">Alaotsikko</label>
+                    {{ form.subtitle_fi }}
+                </div>
+                <div class="form-group">
+                    <label for="id_description_fi">Kuvaus</label>
+                    {{ form.description_fi }}
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>{% t 'Typ' 'Type' 'Tyyppi' %}</label>
                 <div style="display:flex; gap:1.5rem;">
@@ -277,10 +356,6 @@ textarea.form-control { resize: vertical; }
             <div class="form-group" id="event-date-group" style="display:none">
                 <label for="event-date-input">{% t 'Datum' 'Date' 'Päivämäärä' %}</label>
                 <input type="text" class="form-control" id="event-date-input" placeholder="DD.MM.YYYY">
-            </div>
-            <div class="form-group">
-                <label for="id_description">{% t 'Beschreibung' 'Description' 'Kuvaus' %}</label>
-                {{ form.description }}
             </div>
         </div>
 
@@ -431,6 +506,13 @@ try {
         if (activeSegmentId && allSegments[activeSegmentId] && allSegments[activeSegmentId].journeyType !== journey) {
             setActiveSegment(segs[0] || null);
         }
+    };
+
+    window.switchLangTab = function(lang) {
+        document.querySelectorAll(".lang-tab").forEach(function (t) { t.classList.toggle("active", t.dataset.lang === lang); });
+        document.querySelectorAll(".lang-fields").forEach(function (d) {
+            d.style.display = d.classList.contains("lang-" + lang) ? "" : "none";
+        });
     };
 
     // ── Shared MapLibre map ──────────────────────────────────────────
@@ -943,6 +1025,12 @@ try {
         formData.append("title", title);
         formData.append("subtitle", document.getElementById("id_subtitle").value);
         formData.append("description", document.getElementById("id_description").value);
+        formData.append("title_en", document.getElementById("id_title_en").value);
+        formData.append("subtitle_en", document.getElementById("id_subtitle_en").value);
+        formData.append("description_en", document.getElementById("id_description_en").value);
+        formData.append("title_fi", document.getElementById("id_title_fi").value);
+        formData.append("subtitle_fi", document.getElementById("id_subtitle_fi").value);
+        formData.append("description_fi", document.getElementById("id_description_fi").value);
 
         var isEvent = document.getElementById("type-event").checked;
         formData.append("is_event", isEvent ? "1" : "0");
@@ -1232,6 +1320,14 @@ try {
     {% if trip_data %}
     (function() {
         var data = {{ trip_data|safe }};
+
+        // Pre-fill translation fields
+        if (data.title_en) document.getElementById("id_title_en").value = data.title_en;
+        if (data.subtitle_en) document.getElementById("id_subtitle_en").value = data.subtitle_en;
+        if (data.description_en) document.getElementById("id_description_en").value = data.description_en;
+        if (data.title_fi) document.getElementById("id_title_fi").value = data.title_fi;
+        if (data.subtitle_fi) document.getElementById("id_subtitle_fi").value = data.subtitle_fi;
+        if (data.description_fi) document.getElementById("id_description_fi").value = data.description_fi;
 
         // Restore embed image selections
         if (data.embed_image_ids) {
