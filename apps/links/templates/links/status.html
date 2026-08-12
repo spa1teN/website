@@ -111,6 +111,7 @@
             {% for cog in roaringbot.bot.loaded_cogs %}
             <span class="cog-chip ok">{{ cog }}</span>
             {% endfor %}
+            <span class="cog-chip {% if preview_healthy %}ok{% else %}bad{% endif %}" title="bot.wannspieltbig.de — Match-Previews"><span class="dot {% if preview_healthy %}ok{% else %}bad{% endif %}"></span>{% t 'Previews' 'Previews' 'Esikatselut' %}</span>
         </div>
         {% endif %}
 
@@ -149,6 +150,10 @@
         <div class="status-links">
             <a href="https://discord.gg/roaringbears" target="_blank" rel="noopener" class="status-link"><i class="fa-brands fa-discord"></i> Roaring Bears</a>
             <a href="https://wannspieltbig.de" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-gamepad"></i> wannspieltbig.de</a>
+            <a href="https://bot.wannspieltbig.de/" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-images"></i> match-previews</a>
+            <a href="https://github.com/RoaringBearsBIG/RoaringBot" target="_blank" rel="noopener" class="status-link"><i class="fa-brands fa-github"></i> RoaringBot repo</a>
+            <a href="https://github.com/RoaringBearsBIG/wannspieltbig-social-preview" target="_blank" rel="noopener" class="status-link"><i class="fa-brands fa-github"></i> preview repo</a>
+            <a href="https://roaringbears.de/" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-globe"></i> roaringbears.de</a>
         </div>
         {% else %}
         <div class="status-offline">{% t 'RoaringBot ist derzeit nicht erreichbar.' 'RoaringBot is currently unavailable.' 'RoaringBot ei ole tällä hetkellä tavoitettavissa.' %}</div>
@@ -170,9 +175,13 @@
 
     // ── Match cards (client-side for time formatting) ──
     var matches = {{ rb_matches_json|safe }};
+    var previewIds = {{ rb_preview_ids_json|safe }};
     var container = document.getElementById('rb-match-cards');
     if (container && matches.length) {
         container.innerHTML = matches.map(function(m) {
+            var previewHtml = previewIds.indexOf(String(m.match_id)) !== -1
+                ? '<img class="match-preview" src="https://bot.wannspieltbig.de/' + esc(String(m.match_id)) + '/image.jpg" alt="Match-Preview" loading="lazy">'
+                : '';
             var cls = 'match-card' + (m.is_live ? ' live' : '') + ((m.issues||[]).length ? ' error' : '');
             var timeHtml = m.is_live ? '<span class="live-badge">● LIVE</span>' : formatMatchTime(m.start_time);
             var scoreHtml = '';
@@ -201,6 +210,7 @@
             }
             return '<a href="' + esc(m.detail_url || 'https://wannspieltbig.de') + '" target="_blank" rel="noopener" class="' + cls + '">'
                 + '<div class="match-top"><span class="match-game-badge">' + esc(m.game) + '</span><span class="match-when">' + timeHtml + '</span></div>'
+                + previewHtml
                 + '<div class="match-teams">' + esc(m.teams) + '</div>'
                 + (m.tournament ? '<div class="match-tournament">' + esc(m.tournament) + '</div>' : '')
                 + scoreHtml + dotsHtml + '</a>';

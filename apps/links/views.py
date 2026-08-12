@@ -57,6 +57,21 @@ def status(request):
     return status_overview(request)
 
 
+def _preview_context(rb_data: dict) -> dict:
+    """Social-preview (bot.wannspieltbig.de) status + thumbnail existence,
+    consumed from the dashboard API. See wannspieltbig-social-preview/DATA_INTERFACE.md."""
+    match_ids = [
+        str(m["match_id"]) for m in (rb_data.get("esports", {}).get("next_matches") or [])
+        if m.get("match_id")
+    ]
+    qs = f"?match_ids={','.join(match_ids)}" if match_ids else ""
+    raw = _cached_fetch("preview_status", f"{DASHBOARD_URL}/api/social-preview/status{qs}")
+    return {
+        "preview_healthy": bool(raw.get("healthy")),
+        "rb_preview_ids_json": json.dumps([k for k, v in (raw.get("images") or {}).items() if v]),
+    }
+
+
 def status_overview(request):
     ts_data = _get_tausendsassa_public()
     rb_data = _get_roaringbot_public()
@@ -73,6 +88,7 @@ def status_overview(request):
         "rb_log_json": json.dumps(rb_log),
         "rb_err_json": json.dumps(rb_err),
         "rb_matches_json": json.dumps(rb_data.get("esports", {}).get("next_matches", [])),
+        **_preview_context(rb_data),
     })
 
 
@@ -89,6 +105,7 @@ def status_roaringbot(request):
         "rb_log_json": json.dumps(rb_log),
         "rb_err_json": json.dumps(rb_err),
         "rb_matches_json": json.dumps(rb_data.get("esports", {}).get("next_matches", [])),
+        **_preview_context(rb_data),
     })
 
 
@@ -105,6 +122,8 @@ def status_tausendsassa(request):
         "rb_log_json": "[]",
         "rb_err_json": "[]",
         "rb_matches_json": "[]",
+        "preview_healthy": False,
+        "rb_preview_ids_json": "[]",
     })
 
 
@@ -165,6 +184,7 @@ def _get_roaringbot_public() -> dict:
     public_matches = []
     for m in (esports.get("next_matches") or []):
         public_matches.append({
+            "match_id": m.get("match_id"),
             "teams": m.get("teams"),
             "tournament": m.get("tournament"),
             "game": m.get("game"),
@@ -201,6 +221,11 @@ def _get_roaringbot_public() -> dict:
             "log_messages_15m": (bot.get("counters") or {}).get("log_messages", {}).get("15m", 0),
         },
     }
+
+
+def status_api_docs(request):
+    """Documentation page for the four dashboard availability endpoints."""
+    return render(request, "links/status_api.html")
 
 
 @require_GET

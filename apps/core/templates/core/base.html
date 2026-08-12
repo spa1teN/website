@@ -24,7 +24,6 @@
                 <ul class="nav-links">
                     <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>{% t 'Start' 'Home' 'Etusivu' %}</a></li>
                     <li><a href="{% url 'links:links' %}" {% if request.resolver_match.namespace == 'links' and request.resolver_match.url_name == 'links' %}class="active"{% endif %}>{% t 'Über mich' 'About Me' 'Tietoa minusta' %}</a></li>
-                    <li><a href="{% url 'status:overview' %}" {% if request.resolver_match.namespace == 'status' %}class="active"{% endif %}>{% t 'Status' 'Status' 'Tila' %}</a></li>
                     <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>{% t 'Reisetagebuch' 'Travel Diary' 'Matkapäiväkirja' %}</a></li>
                 </ul>
                 <ul class="nav-auth">
@@ -47,6 +46,7 @@
         {% if user.is_authenticated %}
         <a href="{% url 'core:admin_index' %}" class="footer-admin-btn">{% t 'Admin' 'Admin' 'Admin' %}</a>
         {% endif %}
+        <a href="{% url 'status:overview' %}">{% t 'Status' 'Status' 'Tila' %}</a>
         <a href="{% url 'core:privacy' %}">{% t 'Datenschutzerklärung' 'Privacy Policy' 'Tietosuojaseloste' %}</a>
     </footer>
     {% endif %}
