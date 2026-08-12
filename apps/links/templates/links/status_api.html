@@ -1,0 +1,131 @@
+{% extends "core/base.html" %}
+{% load i18n_extra %}
+
+{% block title %}{% t 'API-Dokumentation' 'API Documentation' 'API-dokumentaatio' %} - Caspar Sadenius{% endblock %}
+
+{% block content %}
+<div class="page-container api-docs-container">
+    <h1>{% t 'Verfügbarkeits-Endpunkte' 'Availability Endpoints' 'Saatavuuspäätepisteet' %}</h1>
+
+    <p>{% t 'Die folgenden Endpunkte werden vom internen Dashboard (<code>dashboard.casparsadenius.de</code>) bereitgestellt und geben jeweils einen binären Verfügbarkeitsstatus zurück. Alle Endpunkte sind durch HTTP Basic Auth geschützt.' 'The following endpoints are served by the internal dashboard (<code>dashboard.casparsadenius.de</code>) and each returns a binary availability status. All endpoints are protected by HTTP Basic Auth.' 'Seuraavat päätepisteet tarjoaa sisäinen hallintapaneeli (<code>dashboard.casparsadenius.de</code>), ja jokainen palauttaa binäärisen saatavuustilan. Kaikki päätepisteet on suojattu HTTP Basic Auth -todennuksella.' %}</p>
+
+    <h2>{% t 'Antwortformat' 'Response Format' 'Vastauksen muoto' %}</h2>
+    <p>{% t 'Jeder Endpunkt gibt ein JSON-Objekt zurück, das mindestens das Feld <code>available</code> (boolean) enthält. <code>true</code> bedeutet, dass der Dienst erreichbar ist und seine Statusdaten liefern konnte; <code>false</code> bedeutet, dass er nicht erreichbar ist oder seine Daten nicht lesbar sind. Bei <code>false</code> wird zusätzlich ein <code>reason</code>-Feld mitgeliefert.' 'Every endpoint returns a JSON object containing at least the <code>available</code> field (boolean). <code>true</code> means the service is reachable and was able to provide its status data; <code>false</code> means it is unreachable or its data could not be read. When <code>false</code>, a <code>reason</code> field is also included.' 'Jokainen päätepiste palauttaa JSON-objektin, joka sisältää vähintään <code>available</code>-kentän (boolean). <code>true</code> tarkoittaa, että palvelu on tavoitettavissa ja pystyi toimittamaan tilatietonsa; <code>false</code> tarkoittaa, ettei se ole tavoitettavissa tai sen tietoja ei voitu lukea. Kun <code>false</code>, mukana on myös <code>reason</code>-kenttä.' %}</p>
+
+    <h2>{% t 'Endpunkte' 'Endpoints' 'Päätepisteet' %}</h2>
+
+    <div class="api-endpoint">
+        <h3><code>GET /api/roaringbot/status</code></h3>
+        <p>{% t 'RoaringBot Discord-Bot — liest die selbst-berichtete <code>status.json</code>-Datei, die der Bot-Prozess alle 15 Sekunden schreibt. Der Status gilt als veraltet (stale), wenn die Datei älter als 120 Sekunden ist.' 'RoaringBot Discord bot — reads the self-reported <code>status.json</code> file that the bot process writes every 15 seconds. The status is considered stale if the file is older than 120 seconds.' 'RoaringBot Discord-botti — lukee itse raportoidun <code>status.json</code>-tiedoston, jonka bottiprosessi kirjoittaa 15 sekunnin välein. Tila katsotaan vanhentuneeksi, jos tiedosto on yli 120 sekuntia vanha.' %}</p>
+        <pre class="api-example">{
+  "available": true,
+  "stale": false,
+  "bot": { "gateway_status": "connected", "latency_ms": 42, … },
+  …
+}</pre>
+    </div>
+
+    <div class="api-endpoint">
+        <h3><code>GET /api/tausendsassa/status</code></h3>
+        <p>{% t 'Tausendsassa Discord-Bot — fragt den db-browser-Container (<code>tausendsassa-db-browser:8080</code>) nach Dashboard-Daten und liest zusätzlich die <code>status.json</code> des Bot-Prozesses. <code>available: false</code>, wenn der db-browser nicht erreichbar ist oder ungültiges JSON antwortet.' 'Tausendsassa Discord bot — queries the db-browser container (<code>tausendsassa-db-browser:8080</code>) for dashboard data and also reads the bot process\'s <code>status.json</code>. <code>available: false</code> if the db-browser is unreachable or returns invalid JSON.' 'Tausendsassa Discord-botti — kysyy db-browser-säiliöltä (<code>tausendsassa-db-browser:8080</code>) hallintapaneelin tietoja ja lukee myös bottiprosessin <code>status.json</code>-tiedoston. <code>available: false</code>, jos db-browser ei ole tavoitettavissa tai palauttaa virheellistä JSONia.' %}</p>
+        <pre class="api-example">{
+  "available": true,
+  "stale": false,
+  "bot": { "gateway_status": "connected", … },
+  "stats": { "guild_count": 12, … },
+  …
+}</pre>
+    </div>
+
+    <div class="api-endpoint">
+        <h3><code>GET /api/website/status</code></h3>
+        <p>{% t 'Website (<code>casparsadenius.de</code>) — ruft die öffentliche Analytics-API der Website über HTTPS ab. Benötigt einen API-Key (<code>WEBSITE_ANALYTICS_API_KEY</code>). <code>available: false</code>, wenn die Website nicht erreichbar ist, kein API-Key gesetzt ist oder die Antwort ungültig ist.' 'Website (<code>casparsadenius.de</code>) — fetches the website\'s public analytics API over HTTPS. Requires an API key (<code>WEBSITE_ANALYTICS_API_KEY</code>). <code>available: false</code> if the website is unreachable, no API key is set, or the response is invalid.' 'Verkkosivusto (<code>casparsadenius.de</code>) — hakee sivuston julkisen analytiikka-API:n HTTPS:n yli. Vaatii API-avaimen (<code>WEBSITE_ANALYTICS_API_KEY</code>). <code>available: false</code>, jos sivusto ei ole tavoitettavissa, API-avainta ei ole asetettu tai vastaus on virheellinen.' %}</p>
+        <pre class="api-example">{
+  "available": true,
+  "pageviews": { "total": 12345, … },
+  …
+}</pre>
+    </div>
+
+    <div class="api-endpoint">
+        <h3><code>GET /api/nextcloud/status</code></h3>
+        <p>{% t 'Nextcloud-Instanz — führt <code>occ</code>-CLI-Befehle über den Docker-Socket im Container <code>nextcloud-app-1</code> aus. Die Ergebnisse werden 5 Minuten lang zwischengespeichert. <code>available: false</code>, wenn der Docker-Socket nicht erreichbar ist oder die Befehle fehlschlagen.' 'Nextcloud instance — runs <code>occ</code> CLI commands via the Docker socket inside the <code>nextcloud-app-1</code> container. Results are cached for 5 minutes. <code>available: false</code> if the Docker socket is unreachable or the commands fail.' 'Nextcloud-instanssi — suorittaa <code>occ</code>-CLI-komentoja Docker-liitännän kautta <code>nextcloud-app-1</code>-säiliössä. Tulokset välimuistitetaan 5 minuutiksi. <code>available: false</code>, jos Docker-liitäntä ei ole tavoitettavissa tai komennot epäonnistuvat.' %}</p>
+        <pre class="api-example">{
+  "available": true,
+  "stale": false,
+  "version": "30.0.5.1",
+  "users": 5,
+  "maintenance": false,
+  …
+}</pre>
+    </div>
+
+    <h2>{% t 'Public Proxies (ohne Basic Auth)' 'Public Proxies (no Basic Auth)' 'Julkiset välityspalvelimet (ei Basic Auth)' %}</h2>
+    <p>{% t 'Für RoaringBot und Tausendsassa existieren bereits öffentliche JSON-Proxies auf dieser Website (ohne Basic Auth), die eine bereinigte Teilmenge der Dashboard-Daten zurückgeben:' 'For RoaringBot and Tausendsassa, public JSON proxies already exist on this website (no Basic Auth), returning a curated subset of the dashboard data:' 'RoaringBotille ja Tausendsassalle on jo olemassa julkiset JSON-välityspalvelimet tällä sivustolla (ilman Basic Authia), jotka palauttavat kuratoidun osajoukon hallintapaneelin tiedoista:' %}</p>
+
+    <div class="api-endpoint">
+        <h3><code>GET /about/api/status/roaringbot/</code></h3>
+        <p>{% t 'Öffentlicher Proxy für RoaringBot — gibt <code>{"available": true/false, "bot": {…}, "esports": {…}}</code> zurück.' 'Public proxy for RoaringBot — returns <code>{"available": true/false, "bot": {…}, "esports": {…}}</code>.' 'Julkinen välityspalvelin RoaringBotille — palauttaa <code>{"available": true/false, "bot": {…}, "esports": {…}}</code>.' %}</p>
+    </div>
+
+    <div class="api-endpoint">
+        <h3><code>GET /about/api/status/tausendsassa/</code></h3>
+        <p>{% t 'Öffentlicher Proxy für Tausendsassa — gibt <code>{"available": true/false, "stats": {…}, "feeds": {…}, "bot": {…}}</code> zurück.' 'Public proxy for Tausendsassa — returns <code>{"available": true/false, "stats": {…}, "feeds": {…}, "bot": {…}}</code>.' 'Julkinen välityspalvelin Tausendsassalle — palauttaa <code>{"available": true/false, "stats": {…}, "feeds": {…}, "bot": {…}}</code>.' %}</p>
+    </div>
+
+</div>
+
+<style>
+.api-docs-container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    line-height: 1.7;
+}
+
+.api-docs-container h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.15rem;
+}
+
+.api-docs-container h3 {
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
+}
+
+.api-docs-container code {
+    background: var(--color-surface);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.api-docs-container p {
+    margin-bottom: 0.75rem;
+}
+
+.api-endpoint {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.api-endpoint:last-of-type {
+    border-bottom: none;
+}
+
+.api-example {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--color-text-muted);
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}
