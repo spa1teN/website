@@ -37,6 +37,7 @@
                 <th>{% t 'Transportmittel' 'Transport' %}</th>
                 <th>{% t 'Strecke (km)' 'Distance (km)' %}</th>
                 <th>{% t 'Bilder' 'Photos' %}</th>
+                <th>{% t 'Videos' 'Videos' %}</th>
                 <th class="actions-col">{% t 'Aktionen' 'Actions' %}</th>
             </tr>
         </thead>
@@ -56,6 +57,7 @@
                     {{ trip.outbound_distance_km|default:"—" }}{% if trip.return_distance_km %} / {{ trip.return_distance_km }}{% endif %}
                 </td>
                 <td>{{ trip.images.count }}</td>
+                <td>{{ trip.videos.count }}</td>
                 <td class="actions-col">
                     <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-secondary btn-sm">{% t 'Bearbeiten' 'Edit' %}</a>
                     <a href="{% url 'diary:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">{% t 'Löschen' 'Delete' %}</a>

@@ -201,7 +201,7 @@ def dashboard(request):
     trips = Trip.objects.select_related(
         "outbound_journey", "return_journey"
     ).prefetch_related(
-        "outbound_journey__segments", "return_journey__segments"
+        "outbound_journey__segments", "return_journey__segments", "videos"
     ).all()
 
     sort_options = {
@@ -304,6 +304,14 @@ def image_set_location(request, pk):
     data = json.loads(request.body)
     img.location = Point(float(data["lng"]), float(data["lat"]))
     img.save(update_fields=["location"])
+    return JsonResponse({"ok": True})
+
+
+def video_set_location(request, pk):
+    vid = get_object_or_404(TripVideo, pk=pk)
+    data = json.loads(request.body)
+    vid.location = Point(float(data["lng"]), float(data["lat"]))
+    vid.save(update_fields=["location"])
     return JsonResponse({"ok": True})
 
 

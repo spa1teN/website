@@ -67,6 +67,22 @@ class TripForm(forms.ModelForm):
         model = Trip
         fields = []
 
+    def _get_validation_exclusions(self):
+        """Skip model-level validation of the virtual translation fields.
+
+        modeltranslation adds virtual ``title``/``subtitle``/``description``
+        fields to ``Trip._meta.fields``.  Because the form declares explicit
+        fields with the same names, they would not be auto-excluded from the
+        instance ``full_clean()`` in ``_post_clean``.  On create the instance
+        is still empty at that point (``Meta.fields = []`` means
+        ``construct_instance`` does not copy the cleaned data), so the virtual
+        ``title`` would fail with "blank".  The explicit form fields above
+        already validate the same content.
+        """
+        exclude = super()._get_validation_exclusions()
+        exclude.update({"title", "subtitle", "description"})
+        return exclude
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:

@@ -238,6 +238,9 @@ textarea.form-control { resize: vertical; }
 }
 .loc-dot { opacity: 0.35; }
 .loc-dot.has-location { opacity: 1; }
+.set-location-btn.static-loc-btn {
+    position: static; background: none; padding: 2px 4px;
+}
 .embed-toggle-btn {
     position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.55);
     border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; padding: 2px 6px;
@@ -383,6 +386,13 @@ textarea.form-control { resize: vertical; }
                     <div class="image-preview" id="existing-vid-{{ vid.id }}" style="width:auto; padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem;">
                         <span style="font-size:1.2rem;">&#9654;</span>
                         <span style="font-size:0.8rem; color:var(--color-text-muted); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ vid.video.name|cut:"trips/" }}</span>
+                        <button type="button" class="set-location-btn static-loc-btn"
+                            data-vid-id="{{ vid.id }}"
+                            data-lat="{% if vid.location %}{{ vid.location.y|unlocalize }}{% endif %}"
+                            data-lng="{% if vid.location %}{{ vid.location.x|unlocalize }}{% endif %}"
+                            title="{% if vid.location %}{% t 'Ort ändern' 'Change location' %}{% else %}{% t 'Ort setzen' 'Set location' %}{% endif %}">
+                            <span class="loc-dot {% if vid.location %}has-location{% endif %}">&#x1F4CD;</span>
+                        </button>
                         <button type="button" class="remove-img" onclick="markVideoForDeletion({{ vid.id }}, this)">&times;</button>
                     </div>
                     {% endfor %}
@@ -446,7 +456,7 @@ textarea.form-control { resize: vertical; }
 <div id="location-modal" class="modal-overlay hidden">
     <div class="modal-box">
         <h4>{% t 'Ort auf der Karte wählen' 'Choose location on the map' %}</h4>
-        <p style="font-size:0.8rem; color:var(--color-text-muted);">{% t 'Klick auf die Karte setzt den Ort des Fotos. Suche nach einem Ort oder klicke direkt auf die Karte.' 'Click on the map to set the photo location. Search for a place or click directly on the map.' %}</p>
+        <p style="font-size:0.8rem; color:var(--color-text-muted);">{% t 'Klick auf die Karte setzt den Ort des Fotos/Videos. Suche nach einem Ort oder klicke direkt auf die Karte.' 'Click on the map to set the photo/video location. Search for a place or click directly on the map.' %}</p>
         <div class="location-search-row">
             <input type="text" id="location-search-input" placeholder="{% t 'Ort suchen (z.B. Berlin, Paris)...' 'Search location (e.g. Berlin, Paris)...' %}" autocomplete="off">
             <button type="button" id="location-search-btn" class="btn btn-sm btn-secondary">{% t 'Suchen' 'Search' %}</button>
@@ -1174,19 +1184,21 @@ try {
     };
 
     // --- Location Picker Modal (MapLibre) ---
-    var locModal = { map: null, marker: null, imgId: null, lngLat: null };
+    var locModal = { map: null, marker: null, kind: "image", id: null, lngLat: null };
 
     document.querySelectorAll(".set-location-btn").forEach(function(btn) {
         btn.addEventListener("click", function() {
-            var id  = this.dataset.imgId;
+            var kind = this.dataset.imgId !== undefined ? "image" : "video";
+            var id = kind === "image" ? this.dataset.imgId : this.dataset.vidId;
             var lat = this.dataset.lat ? parseFloat(this.dataset.lat) : null;
             var lng = this.dataset.lng ? parseFloat(this.dataset.lng) : null;
-            openLocationPicker(id, lat, lng);
+            openLocationPicker(kind, id, lat, lng);
         });
     });
 
-    function openLocationPicker(imgId, lat, lng) {
-        locModal.imgId = imgId;
+    function openLocationPicker(kind, id, lat, lng) {
+        locModal.kind = kind;
+        locModal.id = id;
         document.getElementById("location-modal").classList.remove("hidden");
 
         if (!locModal.map) {
@@ -1275,7 +1287,9 @@ try {
 
     document.getElementById("location-save-btn").addEventListener("click", function() {
         if (!locModal.lngLat) return;
-        fetch("/diary/manage/image/" + locModal.imgId + "/set-location/", {
+        var kind = locModal.kind;
+        var id = locModal.id;
+        fetch("/diary/manage/" + kind + "/" + id + "/set-location/", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
             body: JSON.stringify({ lat: locModal.lngLat.lat, lng: locModal.lngLat.lng }),
@@ -1283,9 +1297,10 @@ try {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.ok) {
-                var dot = document.querySelector("#existing-img-" + locModal.imgId + " .loc-dot");
+                var sel = kind === "video" ? "#existing-vid-" : "#existing-img-";
+                var dot = document.querySelector(sel + id + " .loc-dot");
                 if (dot) dot.classList.add("has-location");
-                var btn = document.querySelector("#existing-img-" + locModal.imgId + " .set-location-btn");
+                var btn = document.querySelector(sel + id + " .set-location-btn");
                 if (btn) {
                     btn.dataset.lat = locModal.lngLat.lat;
                     btn.dataset.lng = locModal.lngLat.lng;

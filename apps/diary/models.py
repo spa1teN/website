@@ -219,12 +219,59 @@ class TripVideo(models.Model, TranslationFallbackMixin):
         Trip, on_delete=models.CASCADE, related_name="videos"
     )
     video = models.FileField(upload_to="trips/%Y/%m/")
+    thumbnail = models.ImageField(upload_to="trips/vthumbs/%Y/%m/", null=True, blank=True)
     location = gis_models.PointField(srid=4326, null=True, blank=True)
     caption = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.caption_de or f"Video zu {self.trip.title_de}"
+
+    def _generate_thumbnail(self):
+        """Extract a still frame (t=1s) as JPEG thumbnail via ffmpeg."""
+        import os
+        import subprocess
+        import tempfile
+
+        from django.core.files.base import ContentFile
+
+        self.video.open()
+        tmp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+        tmp.close()
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg", "-y", "-loglevel", "error",
+                    "-ss", "1", "-i", self.video.path,
+                    "-frames:v", "1",
+                    "-vf", "scale='min(640,iw)':-2",
+                    "-q:v", "4",
+                    tmp.name,
+                ],
+                check=True,
+                timeout=120,
+            )
+            with open(tmp.name, "rb") as f:
+                base_name = os.path.basename(self.video.name)
+                self.thumbnail.save(
+                    "vthumb_" + base_name + ".jpg",
+                    ContentFile(f.read()),
+                    save=False,
+                )
+        finally:
+            if os.path.exists(tmp.name):
+                os.unlink(tmp.name)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and self.video:
+            try:
+                self._generate_thumbnail()
+                super().save(update_fields=["thumbnail"])
+            except Exception:
+                # Thumbnail is best-effort — never block the upload
+                pass
 
 
 def _invalidate_stats_cache(*args, **kwargs):

@@ -331,22 +331,48 @@
             var coords = feature.geometry.coordinates;
             var props = feature.properties;
             var videoUrl = props.video_url || "";
+            var thumbUrl = props.thumbnail_url || "";
 
             var el = document.createElement("div");
             el.style.width = "48px";
             el.style.height = "48px";
             el.style.borderRadius = "6px";
             el.style.overflow = "hidden";
+            el.style.position = "relative";
             el.style.border = "2px solid #29B6F6";
             el.style.cursor = "pointer";
             el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
             el.style.background = "#0d1b2a";
-            el.style.display = "flex";
-            el.style.alignItems = "center";
-            el.style.justifyContent = "center";
-            el.style.fontSize = "22px";
-            el.style.color = "#29B6F6";
-            el.textContent = "\u25B6";
+
+            if (thumbUrl) {
+                var img = document.createElement("img");
+                img.src = thumbUrl;
+                img.alt = "";
+                img.style.width = "100%";
+                img.style.height = "100%";
+                img.style.objectFit = "cover";
+                el.appendChild(img);
+
+                var badge = document.createElement("div");
+                badge.textContent = "\u25B6";
+                badge.style.position = "absolute";
+                badge.style.right = "2px";
+                badge.style.bottom = "2px";
+                badge.style.fontSize = "10px";
+                badge.style.lineHeight = "1";
+                badge.style.color = "#fff";
+                badge.style.background = "rgba(0,0,0,0.6)";
+                badge.style.borderRadius = "3px";
+                badge.style.padding = "2px 3px";
+                el.appendChild(badge);
+            } else {
+                el.style.display = "flex";
+                el.style.alignItems = "center";
+                el.style.justifyContent = "center";
+                el.style.fontSize = "22px";
+                el.style.color = "#29B6F6";
+                el.textContent = "\u25B6";
+            }
 
             el.addEventListener("click", function (e) {
                 e.stopPropagation();

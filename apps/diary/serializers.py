@@ -79,6 +79,7 @@ class VideoMarkerSerializer(GeoFeatureModelSerializer):
     trip_id = serializers.IntegerField(source="trip.id", read_only=True)
     trip_title = serializers.CharField(source="trip.title", read_only=True)
     video_url = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = TripVideo
@@ -87,6 +88,7 @@ class VideoMarkerSerializer(GeoFeatureModelSerializer):
             "id",
             "caption",
             "video_url",
+            "thumbnail_url",
             "trip_id",
             "trip_title",
         ]
@@ -94,6 +96,11 @@ class VideoMarkerSerializer(GeoFeatureModelSerializer):
     def get_video_url(self, obj):
         if obj.video:
             return obj.video.url
+        return None
+
+    def get_thumbnail_url(self, obj):
+        if obj.thumbnail:
+            return obj.thumbnail.url
         return None
 
 

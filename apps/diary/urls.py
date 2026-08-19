@@ -14,4 +14,5 @@ urlpatterns = [
     path("manage/resolve-airport/", views.resolve_airport_ajax, name="resolve_airport"),
     path("manage/search-stations/", views.search_stations_ajax, name="search_stations"),
     path("manage/image/<int:pk>/set-location/", views.image_set_location, name="image_set_location"),
+    path("manage/video/<int:pk>/set-location/", views.video_set_location, name="video_set_location"),
 ]
