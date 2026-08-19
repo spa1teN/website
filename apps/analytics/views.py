@@ -19,7 +19,7 @@ from .useragent import parse_user_agent
 # static/media/API requests are not "visitor" activity worth analyzing.
 _EXCLUDED_PATH_PREFIXES = (
     "/admin/",
-    "/diary/manage/",
+    "/trips/manage/",
     "/api/",
     "/accounts/",
     "/static/",

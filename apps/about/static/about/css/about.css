@@ -1,0 +1,217 @@
+/* About-Seite: Lebenslauf mit statischer Karte */
+#about-page {
+    display: flex;
+    height: calc(100vh - var(--nav-height));
+    height: calc(100dvh - var(--nav-height));
+    overflow: hidden;
+}
+
+/* Story-Panel (links) */
+#story-panel {
+    width: 400px;
+    flex-shrink: 0;
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.station-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.station-counter {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.station-body {
+    margin-top: 1rem;
+    line-height: 1.7;
+}
+
+.station-nav {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.station-nav button {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.station-nav button:hover:not(:disabled) {
+    color: var(--color-accent-hover);
+    border-color: var(--color-accent);
+}
+
+.station-nav button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.station-dots {
+    display: flex;
+    gap: 0.4rem;
+    margin: 0 auto;
+}
+
+.station-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-hover);
+    cursor: pointer;
+}
+
+.station-dot.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+/* Karte (rechts) */
+#about-map-wrap {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+}
+
+#about-map {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 42%, #131c34 0%, #070b16 68%);
+}
+
+/* Statische Karte: kein Grab-Cursor */
+#about-map .maplibregl-canvas {
+    cursor: default;
+}
+
+.station-popup-img {
+    display: block;
+    width: 380px;
+    max-width: 62vw;
+    height: auto;
+    border-radius: 10px;
+}
+
+/* Bild-Thumbnail als Callout über dem Marker-Punkt, per Linie verbunden */
+.about-marker-thumb {
+    width: 300px;
+    height: 300px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 3px solid #FF9800;
+    cursor: pointer;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6);
+    background: #000;
+}
+
+.about-marker-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Logos (DESY, HPI): auf weißem Grund, ganz einpassen statt zuschneiden */
+.about-marker-thumb.logo {
+    background: #fff;
+}
+
+.about-marker-thumb.logo img,
+.station-popup-img.logo {
+    object-fit: contain;
+    background: #fff;
+    padding: 16px;
+}
+
+.station-popup-img.logo {
+    width: 420px;
+}
+
+/* Verbindungslinie Bild ↔ Marker-Punkt */
+.about-marker-line {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.about-map-credit {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    background: rgba(15, 15, 15, 0.6);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    z-index: 5;
+}
+
+/* Mobile: Karte füllt den Viewport, Story als Bottom-Sheet darüber */
+@media (max-width: 768px) {
+    #about-page {
+        position: relative;
+        display: block;
+        overflow: hidden;
+    }
+
+    #about-map-wrap {
+        position: absolute;
+        inset: 0;
+        height: auto;
+    }
+
+    #story-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: auto;
+        max-height: 58dvh;
+        border-right: none;
+        border-top: 1px solid var(--color-border);
+        border-radius: 14px 14px 0 0;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4);
+        overflow-y: auto;
+        padding: 1rem 1.25rem 1.25rem;
+        z-index: 10;
+    }
+
+    .station-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.1rem;
+    }
+
+    .station-body {
+        margin-top: 0.6rem;
+    }
+
+    .about-marker-thumb {
+        width: 252px;
+        height: 252px;
+        border-width: 2px;
+    }
+
+    .about-map-credit {
+        bottom: auto;
+        top: 0.5rem;
+    }
+}

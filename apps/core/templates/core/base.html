@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Caspar Sadenius{% endblock %}</title>
     {% load static %}
-    <link rel="icon" type="image/png" href="{% static 'core/favicon.png' %}">
+    <link rel="icon" type="image/png" href="{% static 'core/favicon-32.png' %}" sizes="32x32">
+    <link rel="icon" type="image/png" href="{% static 'core/favicon-16.png' %}" sizes="16x16">
+    <link rel="apple-touch-icon" href="{% static 'core/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'core/site.webmanifest' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     {% load static %}
     <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
@@ -41,7 +44,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    {% if request.resolver_match.app_name != 'diary' %}
+    {% if request.resolver_match.app_name != 'diary' and request.resolver_match.app_name != 'about' %}
     <footer class="site-footer">
         {% if user.is_authenticated %}
         <a href="{% url 'core:admin_index' %}" class="footer-admin-btn">{% t 'Admin' 'Admin' %}</a>

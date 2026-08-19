@@ -18,8 +18,9 @@ Paths below are relative to `/root/website/`.
 SKIP_UI=1 .claude/skills/run-website/smoke.sh  # containers + HTTP + ORM only (~10 s)
 ```
 
-Checks containers, public HTTPS endpoints (`/`, `/diary/`, diary APIs),
-`manage.py check`, a read-only ORM query, and renders `/diary/` headless
+Checks containers, public HTTPS endpoints (`/`, `/trips/`, `/links/`, diary
+APIs), 301 redirects from the legacy `/diary/*` and `/about/*` paths,
+`manage.py check`, a read-only ORM query, and renders `/trips/` headless
 (screenshot → `/tmp/shots/website-diary.png`, blank-detection, MapLibre
 `<canvas>` present in DOM — WebGL works via SwiftShader in `zenika/alpine-chrome`).
 
@@ -63,7 +64,7 @@ cd /root/dashboard && docker compose restart web     # note: dashboard dir, not 
 - Media files live in the named volume `website_media_volume`, not in
   `~/website/media/`.
 - `/tmp/shots` must be `chmod 777` (Chrome runs as uid 1000).
-- `/admin/`, `/diary/manage/` are nginx basic-auth'd — smoke only covers public
+- `/admin/`, `/trips/manage/` are nginx basic-auth'd — smoke only covers public
   routes; management UI testing needs the user's browser.
 
 ## Troubleshooting

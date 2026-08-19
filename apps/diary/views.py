@@ -410,7 +410,7 @@ def _save_trip(request, trip=None):
             except Exception:
                 pass
 
-        return JsonResponse({"success": True, "redirect": "/diary/manage/"})
+        return JsonResponse({"success": True, "redirect": "/trips/manage/"})
 
     except Exception as e:
         return JsonResponse(

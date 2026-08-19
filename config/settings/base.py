@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "apps.links",
     "apps.diary",
     "apps.analytics",
+    "apps.about",
 ]
 
 MIDDLEWARE = [
@@ -102,7 +103,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/diary/manage/"
+LOGIN_REDIRECT_URL = "/trips/manage/"
 LOGOUT_REDIRECT_URL = "/"
 
 OSRM_API_URL = config("OSRM_API_URL", default="https://router.project-osrm.org")

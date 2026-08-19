@@ -1289,7 +1289,7 @@ try {
         if (!locModal.lngLat) return;
         var kind = locModal.kind;
         var id = locModal.id;
-        fetch("/diary/manage/" + kind + "/" + id + "/set-location/", {
+        fetch("/trips/manage/" + kind + "/" + id + "/set-location/", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
             body: JSON.stringify({ lat: locModal.lngLat.lat, lng: locModal.lngLat.lng }),

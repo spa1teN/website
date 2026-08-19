@@ -23,10 +23,26 @@ done
 
 # 2. public HTTPS endpoints through nginx
 for url in "https://casparsadenius.de/" \
-           "https://casparsadenius.de/diary/" \
+           "https://casparsadenius.de/trips/" \
+           "https://casparsadenius.de/links/" \
+           "https://casparsadenius.de/about/" \
            "https://casparsadenius.de/api/diary/stats/" \
            "https://casparsadenius.de/api/diary/trips/"; do
   curl -sf -m 15 -o /dev/null "$url" && pass "GET $url" || fail "GET $url"
+done
+
+# 2b. legacy URLs must 301 to the new locations (no -L: we want the redirect itself)
+# (/about/ itself is the CV page since 2026-08, only nested paths redirect)
+for old in "/diary/" "/diary/trip/1/" "/about/foo/"; do
+  case "$old" in
+    /diary*) want="/trips${old#/diary}" ;;
+    /about*) want="/links${old#/about}" ;;
+  esac
+  got=$(curl -s -o /dev/null -m 15 -w '%{http_code} %{redirect_url}' "https://casparsadenius.de$old")
+  case "$got" in
+    "301 https://casparsadenius.de$want") pass "redirect $old -> $want" ;;
+    *)                                    fail "redirect $old -> $want (got: $got)" ;;
+  esac
 done
 
 # 3. Django system check (inside the live container)
@@ -41,19 +57,19 @@ case "$TRIPS" in
   *)           pass "ORM query: $TRIPS trips" ;;
 esac
 
-# 5. UI render check: diary map page (MapLibre GL)
+# 5. UI render check: trips map page (MapLibre GL)
 if [ "${SKIP_UI:-0}" != 1 ]; then
   mkdir -p /tmp/shots && chmod 777 /tmp/shots   # chrome runs as uid 1000
   docker run --rm -v /tmp/shots:/out zenika/alpine-chrome \
     --no-sandbox --headless --disable-gpu --hide-scrollbars \
     --window-size=1600,1000 --virtual-time-budget=15000 \
-    --screenshot=/out/website-diary.png https://casparsadenius.de/diary/ >/dev/null 2>&1
+    --screenshot=/out/website-diary.png https://casparsadenius.de/trips/ >/dev/null 2>&1
   python3 "$HERE/verify_png.py" /tmp/shots/website-diary.png \
-    && pass "diary screenshot non-blank -> /tmp/shots/website-diary.png" \
-    || fail "diary screenshot non-blank"
+    && pass "trips screenshot non-blank -> /tmp/shots/website-diary.png" \
+    || fail "trips screenshot non-blank"
 
   N=$(docker run --rm zenika/alpine-chrome --no-sandbox --headless --disable-gpu \
-      --virtual-time-budget=15000 --dump-dom https://casparsadenius.de/diary/ 2>/dev/null \
+      --virtual-time-budget=15000 --dump-dom https://casparsadenius.de/trips/ 2>/dev/null \
       | grep -c "<canvas")
   [ "${N:-0}" -ge 1 ] && pass "MapLibre canvas present in DOM" \
                       || fail "MapLibre canvas present in DOM"

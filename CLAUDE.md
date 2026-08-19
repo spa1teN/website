@@ -1,6 +1,6 @@
 # Website — casparsadenius.de
 
-Persönliche Website mit Reisetagebuch (interaktive Karte), About-Seite und anonymem Analytics-Tracking. Mehrsprachig (DE/EN/FI).
+Persönliche Website mit Reisetagebuch (interaktive Karte), About-Seite und anonymem Analytics-Tracking. Mehrsprachig (DE/EN).
 
 ## Stack
 
@@ -32,7 +32,7 @@ website/
 │   │   ├── urls.py
 │   │   ├── context_processors.py    # LANG + OTHER_LANGS für Templates
 │   │   ├── templatetags/
-│   │   │   └── i18n_extra.py        # {% t de en fi %} Template-Tag
+│   │   │   └── i18n_extra.py        # {% t de en %} Template-Tag
 │   │   ├── static/core/
 │   │   │   ├── css/style.css        # Globales CSS + Navigation + Mobile
 │   │   │   ├── js/analytics.js      # Client-seitiges Analytics (sendBeacon)
@@ -42,10 +42,19 @@ website/
 │   │       ├── home.html, login.html, privacy.html
 │   │       ├── admin.html           # Admin-Übersicht
 │   │       └── admin_sidebar.html
-│   ├── links/                       # About-Seite (Social Links + Discord-Status)
+│   ├── links/                       # Links-Seite (Social Links + Discord-Status)
 │   │   ├── views.py                 # Übergibt DISCORD_USER_ID ans Template
 │   │   ├── urls.py
 │   │   └── templates/links/links.html
+│   ├── about/                       # Interaktiver Lebenslauf (statische Karte + Stationen)
+│   │   ├── views.py                 # index — lokalisiert STATIONS (DE/EN) und übergibt JSON
+│   │   ├── urls.py                  # /about/ (app_name="about")
+│   │   ├── stations.py              # STATIONS-Daten (Titel/Text pro Sprache, Karten-Konfig)
+│   │   ├── templates/about/about.html
+│   │   └── static/about/
+│   │       ├── css/about.css        # Split-Layout (Story-Panel links, Karte rechts)
+│   │       ├── js/about.js          # MapLibre (interactive:false), Pfeiltasten-Navigation, Puls-Marker
+│   │       └── data/fi-de.geojson   # FI+DE Polygone (aus diary/data/countries.geojson extrahiert)
 │   ├── diary/                       # Reisetagebuch (Hauptfeature)
 │   │   ├── models.py                # Trip, Journey, JourneySegment, TripImage, TripVideo
 │   │   ├── views.py                 # Kartenansicht, Trip-Detail, Admin-CRUD
@@ -164,24 +173,25 @@ Alle Volumes sind `external: true` (vom Dashboard-Stack erstellt):
 | Pfad | Beschreibung |
 |---|---|
 | `/` | Home-Seite |
-| `/about/` | Social-Media-Links + Discord-Status |
+| `/links/` | Social-Media-Links + Discord-Status |
+| `/about/` | Interaktiver Lebenslauf (statische Karte + Stationen) |
 | `/datenschutz/` | Datenschutzerklärung |
-| `/set-language/<lang>/` | Sprache setzen (de/en/fi) |
-| `/diary/` | Interaktive Karte (öffentlich) |
-| `/diary/trip/<id>/` | Reise-Detailseite (öffentlich) |
+| `/set-language/<lang>/` | Sprache setzen (de/en) |
+| `/trips/` | Interaktive Karte (öffentlich) |
+| `/trips/trip/<id>/` | Reise-Detailseite (öffentlich) |
 
 ### Geschützt (nginx basic auth)
 | Pfad | Beschreibung |
 |---|---|
 | `/manage/` | Admin-Übersicht |
-| `/diary/manage/` | Reise-Dashboard (Tabelle) |
-| `/diary/manage/trip/new/` | Neue Reise anlegen |
-| `/diary/manage/trip/<id>/edit/` | Reise bearbeiten |
-| `/diary/manage/trip/<id>/delete/` | Reise löschen |
-| `/diary/manage/resolve-route/` | AJAX: Route aus Wegpunkten berechnen |
-| `/diary/manage/resolve-airport/` | AJAX: IATA-Code → Koordinaten |
-| `/diary/manage/search-stations/` | AJAX: Ortssuche via Photon |
-| `/diary/manage/image/<id>/set-location/` | AJAX: Bild-GPS manuell setzen |
+| `/trips/manage/` | Reise-Dashboard (Tabelle) |
+| `/trips/manage/trip/new/` | Neue Reise anlegen |
+| `/trips/manage/trip/<id>/edit/` | Reise bearbeiten |
+| `/trips/manage/trip/<id>/delete/` | Reise löschen |
+| `/trips/manage/resolve-route/` | AJAX: Route aus Wegpunkten berechnen |
+| `/trips/manage/resolve-airport/` | AJAX: IATA-Code → Koordinaten |
+| `/trips/manage/search-stations/` | AJAX: Ortssuche via Photon |
+| `/trips/manage/image/<id>/set-location/` | AJAX: Bild-GPS manuell setzen |
 | `/admin/` | Django-Admin |
 | `/accounts/login/` | Login (RemoteUser via nginx) |
 
@@ -243,21 +253,21 @@ Anonymes Pageview- und Click-Tracking — keine IP-Adressen, Cookies oder Sessio
 - **GeoIP:** MaxMind GeoLite2-City (optional, Pfad in `.env`)
 - **Client:** `apps/core/static/core/js/analytics.js` — sendet Events per `navigator.sendBeacon()`
 - **Stats API:** `/api/analytics/stats/` mit `X-API-Key`-Header (vom Dashboard konsumiert)
-- **Ausschluss:** Authentifizierte User, Pfade mit `/admin`/`/staticfiles`/`/media`/`/api`/`/accounts`/`/diary/manage`
+- **Ausschluss:** Authentifizierte User, Pfade mit `/admin`/`/staticfiles`/`/media`/`/api`/`/accounts`/`/trips/manage`
 - Daten sind read-only im Django-Admin
 
 ## Authentifizierung
 
 Nginx Basic Auth + Django `RemoteUserBackend`:
 
-1. Nginx prüft Basic Auth für geschützte Pfade (`/admin/`, `/diary/manage/`, `/manage/`)
+1. Nginx prüft Basic Auth für geschützte Pfade (`/admin/`, `/trips/manage/`, `/manage/`)
 2. `NginxRemoteUserMiddleware` kopiert `HTTP_REMOTE_USER` → `REMOTE_USER` in `request.META`
 3. `PersistentRemoteUserMiddleware` (mit `force_logout_if_no_header = False`) hält die Session auf öffentlichen Seiten
 4. Django erstellt/aktualisiert den User automatisch — kein separates Login-Formular
 
 ## Mehrsprachigkeit
 
-Drei Sprachen: DE (default), EN, FI. Sprache wird per Session (`request.session["lang"]`) gespeichert. Umschaltung via `/set-language/<lang>/`. Das `{% t "DE" "EN" "FI" %}` Template-Tag rendert den passenden String. Die Karten-API endpoints akzeptieren `?lang=` für lokalisierte Labels.
+Zwei Sprachen: DE (default), EN. Sprache wird per Session (`request.session["lang"]`) gespeichert. Umschaltung via `/set-language/<lang>/`. Das `{% t "DE" "EN" %}` Template-Tag rendert den passenden String. Die Karten-API endpoints akzeptieren `?lang=` für lokalisierte Labels. Die About-Seite lokalisiert ihre Stations-Texte serverseitig in `apps/about/views.py` (gleiche de/en-Logik wie `{% t %}`).
 
 ## Deployment
 
@@ -286,7 +296,7 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 - `DEBUG` — 0 oder 1
 - `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
 - `OSRM_API_URL` — Default: `https://router.project-osrm.org`
-- `DISCORD_USER_ID` — Discord-User-ID für Lanyard-Status auf `/about/`
+- `DISCORD_USER_ID` — Discord-User-ID für Lanyard-Status auf `/links/`
 - `ALLOWED_HOSTS` — Kommagetrennte Liste
 - `ANALYTICS_GEOIP_DB_PATH` — Pfad zur MaxMind GeoLite2-City.mmdb (optional)
 - `ANALYTICS_DASHBOARD_API_KEY` — Shared Secret für die Stats-API

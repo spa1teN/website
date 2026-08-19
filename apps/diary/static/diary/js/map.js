@@ -451,7 +451,7 @@
                 var fallbackTitle = tr("Reise", "Trip");
                 var html = "<b>" + (props.trip_title || fallbackTitle) + "</b><br>" + transportLabel(props.transport_type);
                 if (props.trip_id) {
-                    html += '<br><a href="/diary/trip/' + props.trip_id + '/">Details &rarr;</a>';
+                    html += '<br><a href="/trips/trip/' + props.trip_id + '/">Details &rarr;</a>';
                 }
                 if (currentPopup) currentPopup.remove();
                 currentPopup = new maplibregl.Popup({ maxWidth: "250px" })
@@ -878,7 +878,7 @@
                   '</div>'
                 : '') +
             statsHtml +
-            '<a href="/diary/trip/' + trip.id + '/" class="trip-info-link">Details &rarr;</a>';
+            '<a href="/trips/trip/' + trip.id + '/" class="trip-info-link">Details &rarr;</a>';
 
         infoEl.classList.remove("hidden");
     }
