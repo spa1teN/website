@@ -86,11 +86,10 @@ TIME_ZONE = "Europe/Berlin"
 LANGUAGES = (
     ("de", "German"),
     ("en", "English"),
-    ("fi", "Finnish"),
 )
 MODELTRANSLATION_DEFAULT_LANGUAGE = "de"
-MODELTRANSLATION_LANGUAGES = ("de", "en", "fi")
-MODELTRANSLATION_FALLBACK_LANGUAGES = ("en", "fi")
+MODELTRANSLATION_LANGUAGES = ("de", "en")
+MODELTRANSLATION_FALLBACK_LANGUAGES = ("en",)
 USE_I18N = True
 USE_TZ = True
 

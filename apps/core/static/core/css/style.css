@@ -184,7 +184,8 @@ a:hover {
 
 .nav-btn-group-item.lang-btn {
     padding: 0.35rem 0.6rem;
-    font-size: 1.15rem;
+    font-size: 0.8rem;
+    font-weight: 600;
     line-height: 1;
 }
 

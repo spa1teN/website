@@ -159,35 +159,33 @@
     color: color-mix(in srgb, var(--color-accent) 65%, white);
 }
 
-.subdivisions-toggle {
-    display: block;
-    width: 100%;
-    padding: 0.45rem 0.6rem;
-    margin-bottom: 1.25rem;
-    background: var(--color-bg);
+.map-options-switch {
+    margin-bottom: 0.4rem;
+}
+
+.map-legend {
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    color: var(--color-text-muted);
-    font-size: 0.8rem;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.subdivisions-toggle:hover {
+    padding: 0.45rem 0.65rem;
     color: var(--color-text);
-    border-color: var(--color-accent);
+    font-size: 0.75rem;
+    pointer-events: none;
 }
 
-.subdivisions-toggle.active {
-    background: color-mix(in srgb, var(--color-accent) 26%, transparent);
-    color: color-mix(in srgb, var(--color-accent) 65%, white);
-    border-color: transparent;
-}
-
-.subdivisions-toggle.hidden {
+.map-legend.hidden {
     display: none;
+}
+
+.map-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.12rem 0;
+}
+
+.map-legend-swatch {
+    flex-shrink: 0;
 }
 
 #manage-link {
@@ -226,6 +224,61 @@
 .filter-section input[type="checkbox"] {
     margin-right: 0.5rem;
     accent-color: var(--color-accent);
+}
+
+.route-width-control {
+    margin-top: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.route-width-control label {
+    padding: 0;
+}
+
+.route-width-control input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.route-width-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    border: none;
+}
+
+.route-width-control input[type="range"]::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    border: none;
+}
+
+.route-width-control input[type="range"]::-moz-range-track {
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 2px;
+}
+
+.route-width-control #route-width-value {
+    min-width: 2.75rem;
+    text-align: right;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
 }
 
 #year-filter {
@@ -631,10 +684,7 @@
     border-radius: 999px;
 }
 
-#type-filter-section.hidden,
-#country-filter-section.hidden,
-#entries-section.hidden,
-#transport-filter-section.hidden {
+#entries-section.hidden {
     display: none;
 }
 

@@ -2,7 +2,7 @@
 {% load i18n_extra %}
 {% load static %}
 
-{% block title %}{% t 'Status' 'Status' 'Tila' %} - Caspar Sadenius{% endblock %}
+{% block title %}{% t 'Status' 'Status' %} - Caspar Sadenius{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'core/css/status.css' %}">
@@ -11,9 +11,9 @@
 {% block content %}
 <div class="page-container">
     {% if bot_filter %}
-    <p class="status-backlink"><a href="{% url 'status:overview' %}">← {% t 'Zurück zur Status-Übersicht' 'Back to status overview' 'Takaisin tilan yleisnäkymään' %}</a></p>
+    <p class="status-backlink"><a href="{% url 'status:overview' %}">← {% t 'Zurück zur Status-Übersicht' 'Back to status overview' %}</a></p>
     {% endif %}
-    <h1>{% if bot_filter == 'roaringbot' %}RoaringBot{% elif bot_filter == 'tausendsassa' %}Tausendsassa{% else %}{% t 'Status' 'Status' 'Tila' %}{% endif %}</h1>
+    <h1>{% if bot_filter == 'roaringbot' %}RoaringBot{% elif bot_filter == 'tausendsassa' %}Tausendsassa{% else %}{% t 'Status' 'Status' %}{% endif %}</h1>
 
     {# ── Tausendsassa ── #}
     {% if not bot_filter or bot_filter == 'tausendsassa' %}
@@ -22,7 +22,7 @@
             Tausendsassa
             <span class="dot {% if tausendsassa.available and tausendsassa.bot.gateway_status == 'connected' %}ok{% else %}bad{% endif %}"></span>
             <span class="status-chip {% if tausendsassa.available and tausendsassa.bot.gateway_status == 'connected' %}ok{% else %}bad{% endif %}">
-                {% if tausendsassa.available and tausendsassa.bot.gateway_status == 'connected' %}{% t 'Online' 'Online' 'Online' %}{% else %}{% t 'Offline' 'Offline' 'Offline' %}{% endif %}
+                {% if tausendsassa.available and tausendsassa.bot.gateway_status == 'connected' %}{% t 'Online' 'Online' %}{% else %}{% t 'Offline' 'Offline' %}{% endif %}
             </span>
             {% if tausendsassa.available and tausendsassa.bot.latency_ms %}<span class="h2-right">{{ tausendsassa.bot.latency_ms }} ms</span>{% endif %}
         </h2>
@@ -39,39 +39,39 @@
         <div class="stat-row">
             <div class="stat-tile">
                 <span class="stat-num">{{ tausendsassa.stats.guild_count }}</span>
-                <span class="stat-lbl">{% t 'Server' 'Servers' 'Palvelimet' %}</span>
+                <span class="stat-lbl">{% t 'Server' 'Servers' %}</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-num">{{ tausendsassa.stats.total_members }}</span>
-                <span class="stat-lbl">{% t 'Mitglieder' 'Members' 'Jäsenet' %}</span>
+                <span class="stat-lbl">{% t 'Mitglieder' 'Members' %}</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-num">{{ tausendsassa.feeds.active }}</span>
-                <span class="stat-lbl">{% t 'Feeds' 'Feeds' 'Syötteet' %}</span>
+                <span class="stat-lbl">{% t 'Feeds' 'Feeds' %}</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-num">{{ tausendsassa.calendars.count }}</span>
-                <span class="stat-lbl">{% t 'Kalender' 'Calendars' 'Kalenterit' %}</span>
+                <span class="stat-lbl">{% t 'Kalender' 'Calendars' %}</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-num">{{ tausendsassa.map.total_pins }}</span>
-                <span class="stat-lbl">{% t 'Pins' 'Pins' 'Nastat' %}</span>
+                <span class="stat-lbl">{% t 'Pins' 'Pins' %}</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-num">{{ tausendsassa.map.guild_count }}</span>
-                <span class="stat-lbl">{% t 'Maps' 'Maps' 'Kartat' %}</span>
+                <span class="stat-lbl">{% t 'Maps' 'Maps' %}</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-num">{{ tausendsassa.moderation.guilds_configured }}</span>
-                <span class="stat-lbl">{% t 'Mod-Logs' 'Mod Logs' 'Mod-lokit' %}</span>
+                <span class="stat-lbl">{% t 'Mod-Logs' 'Mod Logs' %}</span>
             </div>
         </div>
 
         <div class="activity-line">
-            {% t 'Letzte 15 min:' 'Last 15 min:' 'Viimeiset 15 min:' %}
+            {% t 'Letzte 15 min:' 'Last 15 min:' %}
             <strong>{{ tausendsassa.counters.slash_commands_15m }}</strong> Slash-Commands ·
-            <strong>{{ tausendsassa.counters.interactions_15m }}</strong> {% t 'Interaktionen' 'Interactions' 'Vuorovaikutukset' %} ·
-            <strong>{{ tausendsassa.web_views_1h }}</strong> {% t 'Web (1h)' 'Web (1h)' 'Verkko (1h)' %}
+            <strong>{{ tausendsassa.counters.interactions_15m }}</strong> {% t 'Interaktionen' 'Interactions' %} ·
+            <strong>{{ tausendsassa.web_views_1h }}</strong> {% t 'Web (1h)' 'Web (1h)' %}
         </div>
 
         {% if ts_log or ts_err %}
@@ -84,11 +84,11 @@
             <a href="https://discord.com/discovery/applications/1398477775828029645" target="_blank" rel="noopener" class="status-link"><i class="fa-brands fa-discord"></i> Discovery</a>
             <a href="https://tausendsassa.casparsadenius.de" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-globe"></i> Interface</a>
             <a href="https://github.com/spa1teN/Tausendsassa" target="_blank" rel="noopener" class="status-link"><i class="fa-brands fa-github"></i> GitHub</a>
-            <a href="https://tausendsassa.casparsadenius.de/terms" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-file-contract"></i> {% t 'ToS' 'ToS' 'Käyttöehdot' %}</a>
-            <a href="https://tausendsassa.casparsadenius.de/privacy" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-shield-halved"></i> {% t 'Datenschutz' 'Privacy' 'Tietosuoja' %}</a>
+            <a href="https://tausendsassa.casparsadenius.de/terms" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-file-contract"></i> {% t 'ToS' 'ToS' %}</a>
+            <a href="https://tausendsassa.casparsadenius.de/privacy" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-shield-halved"></i> {% t 'Datenschutz' 'Privacy' %}</a>
         </div>
         {% else %}
-        <div class="status-offline">{% t 'Tausendsassa ist derzeit nicht erreichbar.' 'Tausendsassa is currently unavailable.' 'Tausendsassa ei ole tällä hetkellä tavoitettavissa.' %}</div>
+        <div class="status-offline">{% t 'Tausendsassa ist derzeit nicht erreichbar.' 'Tausendsassa is currently unavailable.' %}</div>
         {% endif %}
     </div>
     {% endif %}
@@ -100,7 +100,7 @@
             RoaringBot
             <span class="dot {% if roaringbot.available and roaringbot.bot.gateway_status == 'connected' %}ok{% else %}bad{% endif %}"></span>
             <span class="status-chip {% if roaringbot.available and roaringbot.bot.gateway_status == 'connected' %}ok{% else %}bad{% endif %}">
-                {% if roaringbot.available and roaringbot.bot.gateway_status == 'connected' %}{% t 'Online' 'Online' 'Online' %}{% else %}{% t 'Offline' 'Offline' 'Offline' %}{% endif %}
+                {% if roaringbot.available and roaringbot.bot.gateway_status == 'connected' %}{% t 'Online' 'Online' %}{% else %}{% t 'Offline' 'Offline' %}{% endif %}
             </span>
             {% if roaringbot.available and roaringbot.bot.latency_ms %}<span class="h2-right">{{ roaringbot.bot.latency_ms }} ms</span>{% endif %}
         </h2>
@@ -111,26 +111,26 @@
             {% for cog in roaringbot.bot.loaded_cogs %}
             <span class="cog-chip ok">{{ cog }}</span>
             {% endfor %}
-            <span class="cog-chip {% if preview_healthy %}ok{% else %}bad{% endif %}" title="bot.wannspieltbig.de — Match-Previews"><span class="dot {% if preview_healthy %}ok{% else %}bad{% endif %}"></span>{% t 'Previews' 'Previews' 'Esikatselut' %}</span>
+            <span class="cog-chip {% if preview_healthy %}ok{% else %}bad{% endif %}" title="bot.wannspieltbig.de — Match-Previews"><span class="dot {% if preview_healthy %}ok{% else %}bad{% endif %}"></span>{% t 'Previews' 'Previews' %}</span>
         </div>
         {% endif %}
 
         <div class="stat-row">
             <div class="stat-tile">
                 <span class="stat-num">{{ roaringbot.bot.guild_count }}</span>
-                <span class="stat-lbl">{% t 'Server' 'Servers' 'Palvelimet' %}</span>
+                <span class="stat-lbl">{% t 'Server' 'Servers' %}</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-num">{{ roaringbot.bot.member_count|default:"-" }}</span>
-                <span class="stat-lbl">{% t 'Mitglieder' 'Members' 'Jäsenet' %}</span>
+                <span class="stat-lbl">{% t 'Mitglieder' 'Members' %}</span>
             </div>
             <div class="stat-tile">
-                <span class="stat-num">{% if roaringbot.esports.monitoring_enabled %}{% t 'Aktiv' 'Active' 'Aktiivinen' %}{% else %}{% t 'Inaktiv' 'Inactive' 'Epäaktiivinen' %}{% endif %}</span>
-                <span class="stat-lbl">{% t 'Match-Cog' 'Match Cog' 'Ottelu-Cog' %}</span>
+                <span class="stat-num">{% if roaringbot.esports.monitoring_enabled %}{% t 'Aktiv' 'Active' %}{% else %}{% t 'Inaktiv' 'Inactive' %}{% endif %}</span>
+                <span class="stat-lbl">{% t 'Match-Cog' 'Match Cog' %}</span>
             </div>
             <div class="stat-tile">
                 <span class="stat-num">{{ roaringbot.counters.log_messages_15m }}</span>
-                <span class="stat-lbl">{% t 'Logs (15m)' 'Logs (15m)' 'Lokit (15m)' %}</span>
+                <span class="stat-lbl">{% t 'Logs (15m)' 'Logs (15m)' %}</span>
             </div>
         </div>
 
@@ -142,7 +142,7 @@
 
         {% if roaringbot.esports.next_matches %}
         <div class="match-section">
-            <div class="card-sub">{% t 'Anstehende Matches' 'Upcoming Matches' 'Tulevat ottelut' %}</div>
+            <div class="card-sub">{% t 'Anstehende Matches' 'Upcoming Matches' %}</div>
             <div class="match-cards" id="rb-match-cards"></div>
         </div>
         {% endif %}
@@ -156,7 +156,7 @@
             <a href="https://roaringbears.de/" target="_blank" rel="noopener" class="status-link"><i class="fa-solid fa-globe"></i> roaringbears.de</a>
         </div>
         {% else %}
-        <div class="status-offline">{% t 'RoaringBot ist derzeit nicht erreichbar.' 'RoaringBot is currently unavailable.' 'RoaringBot ei ole tällä hetkellä tavoitettavissa.' %}</div>
+        <div class="status-offline">{% t 'RoaringBot ist derzeit nicht erreichbar.' 'RoaringBot is currently unavailable.' %}</div>
         {% endif %}
     </div>
     {% endif %}
@@ -167,9 +167,8 @@
 <script>
 (function() {
     var LANG = "{{ LANG }}";
-    function tr(de, en, fi) {
+    function tr(de, en) {
         if (LANG === "en") return en;
-        if (LANG === "fi") return fi !== undefined ? fi : en;
         return de;
     }
 
@@ -191,7 +190,7 @@
             }
             var dotsHtml;
             if (m.cleanly_finished) {
-                dotsHtml = '<div class="status-dots"><span class="dot-group"><span class="sdot ok"></span><span class="dot-label">' + tr('Match beendet', 'Match finished', 'Ottelu päättynyt') + '</span></span></div>';
+                dotsHtml = '<div class="status-dots"><span class="dot-group"><span class="sdot ok"></span><span class="dot-label">' + tr('Match beendet', 'Match finished') + '</span></span></div>';
             } else {
                 dotsHtml = '<div class="status-dots">'
                     + '<span class="dot-group">'
@@ -228,8 +227,8 @@
         var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         var tomorrow = new Date(today.getTime() + 86400000);
         var locale = LANG === "fi" ? "fi-FI" : (LANG === "en" ? "en-US" : "de-DE");
-        if (d >= today && d < tomorrow) return tr('Heute', 'Today', 'Tänään') + ' ' + hh + ':' + mm;
-        if (d >= tomorrow && d < new Date(tomorrow.getTime() + 86400000)) return tr('Morgen', 'Tomorrow', 'Huomenna') + ' ' + hh + ':' + mm;
+        if (d >= today && d < tomorrow) return tr('Heute', 'Today') + ' ' + hh + ':' + mm;
+        if (d >= tomorrow && d < new Date(tomorrow.getTime() + 86400000)) return tr('Morgen', 'Tomorrow') + ' ' + hh + ':' + mm;
         return d.toLocaleDateString(locale, {day:'2-digit',month:'2-digit'}) + ' ' + hh + ':' + mm;
     }
 

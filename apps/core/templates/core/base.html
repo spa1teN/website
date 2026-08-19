@@ -19,17 +19,17 @@
     <nav class="main-nav">
         <div class="nav-container">
             <a href="{% url 'core:home' %}" class="nav-brand">Caspar Sadenius</a>
-            <button class="nav-hamburger" id="nav-hamburger" aria-label="{% t 'Menü' 'Menu' 'Valikko' %}">&#9776;</button>
+            <button class="nav-hamburger" id="nav-hamburger" aria-label="{% t 'Menü' 'Menu' %}">&#9776;</button>
             <div class="nav-menu" id="nav-menu">
                 <ul class="nav-links">
-                    <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>{% t 'Start' 'Home' 'Etusivu' %}</a></li>
-                    <li><a href="{% url 'links:links' %}" {% if request.resolver_match.namespace == 'links' and request.resolver_match.url_name == 'links' %}class="active"{% endif %}>{% t 'Über mich' 'About Me' 'Tietoa minusta' %}</a></li>
-                    <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>{% t 'Reisetagebuch' 'Travel Diary' 'Matkapäiväkirja' %}</a></li>
+                    <li><a href="{% url 'core:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>{% t 'Start' 'Home' %}</a></li>
+                    <li><a href="{% url 'links:links' %}" {% if request.resolver_match.namespace == 'links' and request.resolver_match.url_name == 'links' %}class="active"{% endif %}>{% t 'Links' 'Links' %}</a></li>
+                    <li><a href="{% url 'diary:map' %}" {% if request.resolver_match.app_name == 'diary' %}class="active"{% endif %}>{% t 'Reisen' 'Travels' %}</a></li>
                 </ul>
                 <ul class="nav-auth">
                     <li class="nav-btn-group">
                         {% for lang_option in OTHER_LANGS %}
-                        <a href="{% url 'core:set_language' lang_option.code %}" class="nav-btn-group-item lang-btn" aria-label="{{ lang_option.aria }}" title="{{ lang_option.label }}">{{ lang_option.flag }}</a>
+                        <a href="{% url 'core:set_language' lang_option.code %}" class="nav-btn-group-item lang-btn" aria-label="{{ lang_option.aria }}" title="{{ lang_option.label }}">{{ lang_option.code|upper }}</a>
                         {% endfor %}
                     </li>
                 </ul>
@@ -44,10 +44,10 @@
     {% if request.resolver_match.app_name != 'diary' %}
     <footer class="site-footer">
         {% if user.is_authenticated %}
-        <a href="{% url 'core:admin_index' %}" class="footer-admin-btn">{% t 'Admin' 'Admin' 'Admin' %}</a>
+        <a href="{% url 'core:admin_index' %}" class="footer-admin-btn">{% t 'Admin' 'Admin' %}</a>
         {% endif %}
-        <a href="{% url 'status:overview' %}">{% t 'Status' 'Status' 'Tila' %}</a>
-        <a href="{% url 'core:privacy' %}">{% t 'Datenschutzerklärung' 'Privacy Policy' 'Tietosuojaseloste' %}</a>
+        <a href="{% url 'status:overview' %}">{% t 'Status' 'Status' %}</a>
+        <a href="{% url 'core:privacy' %}">{% t 'Datenschutzerklärung' 'Privacy Policy' %}</a>
     </footer>
     {% endif %}
 

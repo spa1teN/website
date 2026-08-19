@@ -510,28 +510,28 @@
                 {% if trip.subtitle %}<div class="trip-subtitle">{{ trip.subtitle }}</div>{% endif %}
             </div>
             <div class="trip-actions">
-                <a href="{% url 'diary:map' %}" class="btn btn-secondary">← {% t 'Zur Karte' 'Back to Map' 'Kartalle' %}</a>
+                <a href="{% url 'diary:map' %}" class="btn btn-secondary">← {% t 'Zur Karte' 'Back to Map' %}</a>
                 {% if user.is_authenticated %}
-                <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-primary">{% t 'Bearbeiten' 'Edit' 'Muokkaa' %}</a>
+                <a href="{% url 'diary:trip_edit' trip.pk %}" class="btn btn-primary">{% t 'Bearbeiten' 'Edit' %}</a>
                 {% endif %}
             </div>
         </div>
 
         <div class="trip-stats">
-            {% if stats.total_distance_km %}<span>{% t 'Strecke' 'Distance' 'Matka' %}: <strong>{{ stats.total_distance_km }} km</strong></span>{% endif %}
-            {% if stats.duration_days %}<span>{% t 'Dauer' 'Duration' 'Kesto' %}: <strong>{{ stats.duration_days }} {% t 'Tage' 'days' 'pv' %}</strong></span>{% endif %}
-            {% if stats.country_count %}<span>{% t 'Länder' 'Countries' 'Maita' %}: <strong>{{ stats.country_count }}</strong></span>{% endif %}
-            {% if stats.photo_count %}<span>{% t 'Fotos' 'Photos' 'Kuvia' %}: <strong>{{ stats.photo_count }}</strong></span>{% endif %}
+            {% if stats.total_distance_km %}<span>{% t 'Strecke' 'Distance' %}: <strong>{{ stats.total_distance_km }} km</strong></span>{% endif %}
+            {% if stats.duration_days %}<span>{% t 'Dauer' 'Duration' %}: <strong>{{ stats.duration_days }} {% t 'Tage' 'days' %}</strong></span>{% endif %}
+            {% if stats.country_count %}<span>{% t 'Länder' 'Countries' %}: <strong>{{ stats.country_count }}</strong></span>{% endif %}
+            {% if stats.photo_count %}<span>{% t 'Fotos' 'Photos' %}: <strong>{{ stats.photo_count }}</strong></span>{% endif %}
         </div>
 
         <div class="trip-meta-row">
             {% if trip.year %}<span style="color:var(--color-text-muted);font-size:0.85rem">{{ trip.year }}</span>{% endif %}
             {% for t in trip.transport_types %}
             <span class="transport-badge transport-{{ t }}">
-                {% if t == "train" %}🚆 {% t 'Zug' 'Train' 'Juna' %}
-                {% elif t == "car" %}🚗 {% t 'Auto' 'Car / Bus' 'Auto / Bussi' %}
-                {% elif t == "plane" %}✈️ {% t 'Flug' 'Plane' 'Lentokone' %}
-                {% elif t == "ferry" %}⛴ {% t 'Fähre' 'Ferry' 'Lautta' %}
+                {% if t == "train" %}🚆 {% t 'Zug' 'Train' %}
+                {% elif t == "car" %}🚗 {% t 'Auto' 'Car / Bus' %}
+                {% elif t == "plane" %}✈️ {% t 'Flug' 'Plane' %}
+                {% elif t == "ferry" %}⛴ {% t 'Fähre' 'Ferry' %}
                 {% endif %}
             </span>
             {% endfor %}
@@ -546,7 +546,7 @@
     {% endif %}
 
     <div class="detail-section">
-        <h2>{% t 'Route' 'Route' 'Reitti' %}</h2>
+        <h2>{% t 'Route' 'Route' %}</h2>
         <div id="detail-map"></div>
         {% if journey_info %}
         <div class="journey-wrapper">
@@ -583,14 +583,14 @@
                 {% endfor %}
             </div>
         </div>
-        <button type="button" class="journey-expand-btn" onclick="toggleJourneyExpand()" id="journey-expand-btn">▸ {% t 'Details' 'Details' 'Tiedot' %}</button>
+        <button type="button" class="journey-expand-btn" onclick="toggleJourneyExpand()" id="journey-expand-btn">▸ {% t 'Details' 'Details' %}</button>
         </div>
         {% endif %}
     </div>
 
     {% if images %}
     <div class="detail-section">
-        <h2>{% t 'Bilder' 'Photos' 'Kuvat' %} ({{ images|length }})</h2>
+        <h2>{% t 'Bilder' 'Photos' %} ({{ images|length }})</h2>
         <div class="gallery">
             {% for img in images %}
             <div class="gallery-item" data-img-url="{{ img.image.url }}" data-lat="{% if img.location %}{{ img.location.y|stringformat:'.6f' }}{% endif %}" data-lng="{% if img.location %}{{ img.location.x|stringformat:'.6f' }}{% endif %}" data-caption="{{ img.caption|default:'' }}" onclick="openLightbox(this)">
@@ -606,7 +606,7 @@
 
     {% if videos %}
     <div class="detail-section">
-        <h2>{% t 'Videos' 'Videos' 'Videot' %} ({{ videos|length }})</h2>
+        <h2>{% t 'Videos' 'Videos' %} ({{ videos|length }})</h2>
         <div class="gallery">
             {% for vid in videos %}
             <div class="gallery-item video-card" onclick="openVideoPlayer('{{ vid.video.url }}')">
@@ -661,10 +661,10 @@
     };
 
     var typeLabels = {
-        train: "{% t 'Zug' 'Train' 'Juna' %}",
-        car: "{% t 'Auto' 'Car' 'Auto' %}",
-        plane: "{% t 'Flug' 'Plane' 'Lento' %}",
-        ferry: "{% t 'Fähre' 'Ferry' 'Lautta' %}",
+        train: "{% t 'Zug' 'Train' %}",
+        car: "{% t 'Auto' 'Car' %}",
+        plane: "{% t 'Flug' 'Plane' %}",
+        ferry: "{% t 'Fähre' 'Ferry' %}",
     };
 
     var routeGeoJSON = {{ route_geojson|safe }};
@@ -964,11 +964,11 @@
         if (expanded.classList.contains("hidden")) {
             expanded.classList.remove("hidden");
             compact.classList.add("hidden");
-            btn.textContent = "▾ " + "{% t 'Weniger' 'Less' 'Vähemmän' %}";
+            btn.textContent = "▾ " + "{% t 'Weniger' 'Less' %}";
         } else {
             expanded.classList.add("hidden");
             compact.classList.remove("hidden");
-            btn.textContent = "▸ " + "{% t 'Details' 'Details' 'Tiedot' %}";
+            btn.textContent = "▸ " + "{% t 'Details' 'Details' %}";
         }
         map.resize();
     };

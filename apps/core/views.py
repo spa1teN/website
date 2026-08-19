@@ -18,7 +18,7 @@ def admin_index(request):
 
 
 def set_language(request, lang):
-    if lang not in ("de", "en", "fi"):
+    if lang not in ("de", "en"):
         lang = "de"
     request.session["lang"] = lang
 

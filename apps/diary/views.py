@@ -67,10 +67,7 @@ def trip_detail(request, pk):
         video_data.append(entry)
 
     lang = request.session.get("lang", "de")
-    if lang == "fi":
-        transport_labels = {"train": "Juna", "car": "Auto / Bussi", "plane": "Lentokone", "ferry": "Lautta"}
-        journey_labels = [("Menomatka", "outbound_journey"), ("Paluumatka", "return_journey")]
-    elif lang == "en":
+    if lang == "en":
         transport_labels = {"train": "Train", "car": "Car / Bus", "plane": "Plane", "ferry": "Ferry"}
         journey_labels = [("Outbound", "outbound_journey"), ("Return", "return_journey")]
     else:
@@ -449,13 +446,10 @@ def _trip_to_json(trip):
     result = {
         "title": trip.title,
         "title_en": trip.title_en or "",
-        "title_fi": trip.title_fi or "",
         "subtitle": trip.subtitle,
         "subtitle_en": trip.subtitle_en or "",
-        "subtitle_fi": trip.subtitle_fi or "",
         "description": trip.description,
         "description_en": trip.description_en or "",
-        "description_fi": trip.description_fi or "",
         "is_event": trip.is_event,
         "event_date": trip.event_date.strftime("%d.%m.%Y") if trip.event_date else "",
         "outbound_journey": None,

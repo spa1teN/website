@@ -2,11 +2,10 @@
     "use strict";
 
     var config = document.getElementById("map-config").dataset;
-    var LANG = (config.lang === "en" || config.lang === "fi") ? config.lang : "de";
+    var LANG = (config.lang === "en") ? "en" : "de";
 
-    function tr(de, en, fi) {
+    function tr(de, en) {
         if (LANG === "en") return en;
-        if (LANG === "fi") return fi !== undefined ? fi : en;
         return de;
     }
 
@@ -29,6 +28,7 @@
         center: [10.4515, 51.1657],
         zoom: 5,
         attributionControl: false,
+        renderWorldCopies: false,
     });
 
     map.on("style.load", function () {
@@ -36,16 +36,34 @@
         try { map.setSky({ "atmosphere-blend": 0.85 }); } catch (e) {}
     });
 
+    // Transport legend (bottom right)
+    var legendEl = null;
+    function TransportLegendControl() {}
+    TransportLegendControl.prototype.onAdd = function () {
+        legendEl = document.createElement("div");
+        legendEl.className = "map-legend";
+        var html = "";
+        ["train", "car", "plane", "ferry"].forEach(function (type) {
+            var dash = ROUTE_DASH[type] ? ROUTE_DASH[type].join(",") : "none";
+            html += '<div class="map-legend-item">' +
+                '<svg class="map-legend-swatch" width="22" height="8" aria-hidden="true">' +
+                '<line x1="1" y1="4" x2="21" y2="4" stroke="' + (ROUTE_COLORS[type] || "#999") + '" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + dash + '"/>' +
+                '</svg>' +
+                '<span>' + transportLabel(type) + '</span></div>';
+        });
+        legendEl.innerHTML = html;
+        return legendEl;
+    };
+    TransportLegendControl.prototype.onRemove = function () {};
+    map.addControl(new TransportLegendControl(), "bottom-right");
+
     // State
     var allTrips = [];
     var allRoutesGeoJSON = null;
     var imageMarkers = [];
     var videoMarkers = [];
     var activeFilters = {
-        types: new Set(),
-        transport: new Set(),
         years: new Set(),
-        countries: new Set(),
         tripId: "",
     };
     var currentPopup = null;
@@ -53,12 +71,14 @@
     var refreshStatsIfOpen = function () {};
     var routeWidthMultiplier = 1.0;
 
+    function _updateRouteWidthValue() {
+        var valueEl = document.getElementById("route-width-value");
+        if (valueEl) valueEl.textContent = "×" + parseFloat(routeWidthMultiplier.toFixed(2));
+    }
+
     function _buildStatsParams() {
         var params = new URLSearchParams();
         activeFilters.years.forEach(function (y) { params.append("year", y); });
-        activeFilters.transport.forEach(function (t) { params.append("transport", t); });
-        activeFilters.types.forEach(function (ty) { params.append("type", ty); });
-        activeFilters.countries.forEach(function (c) { params.append("country", c); });
         return params;
     }
     var _buildFilterParams = _buildStatsParams;
@@ -393,8 +413,7 @@
     function renderRoutesFiltered(matchingTripIds) {
         if (!allRoutesGeoJSON || !allRoutesGeoJSON.features) return;
         var features = allRoutesGeoJSON.features.filter(function (f) {
-            return matchingTripIds.has(f.properties.trip_id) &&
-                (activeFilters.transport.size === 0 || activeFilters.transport.has(f.properties.transport_type));
+            return matchingTripIds.has(f.properties.trip_id);
         });
         renderRoutes({ type: "FeatureCollection", features: features });
     }
@@ -403,7 +422,7 @@
         ["train", "car", "plane", "ferry"].forEach(function (type) {
             map.on("click", "route-" + type, function (e) {
                 var props = e.features[0].properties;
-                var fallbackTitle = tr("Reise", "Trip", "Matka");
+                var fallbackTitle = tr("Reise", "Trip");
                 var html = "<b>" + (props.trip_title || fallbackTitle) + "</b><br>" + transportLabel(props.transport_type);
                 if (props.trip_id) {
                     html += '<br><a href="/diary/trip/' + props.trip_id + '/">Details &rarr;</a>';
@@ -475,11 +494,10 @@
     }
 
     function loadFilteredVisitedCountries(callback) {
-        // Respects the active Transport/Year filters - used for the main map layer.
+        // Respects the active Year filter - used for the main map layer.
         if (!config.visitedCountriesUrl) return;
         var params = new URLSearchParams();
         activeFilters.years.forEach(function (y) { params.append("year", y); });
-        activeFilters.transport.forEach(function (t) { params.append("transport", t); });
         var qs = params.toString();
         var url = config.visitedCountriesUrl + (qs ? "?" + qs : "");
         fetch(url)
@@ -569,7 +587,7 @@
         if (!entries.length) {
             var empty = document.createElement("div");
             empty.className = "stats-empty";
-            empty.textContent = tr("Noch keine Daten.", "No data yet.", "Ei vielä tietoja.");
+            empty.textContent = tr("Noch keine Daten.", "No data yet.");
             list.appendChild(empty);
             return;
         }
@@ -629,7 +647,6 @@
             allRoutesGeoJSON.features.forEach(function (f) {
                 if (!f.geometry || !f.geometry.coordinates) return;
                 if (!matchingIds.has(f.properties.trip_id)) return;
-                if (activeFilters.transport.size && !activeFilters.transport.has(f.properties.transport_type)) return;
                 f.geometry.coordinates.forEach(function (c) { bounds.extend(c); });
             });
         }
@@ -659,7 +676,9 @@
         if (mode === currentMode) return;
         currentMode = mode;
 
-        document.querySelectorAll(".map-mode-btn").forEach(function (b) {
+        if (legendEl) legendEl.classList.toggle("hidden", mode !== "detailed");
+
+        document.querySelectorAll(".map-mode-btn[data-mode]").forEach(function (b) {
             b.classList.toggle("active", b.dataset.mode === mode);
         });
 
@@ -668,9 +687,6 @@
             var el = document.getElementById(id);
             if (el) el.classList.toggle("hidden", isSpecial);
         });
-
-        var subdivisionsToggle = document.getElementById("subdivisions-toggle");
-        if (subdivisionsToggle) subdivisionsToggle.classList.toggle("hidden", mode !== "visited");
 
         setVisitedLayerVisibility(false);
         setHeatmapLayerVisibility(false);
@@ -704,14 +720,13 @@
         }
     }
 
-    document.querySelectorAll(".map-mode-btn").forEach(function (btn) {
+    document.querySelectorAll(".map-mode-btn[data-mode]").forEach(function (btn) {
         btn.addEventListener("click", function () { setMapMode(btn.dataset.mode); });
     });
 
     // --- States / Bundesländer drill-down ---
 
     var currentCountryIso = null;
-    var subdivisionsGlobal = false;
 
     function ensureStatesLayer(geojson) {
         if (map.getSource("states")) {
@@ -751,22 +766,7 @@
         var params = new URLSearchParams();
         params.set("country", iso);
         activeFilters.years.forEach(function (y) { params.append("year", y); });
-        activeFilters.transport.forEach(function (t) { params.append("transport", t); });
         fetch(config.statesUrl + "?" + params.toString())
-            .then(function (r) { return r.json(); })
-            .then(function (geojson) {
-                ensureStatesLayer(geojson);
-                if (callback) callback(geojson);
-            });
-    }
-
-    function loadAllStatesGeoJSON(callback) {
-        if (!config.statesUrl) return;
-        var params = new URLSearchParams();
-        activeFilters.years.forEach(function (y) { params.append("year", y); });
-        activeFilters.transport.forEach(function (t) { params.append("transport", t); });
-        var qs = params.toString();
-        fetch(config.statesUrl + (qs ? "?" + qs : ""))
             .then(function (r) { return r.json(); })
             .then(function (geojson) {
                 ensureStatesLayer(geojson);
@@ -776,9 +776,6 @@
 
     function showStatesForCountry(iso, name) {
         if (!iso) return;
-        subdivisionsGlobal = false;
-        var toggleBtn = document.getElementById("subdivisions-toggle");
-        if (toggleBtn) toggleBtn.classList.remove("active");
 
         currentCountryIso = iso;
         setVisitedLayerVisibility(false);
@@ -795,48 +792,17 @@
         if (backBtn) backBtn.classList.remove("hidden");
     }
 
-    function toggleGlobalSubdivisions() {
-        subdivisionsGlobal = !subdivisionsGlobal;
-        var toggleBtn = document.getElementById("subdivisions-toggle");
-        if (toggleBtn) toggleBtn.classList.toggle("active", subdivisionsGlobal);
-
-        if (subdivisionsGlobal) {
-            currentCountryIso = null;
-            var backBtn = document.getElementById("states-back-btn");
-            if (backBtn) backBtn.classList.add("hidden");
-            setVisitedLayerVisibility(false);
-            loadAllStatesGeoJSON(function () {
-                if (!subdivisionsGlobal) return;
-                setStatesLayerVisibility(true);
-            });
-            _fitToContentBounds({ padding: 60, maxZoom: 8 });
-        } else {
-            setStatesLayerVisibility(false);
-            if (currentMode === "visited") {
-                setVisitedLayerVisibility(true);
-            }
-        }
-        _updateTransportSectionVisibility();
-    }
-
     function refreshStatesLayerIfActive() {
         if (currentCountryIso) {
             loadStatesGeoJSON(currentCountryIso, function () {
-                setStatesLayerVisibility(true);
-            });
-        } else if (subdivisionsGlobal) {
-            loadAllStatesGeoJSON(function () {
                 setStatesLayerVisibility(true);
             });
         }
     }
 
     function hideStatesView() {
-        if (!currentCountryIso && !subdivisionsGlobal) return;
+        if (!currentCountryIso) return;
         currentCountryIso = null;
-        subdivisionsGlobal = false;
-        var toggleBtn = document.getElementById("subdivisions-toggle");
-        if (toggleBtn) toggleBtn.classList.remove("active");
         setStatesLayerVisibility(false);
         var backBtn = document.getElementById("states-back-btn");
         if (backBtn) backBtn.classList.add("hidden");
@@ -845,7 +811,6 @@
             loadFilteredVisitedCountries(function () {});
             _fitToContentBounds({ padding: 60, maxZoom: 8 });
         }
-        _updateTransportSectionVisibility();
     }
 
     var tripBackBtn = document.getElementById("trip-back-btn");
@@ -856,11 +821,6 @@
     var statesBackBtn = document.getElementById("states-back-btn");
     if (statesBackBtn) {
         statesBackBtn.addEventListener("click", hideStatesView);
-    }
-
-    var subdivisionsToggleBtn = document.getElementById("subdivisions-toggle");
-    if (subdivisionsToggleBtn) {
-        subdivisionsToggleBtn.addEventListener("click", toggleGlobalSubdivisions);
     }
 
     // --- Trip Info Box ---
@@ -875,10 +835,10 @@
 
         var statsHtml = "";
         var stats = [];
-        if (trip.total_distance_km) stats.push('<span>' + tr('Strecke', 'Distance', 'Matka') + ': <strong>' + trip.total_distance_km + ' km</strong></span>');
-        if (trip.duration_days) stats.push('<span>' + tr('Dauer', 'Duration', 'Kesto') + ': <strong>' + trip.duration_days + ' ' + tr('Tage', 'days', 'pv') + '</strong></span>');
-        if (trip.country_count) stats.push('<span>' + tr('Länder', 'Countries', 'Maita') + ': <strong>' + trip.country_count + '</strong></span>');
-        if (trip.photo_count) stats.push('<span>' + tr('Fotos', 'Photos', 'Kuvia') + ': <strong>' + trip.photo_count + '</strong></span>');
+        if (trip.total_distance_km) stats.push('<span>' + tr('Strecke', 'Distance') + ': <strong>' + trip.total_distance_km + ' km</strong></span>');
+        if (trip.duration_days) stats.push('<span>' + tr('Dauer', 'Duration') + ': <strong>' + trip.duration_days + ' ' + tr('Tage', 'days') + '</strong></span>');
+        if (trip.country_count) stats.push('<span>' + tr('Länder', 'Countries') + ': <strong>' + trip.country_count + '</strong></span>');
+        if (trip.photo_count) stats.push('<span>' + tr('Fotos', 'Photos') + ': <strong>' + trip.photo_count + '</strong></span>');
         if (stats.length) statsHtml = '<div class="trip-info-stats">' + stats.join(' &middot; ') + '</div>';
 
         infoEl.innerHTML =
@@ -995,7 +955,7 @@
 
         var allItem = document.createElement("div");
         allItem.className = "trip-item" + (activeFilters.tripId === "" ? " active" : "");
-        allItem.textContent = tr("Alle", "All", "Kaikki");
+        allItem.textContent = tr("Alle", "All");
         allItem.dataset.tripId = "";
         allItem.addEventListener("click", function () { selectTrip(""); });
         tripList.appendChild(allItem);
@@ -1009,7 +969,7 @@
         if (sorted.length === 0) {
             var empty = document.createElement("div");
             empty.className = "ms-dropdown-menu-empty";
-            empty.textContent = tr("Keine passenden Einträge.", "No matching entries.", "Ei vastaavia merkintöjä.");
+            empty.textContent = tr("Keine passenden Einträge.", "No matching entries.");
             tripList.appendChild(empty);
         }
 
@@ -1019,39 +979,11 @@
     // --- Filters ---
 
     function tripMatchesFilters(t) {
-        var type = t.is_event ? "event" : "journey";
-        if (activeFilters.types.size && !activeFilters.types.has(type)) return false;
-
         if (t.year != null && activeFilters.years.size && !activeFilters.years.has(String(t.year))) {
             return false;
         }
 
-        if (activeFilters.countries.size &&
-            !(t.destination_country && activeFilters.countries.has(t.destination_country.name))) {
-            return false;
-        }
-
-        // Events have no transport types — exclude when transport filter is active
-        if (t.is_event && activeFilters.transport.size) return false;
-
-        if (!t.is_event && t.transport_types && t.transport_types.length && activeFilters.transport.size) {
-            var hasMatch = t.transport_types.some(function (tt) { return activeFilters.transport.has(tt); });
-            if (!hasMatch) return false;
-        }
-
         return true;
-    }
-
-    function _updateTransportSectionVisibility() {
-        var transportSection = document.getElementById("transport-filter-section");
-        if (!transportSection) return;
-        var show;
-        if (currentMode === "visited") {
-            show = false;
-        } else {
-            show = activeFilters.types.size === 0 || activeFilters.types.has("journey");
-        }
-        transportSection.classList.toggle("hidden", !show);
     }
 
     function applyFilters() {
@@ -1072,16 +1004,12 @@
             }
         }
 
-        _updateTransportSectionVisibility();
         _updateFilterResetVisibility();
         refreshStatsIfOpen();
     }
 
     function _filtersAreDefault() {
-        return activeFilters.types.size === 0 &&
-            activeFilters.transport.size === 0 &&
-            activeFilters.years.size === 0 &&
-            activeFilters.countries.size === 0;
+        return activeFilters.years.size === 0;
     }
 
     function _updateFilterResetVisibility() {
@@ -1090,41 +1018,39 @@
     }
 
     function resetFilters() {
-        ["filter-type", "filter-transport", "filter-year", "filter-country"].forEach(function (id) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            var menu = el.querySelector(".ms-dropdown-menu");
-            if (!menu) return;
-            menu.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
-                cb.checked = (cb.value === "__all__");
-            });
-            _syncLabelStates(menu);
-        });
+        var yearEl = document.getElementById("filter-year");
+        if (yearEl) {
+            var menu = yearEl.querySelector(".ms-dropdown-menu");
+            if (menu) {
+                menu.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+                    cb.checked = (cb.value === "__all__");
+                });
+                _syncLabelStates(menu);
+            }
+        }
 
-        activeFilters.types = new Set();
-        activeFilters.transport = new Set();
         activeFilters.years = new Set();
-        activeFilters.countries = new Set();
 
-        _updateDropdownLabel(document.getElementById("filter-type"), tr("Alle", "All", "Kaikki"));
-        _updateDropdownLabel(document.getElementById("filter-transport"), tr("Alle", "All", "Kaikki"));
-        _updateDropdownLabel(document.getElementById("filter-year"), tr("Alle Jahre", "All years", "Kaikki vuodet"));
-        _updateDropdownLabel(document.getElementById("filter-country"), tr("Alle Länder", "All countries", "Kaikki maat"));
+        _updateDropdownLabel(yearEl, tr("Alle Jahre", "All years"));
 
         // Reset map options
-        var hideBorders = document.getElementById("opt-hide-borders");
-        var hideLabels = document.getElementById("opt-hide-labels");
-        if (hideBorders) { hideBorders.checked = false; bordersHidden = false; applyBorders(); }
-        if (hideLabels) { hideLabels.checked = false; labelsHidden = false; applyLabels(); }
-        // Reset map display dropdown label and check states
-        var mdMenu = document.getElementById("map-display-menu");
-        if (mdMenu) { _syncLabelStates(mdMenu); _updateMapDisplayLabel(); }
-        if (document.getElementById("filter-route-width")) {
-            var menu = document.getElementById("route-width-menu");
-            var normalRb = menu.querySelector('input[value="1.0"]');
-            if (normalRb) { normalRb.checked = true; _syncRadioLabels(menu); }
+        ["opt-toggle-borders", "opt-toggle-labels"].forEach(function (id) {
+            var btn = document.getElementById(id);
+            if (btn) { btn.classList.remove("active"); btn.setAttribute("aria-pressed", "false"); }
+        });
+        var globeBtn = document.getElementById("opt-toggle-globe");
+        if (globeBtn) { globeBtn.classList.add("active"); globeBtn.setAttribute("aria-pressed", "true"); }
+        bordersHidden = true;
+        labelsHidden = true;
+        applyBorders();
+        applyLabels();
+        map.setProjection({ type: "globe" });
+        try { map.setSky({ "atmosphere-blend": 0.85 }); } catch (e) {}
+        var rwSlider = document.getElementById("route-width-slider");
+        if (rwSlider) {
+            rwSlider.value = "1";
             routeWidthMultiplier = 1.0;
-            _updateDropdownLabel(document.getElementById("filter-route-width"), "Normal");
+            _updateRouteWidthValue();
         }
 
         applyFilters();
@@ -1156,14 +1082,6 @@
         });
     }
 
-    function _syncRadioLabels(menu) {
-        menu.querySelectorAll("label").forEach(function (label) {
-            var rb = label.querySelector('input[type="radio"]');
-            if (!rb) return;
-            label.classList.toggle("selected", rb.checked);
-        });
-    }
-
     function _updateDropdownLabel(el, allLabel) {
         var menu = el.querySelector(".ms-dropdown-menu");
         var allCb = menu.querySelector('input[value="__all__"]');
@@ -1171,7 +1089,7 @@
         var labelEl = el.querySelector(".ms-dropdown-label");
 
         if (checkboxes.length === 0) {
-            labelEl.textContent = tr("Keine vorhanden", "None available", "Ei saatavilla");
+            labelEl.textContent = tr("Keine vorhanden", "None available");
             return;
         }
 
@@ -1185,7 +1103,7 @@
             checked.forEach(function (cb) { labels.push(cb.parentElement.textContent.trim()); });
             labelEl.textContent = labels.join(", ");
         } else {
-            labelEl.textContent = checked.length + tr(" ausgewählt", " selected", " valittu");
+            labelEl.textContent = checked.length + tr(" ausgewählt", " selected");
         }
     }
 
@@ -1241,16 +1159,6 @@
         document.querySelectorAll(".ms-dropdown.open").forEach(function (d) { d.classList.remove("open"); });
     });
 
-    _initDropdown("filter-type", tr("Alle", "All", "Kaikki"), function (values) {
-        activeFilters.types = values;
-        applyFilters();
-    });
-
-    _initDropdown("filter-transport", tr("Alle", "All", "Kaikki"), function (values) {
-        activeFilters.transport = values;
-        applyFilters();
-    });
-
     function _appendCheckSpan(label) {
         var check = document.createElement("span");
         check.className = "ms-check";
@@ -1278,7 +1186,7 @@
 
         var menu = document.getElementById("filter-year-menu");
         menu.innerHTML = "";
-        _appendAllOption(menu, tr("Alle Jahre", "All years", "Kaikki vuodet"));
+        _appendAllOption(menu, tr("Alle Jahre", "All years"));
         sortedYears.forEach(function (y) {
             var label = document.createElement("label");
             var cb = document.createElement("input");
@@ -1290,49 +1198,14 @@
             menu.appendChild(label);
         });
 
-        _initDropdown("filter-year", tr("Alle Jahre", "All years", "Kaikki vuodet"), function (values) {
+        _initDropdown("filter-year", tr("Alle Jahre", "All years"), function (values) {
             activeFilters.years = values;
-            applyFilters();
-        });
-    }
-
-    function _populateCountryOptions() {
-        var countries = {};
-        allTrips.forEach(function (t) {
-            if (t.destination_country) countries[t.destination_country.name] = t.destination_country.iso_a2;
-        });
-        var sortedNames = Object.keys(countries).sort();
-
-        var menu = document.getElementById("filter-country-menu");
-        menu.innerHTML = "";
-        _appendAllOption(menu, tr("Alle", "All", "Kaikki"), "ms-flag-grid-fallback");
-        sortedNames.forEach(function (name) {
-            var label = document.createElement("label");
-            label.title = name;
-            var cb = document.createElement("input");
-            cb.type = "checkbox";
-            cb.value = name;
-            label.appendChild(cb);
-            var flag = countryFlag(countries[name]);
-            if (flag) {
-                label.appendChild(document.createTextNode(flag));
-            } else {
-                label.classList.add("ms-flag-grid-fallback");
-                label.appendChild(document.createTextNode(name));
-            }
-            _appendCheckSpan(label);
-            menu.appendChild(label);
-        });
-
-        _initDropdown("filter-country", tr("Alle Länder", "All countries", "Kaikki maat"), function (values) {
-            activeFilters.countries = values;
             applyFilters();
         });
     }
 
     function populateFilters(trips) {
         _populateYearOptions();
-        _populateCountryOptions();
     }
 
     // --- Helpers ---
@@ -1341,7 +1214,6 @@
         var labelsByLang = {
             de: { train: "Zug", car: "Auto", plane: "Flugzeug", ferry: "Fähre" },
             en: { train: "Train", car: "Car / Bus", plane: "Plane", ferry: "Ferry" },
-            fi: { train: "Juna", car: "Auto / Bussi", plane: "Lentokone", ferry: "Lautta" },
         };
         var labels = labelsByLang[LANG] || labelsByLang.de;
         return labels[type] || type;
@@ -1401,7 +1273,7 @@
         if (!panel || !toggle) return;
 
         function formatNumber(n) {
-            return n.toLocaleString(LANG === "en" ? "en-US" : (LANG === "fi" ? "fi-FI" : "de-DE"));
+            return n.toLocaleString(LANG === "en" ? "en-US" : "de-DE");
         }
 
         function renderBars(container, items, opts) {
@@ -1409,7 +1281,7 @@
             if (!items.length) {
                 var empty = document.createElement("div");
                 empty.className = "stats-empty";
-                empty.textContent = tr("Noch keine Daten.", "No data yet.", "Ei vielä tietoja.");
+                empty.textContent = tr("Noch keine Daten.", "No data yet.");
                 container.appendChild(empty);
                 return;
             }
@@ -1449,10 +1321,10 @@
             var container = document.getElementById("stats-summary");
             container.innerHTML = "";
             var tiles = [
-                { value: formatNumber(summary.total_distance_km) + " km", label: tr("Gesamtstrecke", "Total Distance", "Kokonaismatka") },
-                { value: summary.countries_visited, label: tr("Länder", "Countries", "Maat") },
-                { value: summary.total_trips, label: tr("Reisen", "Trips", "Matkat") },
-                { value: summary.total_photos, label: tr("Fotos", "Photos", "Kuvat") },
+                { value: formatNumber(summary.total_distance_km) + " km", label: tr("Gesamtstrecke", "Total Distance") },
+                { value: summary.countries_visited, label: tr("Länder", "Countries") },
+                { value: summary.total_trips, label: tr("Reisen", "Trips") },
+                { value: summary.total_photos, label: tr("Fotos", "Photos") },
             ];
             tiles.forEach(function (t) {
                 var tile = document.createElement("div");
@@ -1503,12 +1375,12 @@
                             btn.type = "button";
                             btn.className = "yearly-toggle";
                             btn.style.cssText = "font-size:0.75rem;padding:2px 8px;border:1px solid var(--color-border);border-radius:4px;background:var(--color-surface);color:var(--color-text);cursor:pointer;margin-bottom:0.5rem;";
-                            btn.textContent = tr("km", "km", "km");
+                            btn.textContent = tr("km", "km");
                             btn.addEventListener("click", function() {
                                 var current = document.getElementById("stats-yearly")._mode || "trips";
                                 var next = current === "trips" ? "km" : "trips";
                                 document.getElementById("stats-yearly")._mode = next;
-                                btn.textContent = next === "trips" ? tr("km", "km", "km") : tr("Reisen", "Trips", "Matkat");
+                                btn.textContent = next === "trips" ? tr("km", "km") : tr("Reisen", "Trips");
                                 renderYearlyBars(document.getElementById("stats-yearly")._data, next);
                             });
                             var heading = yearlySection.querySelector("h4");
@@ -1520,7 +1392,7 @@
                         renderBars(document.getElementById("stats-yearly"), stats, {
                             name: function (i) { return i.year; },
                             value: function (i) { return mode === "km" ? (i.distance_km || 0) : i.trips; },
-                            formatValue: function (v) { return mode === "km" ? formatNumber(v) + " km" : v + " " + tr("Reisen", "trips", "matkaa"); },
+                            formatValue: function (v) { return mode === "km" ? formatNumber(v) + " km" : v + " " + tr("Reisen", "trips"); },
                         });
                     }
                 });
@@ -1571,8 +1443,8 @@
             });
         }
 
-        var bordersHidden = false;
-        var labelsHidden = false;
+        var bordersHidden = true;
+        var labelsHidden = true;
 
         function applyBorders() {
             if (borderLayers.length === 0) discoverLayers();
@@ -1592,83 +1464,58 @@
             });
         }
 
-        var hideBorders = document.getElementById("opt-hide-borders");
-        var hideLabels = document.getElementById("opt-hide-labels");
+        // Map display options (toggle bar)
+        var bordersBtn = document.getElementById("opt-toggle-borders");
+        var labelsBtn = document.getElementById("opt-toggle-labels");
+        var globeBtn = document.getElementById("opt-toggle-globe");
 
-        // Map display options dropdown (borders + labels checkboxes)
-        var mdDropdown = document.getElementById("filter-map-display");
-        var mdMenu = document.getElementById("map-display-menu");
-        if (mdDropdown && mdMenu) {
-            var mdToggle = mdDropdown.querySelector(".ms-dropdown-toggle");
-            mdToggle.addEventListener("click", function (e) {
-                e.stopPropagation();
-                document.querySelectorAll(".ms-dropdown.open").forEach(function (d) { d.classList.remove("open"); });
-                mdDropdown.classList.toggle("open");
-            });
-            mdMenu.addEventListener("click", function (e) { e.stopPropagation(); });
-            mdMenu.addEventListener("change", function () {
-                _syncLabelStates(mdMenu);
-                _updateMapDisplayLabel();
+        function _bindOptionToggle(btn, onEnable, onDisable) {
+            if (!btn) return;
+            btn.addEventListener("click", function () {
+                var on = btn.classList.toggle("active");
+                btn.setAttribute("aria-pressed", on ? "true" : "false");
+                (on ? onEnable : onDisable)();
             });
         }
 
-        function _updateMapDisplayLabel() {
-            if (!mdDropdown) return;
-            var checked = [];
-            if (hideBorders && hideBorders.checked) checked.push(1);
-            if (hideLabels && hideLabels.checked) checked.push(1);
-            var labelEl = mdDropdown.querySelector(".ms-dropdown-label");
-            if (!labelEl) return;
-            if (checked.length === 0) {
-                labelEl.textContent = tr("Standard", "Default", "Oletus");
-            } else if (checked.length === 1) {
-                labelEl.textContent = tr("1 Option aktiv", "1 option active", "1 valinta aktiivinen");
-            } else {
-                labelEl.textContent = checked.length + " " + tr("Optionen aktiv", "options active", "valintaa aktiivisena");
-            }
-        }
+        _bindOptionToggle(bordersBtn, function () {
+            bordersHidden = false;
+            applyBorders();
+        }, function () {
+            bordersHidden = true;
+            applyBorders();
+        });
 
-        if (hideBorders) {
-            hideBorders.addEventListener("change", function () {
-                bordersHidden = hideBorders.checked;
-                applyBorders();
-                _updateMapDisplayLabel();
-            });
-        }
+        _bindOptionToggle(labelsBtn, function () {
+            labelsHidden = false;
+            applyLabels();
+        }, function () {
+            labelsHidden = true;
+            applyLabels();
+        });
 
-        if (hideLabels) {
-            hideLabels.addEventListener("change", function () {
-                labelsHidden = hideLabels.checked;
-                applyLabels();
-                _updateMapDisplayLabel();
-            });
-        }
+        _bindOptionToggle(globeBtn, function () {
+            map.setProjection({ type: "globe" });
+            try { map.setSky({ "atmosphere-blend": 0.85 }); } catch (e) {}
+        }, function () {
+            map.setProjection({ type: "mercator" });
+        });
 
-        // Route width dropdown (radio buttons)
-        var rwDropdown = document.getElementById("filter-route-width");
-        if (rwDropdown) {
-            var rwToggle = rwDropdown.querySelector(".ms-dropdown-toggle");
-            var rwMenu = document.getElementById("route-width-menu");
-            rwToggle.addEventListener("click", function (e) {
-                e.stopPropagation();
-                document.querySelectorAll(".ms-dropdown.open").forEach(function (d) { d.classList.remove("open"); });
-                rwDropdown.classList.toggle("open");
-            });
-            rwMenu.addEventListener("click", function (e) { e.stopPropagation(); });
-            rwMenu.addEventListener("change", function () {
-                var checked = rwMenu.querySelector('input[name="route-width"]:checked');
-                if (checked) {
-                    routeWidthMultiplier = parseFloat(checked.value);
-                    _syncRadioLabels(rwMenu);
-                    _updateDropdownLabel(rwDropdown, checked.parentElement.textContent.trim());
-                    if (allRoutesGeoJSON) applyFilters();
-                }
+        // Route width slider
+        var rwSlider = document.getElementById("route-width-slider");
+        if (rwSlider) {
+            rwSlider.addEventListener("input", function () {
+                routeWidthMultiplier = parseFloat(rwSlider.value);
+                _updateRouteWidthValue();
+                if (allRoutesGeoJSON) applyFilters();
             });
         }
 
         // Discover layers once the style is loaded
         map.on("style.load", function () {
             discoverLayers();
+            applyBorders();
+            applyLabels();
         });
     })();
 

@@ -1,21 +1,21 @@
 {% extends "core/base.html" %}
 {% load i18n_extra %}
 
-{% block title %}{% t 'Über mich' 'About Me' 'Tietoa minusta' %} - Caspar Sadenius{% endblock %}
+{% block title %}{% t 'Links' 'Links' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="page-container">
-    <h1>{% t 'Über mich' 'About Me' 'Tietoa minusta' %}</h1>
+    <h1>{% t 'Links' 'Links' %}</h1>
 
     <div class="link-cards">
         <div class="link-card">
             <i class="fa-solid fa-envelope"></i>
-            <span class="link-label">{% t 'E-Mail' 'Email' 'Sähköposti' %}</span>
+            <span class="link-label">{% t 'E-Mail' 'Email' %}</span>
             <span class="link-handle">me [at] casparsadenius [dot] de</span>
         </div>
     </div>
 
-    <h2 class="links-section-title">{% t 'Finde mich hier' 'Find Me Here' 'Löydä minut täältä' %}</h2>
+    <h2 class="links-section-title">{% t 'Finde mich hier' 'Find Me Here' %}</h2>
     <div class="link-cards link-cards-grid">
         <a href="https://www.linkedin.com/in/caspar-sadenius-a506332ab/" target="_blank" rel="noopener" class="link-card link-card-full" data-track="social:linkedin">
             <i class="fa-brands fa-linkedin-in"></i>
@@ -83,37 +83,37 @@
         <div class="link-card discord-card">
             <i class="fa-brands fa-discord"></i>
             <span class="link-label">Discord</span>
-            <span class="link-handle" id="discord-handle">{% t 'Lade...' 'Loading...' 'Ladataan...' %}</span>
+            <span class="link-handle" id="discord-handle">{% t 'Lade...' 'Loading...' %}</span>
             <span class="discord-indicator" id="discord-indicator"></span>
         </div>
     </div>
     {% endif %}
 
-    <h2 class="links-section-title">{% t 'Ausbildung' 'Education' 'Koulutus' %}</h2>
+    <h2 class="links-section-title">{% t 'Ausbildung' 'Education' %}</h2>
     <div class="link-cards link-cards-grid">
         <div class="link-card link-card-full edu-combined">
             <span class="link-card-stack">
                 <span class="edu-institutions">
-                    <a href="https://hpi.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Hasso-Plattner-Institut' 'Hasso-Plattner-Institute' 'Hasso-Plattner-Institut' %}</a>
+                    <a href="https://hpi.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Hasso-Plattner-Institut' 'Hasso-Plattner-Institute' %}</a>
                     <span class="edu-divider"></span>
-                    <a href="https://uni-potsdam.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Universität Potsdam' 'University of Potsdam' 'Potsdamin yliopisto' %}</a>
+                    <a href="https://uni-potsdam.de" target="_blank" rel="noopener" class="edu-inst-link">{% t 'Universität Potsdam' 'University of Potsdam' %}</a>
                 </span>
-                <span class="link-handle">{% t 'Bachelor of Science · seit 2023' 'Bachelor of Science · since 2023' 'Bachelor of Science · vuodesta 2023' %}</span>
+                <span class="link-handle">{% t 'Bachelor of Science · seit 2023' 'Bachelor of Science · since 2023' %}</span>
             </span>
         </div>
 
         <a href="https://www.waldorfschule-nienstedten.de" target="_blank" rel="noopener" class="link-card link-card-full">
             <span class="link-card-stack">
-                <span class="link-label">{% t 'Rudolf-Steiner-Schule Hamburg-Nienstedten' 'Rudolf-Steiner-School Hamburg-Nienstedten' 'Rudolf-Steiner-Schule Hamburg-Nienstedten' %}</span>
+                <span class="link-label">{% t 'Rudolf-Steiner-Schule Hamburg-Nienstedten' 'Rudolf-Steiner-School Hamburg-Nienstedten' %}</span>
                 <span class="link-handle">Abitur · 2023</span>
             </span>
         </a>
     </div>
 
-    <h2 class="links-section-title">{% t 'Mitglied' 'Member' 'Jäsen' %}</h2>
+    <h2 class="links-section-title">{% t 'Mitglied' 'Member' %}</h2>
     <div class="link-cards">
         <a href="https://gruene.de" target="_blank" rel="noopener" class="link-card">
-            <span class="link-label">{% t 'Bündnis 90/Die Grünen' 'Alliance 90/The Greens' 'Liitto 90/Vihreät' %}</span>
+            <span class="link-label">{% t 'Bündnis 90/Die Grünen' 'Alliance 90/The Greens' %}</span>
             <span class="link-handle">gruene.de</span>
         </a>
 
@@ -276,7 +276,7 @@
             var handle = document.getElementById("discord-handle");
             var indicator = document.getElementById("discord-indicator");
             if (!data.success) {
-                var unavailableLabels = {en: "Status unavailable", fi: "Tila ei saatavilla", de: "Status nicht verfügbar"};
+                var unavailableLabels = {en: "Status unavailable", de: "Status nicht verfügbar"};
                 handle.textContent = unavailableLabels[lang] || unavailableLabels.de;
                 indicator.classList.add("offline");
                 return;
@@ -287,13 +287,12 @@
             indicator.classList.add(status);
             var labelsDe = {online: "Online", idle: "Abwesend", dnd: "Bitte nicht stören", offline: "Offline"};
             var labelsEn = {online: "Online", idle: "Away", dnd: "Do Not Disturb", offline: "Offline"};
-            var labelsFi = {online: "Paikalla", idle: "Poissa", dnd: "Älä häiritse", offline: "Offline"};
-            var labelsByLang = {en: labelsEn, fi: labelsFi, de: labelsDe};
+            var labelsByLang = {en: labelsEn, de: labelsDe};
             var labels = labelsByLang[lang] || labelsDe;
             indicator.title = labels[status] || status;
         })
         .catch(function() {
-            var errorLabels = {en: "Unavailable", fi: "Ei saatavilla", de: "Nicht verfügbar"};
+            var errorLabels = {en: "Unavailable", de: "Nicht verfügbar"};
             document.getElementById("discord-handle").textContent = errorLabels[lang] || errorLabels.de;
             document.getElementById("discord-indicator").classList.add("offline");
         });

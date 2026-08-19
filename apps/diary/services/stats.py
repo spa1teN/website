@@ -442,7 +442,7 @@ def compute_images_by_country(lang, trip_ids=None):
     result.sort(key=lambda x: -x["count"])
 
     if unresolved:
-        labels = {"de": "Unbekannt", "en": "Unknown", "fi": "Tuntematon"}
+        labels = {"de": "Unbekannt", "en": "Unknown"}
         result.append({"country": labels.get(lang, "Unknown"), "iso_a2": None, "count": unresolved})
 
     return result, len(counts)

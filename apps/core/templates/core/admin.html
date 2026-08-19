@@ -1,14 +1,14 @@
 {% extends "core/base.html" %}
 {% load i18n_extra %}
 
-{% block title %}{% t 'Admin' 'Admin' 'Admin' %} - Caspar Sadenius{% endblock %}
+{% block title %}{% t 'Admin' 'Admin' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="admin-layout">
     {% include "core/admin_sidebar.html" %}
     <div class="admin-content">
-        <h2>{% t 'Admin' 'Admin' 'Admin' %}</h2>
-        <p class="admin-welcome">{% t 'Wähle einen Bereich aus dem Menü.' 'Select a section from the menu.' 'Valitse osio valikosta.' %}</p>
+        <h2>{% t 'Admin' 'Admin' %}</h2>
+        <p class="admin-welcome">{% t 'Wähle einen Bereich aus dem Menü.' 'Select a section from the menu.' %}</p>
     </div>
 </div>
 

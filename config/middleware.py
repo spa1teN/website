@@ -57,7 +57,7 @@ class SessionLanguageMiddleware:
 
     def __call__(self, request):
         lang = request.session.get("lang", "de")
-        if lang not in ("de", "en", "fi"):
+        if lang not in ("de", "en"):
             lang = "de"
         dj_translation.activate(lang)
         response = self.get_response(request)

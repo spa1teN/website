@@ -3,12 +3,12 @@ from django.db import models
 
 
 class TranslationFallbackMixin:
-    """FI→EN→DE fallback chain for translated model fields.
+    """EN→DE fallback chain for translated model fields.
 
     Usage::
 
         obj.get_translated("title")           # uses active language
-        obj.get_translated("title", lang="fi")# explicit language
+        obj.get_translated("title", lang="en")# explicit language
     """
 
     def get_translated(self, field_name, lang=None):
@@ -17,8 +17,6 @@ class TranslationFallbackMixin:
             lang = get_language()
 
         candidates = [lang]
-        if lang == "fi":
-            candidates.append("en")
         candidates.append("de")
 
         for candidate_lang in candidates:
@@ -234,7 +232,6 @@ def _invalidate_stats_cache(*args, **kwargs):
 
     cache.delete("diary_stats_de")
     cache.delete("diary_stats_en")
-    cache.delete("diary_stats_fi")
     cache.delete("diary_geo_index")
     cache.delete("diary_state_index")
 

@@ -1,7 +1,7 @@
 {% extends "core/base.html" %}
 {% load static l10n i18n_extra %}
 
-{% block title %}{% if editing %}{% t 'Reise bearbeiten' 'Edit Trip' 'Muokkaa matkaa' %}{% else %}{% t 'Neue Reise' 'New Trip' 'Uusi matka' %}{% endif %} - Caspar Sadenius{% endblock %}
+{% block title %}{% if editing %}{% t 'Reise bearbeiten' 'Edit Trip' %}{% else %}{% t 'Neue Reise' 'New Trip' %}{% endif %} - Caspar Sadenius{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
@@ -279,33 +279,32 @@ textarea.form-control { resize: vertical; }
 
 {% block content %}
 <div class="trip-form-container">
-    <h1>{% if editing %}{% t 'Reise bearbeiten' 'Edit Trip' 'Muokkaa matkaa' %}{% else %}{% t 'Neue Reise' 'New Trip' 'Uusi matka' %}{% endif %}</h1>
+    <h1>{% if editing %}{% t 'Reise bearbeiten' 'Edit Trip' %}{% else %}{% t 'Neue Reise' 'New Trip' %}{% endif %}</h1>
 
     <form id="trip-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="form-section">
-            <h2>{% t 'Allgemein' 'General' 'Yleistä' %}</h2>
+            <h2>{% t 'Allgemein' 'General' %}</h2>
 
             <!-- Language tabs -->
             <div class="lang-tabs" id="lang-tabs">
                 <button type="button" class="lang-tab active" data-lang="de" onclick="switchLangTab('de')">DE</button>
                 <button type="button" class="lang-tab" data-lang="en" onclick="switchLangTab('en')">EN</button>
-                <button type="button" class="lang-tab" data-lang="fi" onclick="switchLangTab('fi')">FI</button>
             </div>
 
             <!-- DE fields (visible by default) -->
             <div class="lang-fields lang-de" id="lang-fields-de">
                 <div class="form-group">
-                    <label for="id_title">{% t 'Titel' 'Title' 'Otsikko' %}</label>
+                    <label for="id_title">{% t 'Titel' 'Title' %}</label>
                     {{ form.title }}
                 </div>
                 <div class="form-group">
-                    <label for="id_subtitle">{% t 'Untertitel' 'Subtitle' 'Alaotsikko' %}</label>
+                    <label for="id_subtitle">{% t 'Untertitel' 'Subtitle' %}</label>
                     {{ form.subtitle }}
                 </div>
                 <div class="form-group">
-                    <label for="id_description">{% t 'Beschreibung' 'Description' 'Kuvaus' %}</label>
+                    <label for="id_description">{% t 'Beschreibung' 'Description' %}</label>
                     {{ form.description }}
                 </div>
             </div>
@@ -326,35 +325,19 @@ textarea.form-control { resize: vertical; }
                 </div>
             </div>
 
-            <!-- FI fields (hidden by default) -->
-            <div class="lang-fields lang-fi" id="lang-fields-fi" style="display:none">
-                <div class="form-group">
-                    <label for="id_title_fi">Otsikko</label>
-                    {{ form.title_fi }}
-                </div>
-                <div class="form-group">
-                    <label for="id_subtitle_fi">Alaotsikko</label>
-                    {{ form.subtitle_fi }}
-                </div>
-                <div class="form-group">
-                    <label for="id_description_fi">Kuvaus</label>
-                    {{ form.description_fi }}
-                </div>
-            </div>
-
             <div class="form-group">
-                <label>{% t 'Typ' 'Type' 'Tyyppi' %}</label>
+                <label>{% t 'Typ' 'Type' %}</label>
                 <div style="display:flex; gap:1.5rem;">
                     <label style="color:var(--color-text); cursor:pointer;">
-                        <input type="radio" name="trip_type" value="trip" id="type-trip" style="margin-right:0.35rem;" checked> {% t 'Reise' 'Trip' 'Matka' %}
+                        <input type="radio" name="trip_type" value="trip" id="type-trip" style="margin-right:0.35rem;" checked> {% t 'Reise' 'Trip' %}
                     </label>
                     <label style="color:var(--color-text); cursor:pointer;">
-                        <input type="radio" name="trip_type" value="event" id="type-event" style="margin-right:0.35rem;"> {% t 'Event' 'Event' 'Tapahtuma' %}
+                        <input type="radio" name="trip_type" value="event" id="type-event" style="margin-right:0.35rem;"> {% t 'Event' 'Event' %}
                     </label>
                 </div>
             </div>
             <div class="form-group" id="event-date-group" style="display:none">
-                <label for="event-date-input">{% t 'Datum' 'Date' 'Päivämäärä' %}</label>
+                <label for="event-date-input">{% t 'Datum' 'Date' %}</label>
                 <input type="text" class="form-control" id="event-date-input" placeholder="DD.MM.YYYY">
             </div>
         </div>
@@ -363,26 +346,26 @@ textarea.form-control { resize: vertical; }
         <div id="trip-map-section">
             <div class="form-section">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-                    <h2 style="margin:0">{% t 'Routenplanung' 'Route Planning' 'Reitinsuunnittelu' %}</h2>
+                    <h2 style="margin:0">{% t 'Routenplanung' 'Route Planning' %}</h2>
                     <div class="journey-tabs" id="journey-tabs">
-                        <button type="button" class="journey-tab active" data-journey="outbound" onclick="switchJourneyTab('outbound')">{% t 'Hinreise' 'Outbound' 'Menomatka' %}</button>
-                        <button type="button" class="journey-tab" data-journey="return" onclick="switchJourneyTab('return')">{% t 'Rückreise' 'Return' 'Paluumatka' %}</button>
+                        <button type="button" class="journey-tab active" data-journey="outbound" onclick="switchJourneyTab('outbound')">{% t 'Hinreise' 'Outbound' %}</button>
+                        <button type="button" class="journey-tab" data-journey="return" onclick="switchJourneyTab('return')">{% t 'Rückreise' 'Return' %}</button>
                     </div>
                 </div>
                 <div class="planning-layout">
                     <div id="planning-map"></div>
                     <div class="planning-sidebar" id="planning-sidebar">
                         <div class="journey-date-row">
-                            <input type="text" class="form-control" id="outbound-date" name="outbound_date" placeholder="{% t 'Hinreise' 'Outbound' 'Menomatka' %} DD.MM.YYYY" maxlength="10">
+                            <input type="text" class="form-control" id="outbound-date" name="outbound_date" placeholder="{% t 'Hinreise' 'Outbound' %} DD.MM.YYYY" maxlength="10">
                         </div>
                         <div class="journey-date-row" id="return-date-row" style="display:none">
-                            <input type="text" class="form-control" id="return-date" name="return_date" placeholder="{% t 'Rückreise' 'Return' 'Paluumatka' %} DD.MM.YYYY" maxlength="10">
-                            <button type="button" class="btn btn-secondary btn-sm" style="margin-top:4px" onclick="copyOutboundAsReturn()">← {% t 'Hinreise umgekehrt' 'Reverse outbound' 'Menomatka käänteisenä' %}</button>
+                            <input type="text" class="form-control" id="return-date" name="return_date" placeholder="{% t 'Rückreise' 'Return' %} DD.MM.YYYY" maxlength="10">
+                            <button type="button" class="btn btn-secondary btn-sm" style="margin-top:4px" onclick="copyOutboundAsReturn()">← {% t 'Hinreise umgekehrt' 'Reverse outbound' %}</button>
                         </div>
                         <div class="segment-list" id="outbound-segments"></div>
                         <div class="segment-list" id="return-segments" style="display:none"></div>
-                        <button type="button" class="btn btn-secondary btn-sm btn-add-segment" id="add-segment-btn" onclick="addSegment()">+ {% t 'Abschnitt' 'Segment' 'Osuus' %}</button>
-                        <div class="map-click-hint">{% t 'Klick auf die Karte → Wegpunkt zum aktiven Abschnitt' 'Click the map → waypoint for the active segment' 'Klikkaa karttaa → reittipiste aktiiviselle osuudelle' %}</div>
+                        <button type="button" class="btn btn-secondary btn-sm btn-add-segment" id="add-segment-btn" onclick="addSegment()">+ {% t 'Abschnitt' 'Segment' %}</button>
+                        <div class="map-click-hint">{% t 'Klick auf die Karte → Wegpunkt zum aktiven Abschnitt' 'Click the map → waypoint for the active segment' %}</div>
                     </div>
                 </div>
             </div>
@@ -390,11 +373,11 @@ textarea.form-control { resize: vertical; }
 
         <!-- Videos -->
         <div class="form-section">
-            <h2>{% t 'Videos' 'Videos' 'Videot' %}</h2>
+            <h2>{% t 'Videos' 'Videos' %}</h2>
 
             {% if existing_videos %}
             <div class="existing-images">
-                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">{% t 'Vorhandene Videos' 'Existing Videos' 'Olemassa olevat videot' %}</h4>
+                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">{% t 'Vorhandene Videos' 'Existing Videos' %}</h4>
                 <div class="image-preview-list" id="existing-video-list">
                     {% for vid in existing_videos %}
                     <div class="image-preview" id="existing-vid-{{ vid.id }}" style="width:auto; padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem;">
@@ -408,7 +391,7 @@ textarea.form-control { resize: vertical; }
             {% endif %}
 
             <div class="image-upload-zone" id="video-upload-zone" onclick="document.getElementById('video-input').click()">
-                {% t 'Klicke hier oder ziehe Videos hierher' 'Click here or drag videos here' 'Klikkaa tähän tai vedä videot tähän' %}
+                {% t 'Klicke hier oder ziehe Videos hierher' 'Click here or drag videos here' %}
             </div>
             <input type="file" id="video-input" name="videos" multiple accept="video/*" style="display:none">
             <div class="image-preview-list" id="video-previews"></div>
@@ -416,11 +399,11 @@ textarea.form-control { resize: vertical; }
 
         <!-- Images -->
         <div class="form-section">
-            <h2>{% t 'Bilder' 'Images' 'Kuvat' %}</h2>
+            <h2>{% t 'Bilder' 'Images' %}</h2>
 
             {% if existing_images %}
             <div class="existing-images">
-                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">{% t 'Vorhandene Bilder' 'Existing Images' 'Olemassa olevat kuvat' %}</h4>
+                <h4 style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:0.5rem;">{% t 'Vorhandene Bilder' 'Existing Images' %}</h4>
                 <div class="image-preview-list" id="existing-image-list">
                     {% for img in existing_images %}
                     <div class="image-preview" id="existing-img-{{ img.id }}">
@@ -430,23 +413,23 @@ textarea.form-control { resize: vertical; }
                             data-img-id="{{ img.id }}"
                             data-lat="{% if img.location %}{{ img.location.y|unlocalize }}{% endif %}"
                             data-lng="{% if img.location %}{{ img.location.x|unlocalize }}{% endif %}"
-                            title="{% if img.location %}{% t 'Ort ändern' 'Change location' 'Vaihda sijainti' %}{% else %}{% t 'Ort setzen' 'Set location' 'Aseta sijainti' %}{% endif %}">
+                            title="{% if img.location %}{% t 'Ort ändern' 'Change location' %}{% else %}{% t 'Ort setzen' 'Set location' %}{% endif %}">
                             <span class="loc-dot {% if img.location %}has-location{% endif %}">&#x1F4CD;</span>
                         </button>
                         <button type="button" class="embed-toggle-btn" data-img-id="{{ img.id }}"
-                            title="{% t 'Für Discord/Embed-Vorschau auswählen (max. 3)' 'Select for Discord/embed preview (max. 3)' 'Valitse Discord/embed-esikatseluun (max. 3)' %}"
+                            title="{% t 'Für Discord/Embed-Vorschau auswählen (max. 3)' 'Select for Discord/embed preview (max. 3)' %}"
                             onclick="toggleEmbedImage(this, {{ img.id }})">
                             ★
                         </button>
                     </div>
                     {% endfor %}
                 </div>
-                <p class="embed-hint" style="font-size:0.72rem;color:var(--color-text-muted);margin-top:0.35rem">{% t '★ = Für Link-Vorschau (Discord). Maximal 3 Bilder auswählbar.' '★ = For link preview (Discord). Up to 3 images selectable.' '★ = Linkki-esikatseluun (Discord). Enintään 3 kuvaa valittavissa.' %}</p>
+                <p class="embed-hint" style="font-size:0.72rem;color:var(--color-text-muted);margin-top:0.35rem">{% t '★ = Für Link-Vorschau (Discord). Maximal 3 Bilder auswählbar.' '★ = For link preview (Discord). Up to 3 images selectable.' %}</p>
             </div>
             {% endif %}
 
             <div class="image-upload-zone" id="upload-zone" onclick="document.getElementById('image-input').click()">
-                {% t 'Klicke hier oder ziehe Bilder hierher' 'Click here or drag images here' 'Klikkaa tähän tai vedä kuvat tähän' %}
+                {% t 'Klicke hier oder ziehe Bilder hierher' 'Click here or drag images here' %}
             </div>
             <input type="file" id="image-input" name="images" multiple accept="image/*" style="display:none">
             <div class="image-preview-list" id="image-previews"></div>
@@ -455,24 +438,24 @@ textarea.form-control { resize: vertical; }
         <div id="form-error" style="display:none; background:rgba(207,108,108,0.15); border:1px solid var(--color-danger); color:var(--color-danger); padding:0.75rem; border-radius:6px; margin-bottom:1rem;"></div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary" id="submit-btn">{% if editing %}{% t 'Speichern' 'Save' 'Tallenna' %}{% else %}{% t 'Erstellen' 'Create' 'Luo' %}{% endif %}</button>
-            <a href="{% url 'diary:dashboard' %}" class="btn btn-secondary">{% t 'Abbrechen' 'Cancel' 'Peruuta' %}</a>
+            <button type="submit" class="btn btn-primary" id="submit-btn">{% if editing %}{% t 'Speichern' 'Save' %}{% else %}{% t 'Erstellen' 'Create' %}{% endif %}</button>
+            <a href="{% url 'diary:dashboard' %}" class="btn btn-secondary">{% t 'Abbrechen' 'Cancel' %}</a>
         </div>
     </form>
 </div>
 <div id="location-modal" class="modal-overlay hidden">
     <div class="modal-box">
-        <h4>{% t 'Ort auf der Karte wählen' 'Choose location on the map' 'Valitse sijainti kartalta' %}</h4>
-        <p style="font-size:0.8rem; color:var(--color-text-muted);">{% t 'Klick auf die Karte setzt den Ort des Fotos. Suche nach einem Ort oder klicke direkt auf die Karte.' 'Click on the map to set the photo location. Search for a place or click directly on the map.' 'Klikkaa karttaa asettaaksesi kuvan sijainnin. Etsi paikkaa tai klikkaa suoraan karttaa.' %}</p>
+        <h4>{% t 'Ort auf der Karte wählen' 'Choose location on the map' %}</h4>
+        <p style="font-size:0.8rem; color:var(--color-text-muted);">{% t 'Klick auf die Karte setzt den Ort des Fotos. Suche nach einem Ort oder klicke direkt auf die Karte.' 'Click on the map to set the photo location. Search for a place or click directly on the map.' %}</p>
         <div class="location-search-row">
-            <input type="text" id="location-search-input" placeholder="{% t 'Ort suchen (z.B. Berlin, Paris)...' 'Search location (e.g. Berlin, Paris)...' 'Etsi sijaintia (esim. Berliini, Pariisi)...' %}" autocomplete="off">
-            <button type="button" id="location-search-btn" class="btn btn-sm btn-secondary">{% t 'Suchen' 'Search' 'Etsi' %}</button>
+            <input type="text" id="location-search-input" placeholder="{% t 'Ort suchen (z.B. Berlin, Paris)...' 'Search location (e.g. Berlin, Paris)...' %}" autocomplete="off">
+            <button type="button" id="location-search-btn" class="btn btn-sm btn-secondary">{% t 'Suchen' 'Search' %}</button>
         </div>
         <div id="location-results" class="location-results" style="display:none;"></div>
         <div id="location-picker-map"></div>
         <div class="modal-actions">
-            <button type="button" id="location-save-btn" class="btn btn-primary">{% t 'Speichern' 'Save' 'Tallenna' %}</button>
-            <button type="button" onclick="closeLocationModal()" class="btn btn-secondary">{% t 'Abbrechen' 'Cancel' 'Peruuta' %}</button>
+            <button type="button" id="location-save-btn" class="btn btn-primary">{% t 'Speichern' 'Save' %}</button>
+            <button type="button" onclick="closeLocationModal()" class="btn btn-secondary">{% t 'Abbrechen' 'Cancel' %}</button>
         </div>
     </div>
 </div>
@@ -1028,9 +1011,6 @@ try {
         formData.append("title_en", document.getElementById("id_title_en").value);
         formData.append("subtitle_en", document.getElementById("id_subtitle_en").value);
         formData.append("description_en", document.getElementById("id_description_en").value);
-        formData.append("title_fi", document.getElementById("id_title_fi").value);
-        formData.append("subtitle_fi", document.getElementById("id_subtitle_fi").value);
-        formData.append("description_fi", document.getElementById("id_description_fi").value);
 
         var isEvent = document.getElementById("type-event").checked;
         formData.append("is_event", isEvent ? "1" : "0");
@@ -1325,9 +1305,6 @@ try {
         if (data.title_en) document.getElementById("id_title_en").value = data.title_en;
         if (data.subtitle_en) document.getElementById("id_subtitle_en").value = data.subtitle_en;
         if (data.description_en) document.getElementById("id_description_en").value = data.description_en;
-        if (data.title_fi) document.getElementById("id_title_fi").value = data.title_fi;
-        if (data.subtitle_fi) document.getElementById("id_subtitle_fi").value = data.subtitle_fi;
-        if (data.description_fi) document.getElementById("id_description_fi").value = data.description_fi;
 
         // Restore embed image selections
         if (data.embed_image_ids) {

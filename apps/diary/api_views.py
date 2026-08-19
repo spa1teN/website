@@ -17,7 +17,7 @@ from .services.stats import (
 
 def _request_lang(request):
     lang = request.session.get("lang", "de")
-    return lang if lang in ("de", "en", "fi") else "de"
+    return lang if lang in ("de", "en") else "de"
 
 
 class RouteListView(ListAPIView):

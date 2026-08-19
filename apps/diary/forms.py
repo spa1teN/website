@@ -8,7 +8,7 @@ class TripForm(forms.ModelForm):
 
     After django-modeltranslation, ``title``/``subtitle``/``description`` are
     descriptors that resolve to the active-language column.  We define
-    explicit form fields for all three languages (DE/EN/FI) so translations
+    explicit form fields for both languages (DE/EN) so translations
     can be entered directly in the trip form without switching to the Django
     admin.
     """
@@ -63,32 +63,6 @@ class TripForm(forms.ModelForm):
         }),
     )
 
-    # Finnish translations (all optional)
-    title_fi = forms.CharField(
-        max_length=255,
-        required=False,
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Matkan otsikko",
-        }),
-    )
-    subtitle_fi = forms.CharField(
-        max_length=255,
-        required=False,
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Alaotsikko (valinnainen)",
-        }),
-    )
-    description_fi = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={
-            "class": "form-control",
-            "rows": 4,
-            "placeholder": "Matkan kuvaus...",
-        }),
-    )
-
     class Meta:
         model = Trip
         fields = []
@@ -102,9 +76,6 @@ class TripForm(forms.ModelForm):
             self.initial["title_en"] = self.instance.title_en
             self.initial["subtitle_en"] = self.instance.subtitle_en
             self.initial["description_en"] = self.instance.description_en
-            self.initial["title_fi"] = self.instance.title_fi
-            self.initial["subtitle_fi"] = self.instance.subtitle_fi
-            self.initial["description_fi"] = self.instance.description_fi
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -114,9 +85,6 @@ class TripForm(forms.ModelForm):
         instance.title_en = self.cleaned_data["title_en"]
         instance.subtitle_en = self.cleaned_data["subtitle_en"]
         instance.description_en = self.cleaned_data["description_en"]
-        instance.title_fi = self.cleaned_data["title_fi"]
-        instance.subtitle_fi = self.cleaned_data["subtitle_fi"]
-        instance.description_fi = self.cleaned_data["description_fi"]
         if commit:
             instance.save()
             self._save_m2m()
