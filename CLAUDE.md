@@ -10,7 +10,7 @@ Persönliche Website mit Reisetagebuch (interaktive Karte), About-Seite und anon
 | Datenbank | PostgreSQL 16 + PostGIS 3.4 |
 | Frontend | Django Templates, MapLibre GL JS v5, Vanilla JS |
 | Routing | OSRM (Auto), BRouter (Zug), Great-Circle (Flug), Straight-Line (Fähre) |
-| Reverse Proxy | Nginx 1.27 (betreibt auch Tausendsassa, Nextcloud, Dashboard, Collabora) |
+| Reverse Proxy | Nginx 1.27 (betreibt auch Tausendsassa, Nextcloud, Dashboard) |
 | Deployment | Docker Compose |
 | Server | STRATO VPS, Ubuntu 22.04 |
 
@@ -293,7 +293,7 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 
 ## Wichtige Hinweise
 
-- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dashboard.casparsadenius.de`, `collabora.casparsadenius.de`)
+- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dashboard.casparsadenius.de`)
 - Die `web`- und `db`-Container werden vom Dashboard-Stack gestartet (nicht von diesem Compose-File)
 - `web`-Container hat Volume-Mount `/root/website:/app` (Live-Code, kein Image-Rebuild nötig bei Code-Änderungen)
 - `LOCALE_PATHS` ist nicht gesetzt → Django nutzt `USE_L10N=True` mit deutschem Locale. Bei Zahlenformatierung in Templates `|stringformat:'.6f'` nutzen (z.B. für GPS-Koordinaten), da `{{ value }}` im deutschen Locale Kommas statt Punkte rendert
