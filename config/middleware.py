@@ -63,3 +63,21 @@ class SessionLanguageMiddleware:
         response = self.get_response(request)
         dj_translation.deactivate()
         return response
+
+
+class NoCacheHtmlMiddleware:
+    """Disallow browser caching of HTML responses.
+
+    Without a Cache-Control header, browsers may serve a stale page from their
+    cache after a deploy, making template changes look "not applied". Set
+    ``no-cache`` so the browser always revalidates HTML before reusing it.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if "text/html" in response.get("Content-Type", ""):
+            response["Cache-Control"] = "no-cache"
+        return response

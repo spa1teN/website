@@ -4,6 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.views import LoginView, LogoutView
 
+from apps.analytics import views as analytics_views
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/login/", LoginView.as_view(template_name="core/login.html"), name="login"),
@@ -13,6 +15,7 @@ urlpatterns = [
     path("about/", include("apps.about.urls")),
     path("status/", include("apps.links.status_urls")),
     path("trips/", include("apps.diary.urls")),
+    path("statistics/", analytics_views.stats_page, name="stats_page"),
     path("api/diary/", include(("apps.diary.api_urls", "diary-api"))),
     path("api/analytics/", include("apps.analytics.urls")),
 ]

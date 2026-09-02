@@ -1,0 +1,51 @@
+{% extends "core/base.html" %}
+{% load i18n_extra %}
+{% load static %}
+
+{% block title %}{% t 'Besucherstatistik' 'Visitor Statistics' %} - Caspar Sadenius{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="{% static 'analytics/css/stats.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="page-container stats-page">
+    <h1>{% t 'Besucherstatistik' 'Visitor Statistics' %}</h1>
+
+    <div class="stats-kpis">
+        <div class="stats-kpi">
+            <div class="stats-kpi-value">{{ stats.total_pageviews }}</div>
+            <div class="stats-kpi-label">{% t 'Pageviews' 'Pageviews' %}</div>
+        </div>
+        <div class="stats-kpi">
+            <div class="stats-kpi-value">{{ stats.total_clicks }}</div>
+            <div class="stats-kpi-label">{% t 'Klicks' 'Clicks' %}</div>
+        </div>
+        <div class="stats-kpi">
+            <div class="stats-kpi-value">{{ stats.countries|length }}</div>
+            <div class="stats-kpi-label">{% t 'Länder' 'Countries' %}</div>
+        </div>
+    </div>
+
+    <div class="stats-map" id="stats-map"></div>
+
+    <div class="stats-grid">
+        <section class="stats-card">
+            <h2>{% t 'Referrer' 'Referrers' %}</h2>
+            <div id="stats-referrers"></div>
+        </section>
+        <section class="stats-card">
+            <h2>{% t 'Wann wird die Seite besucht?' 'When is the site visited?' %} <span class="stats-card-note">Europe/Berlin</span></h2>
+            <div id="stats-heatmap"></div>
+        </section>
+    </div>
+</div>
+
+<script>window.STATS_DATA = {{ stats_json|safe }};</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script src="{% static 'analytics/js/stats.js' %}"></script>
+{% endblock %}

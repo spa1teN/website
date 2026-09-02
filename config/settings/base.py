@@ -34,6 +34,7 @@ MIDDLEWARE = [
     "config.middleware.NginxRemoteUserMiddleware",
     "config.middleware.PersistentRemoteUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "config.middleware.NoCacheHtmlMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

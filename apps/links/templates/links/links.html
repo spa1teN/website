@@ -1,93 +1,76 @@
 {% extends "core/base.html" %}
 {% load i18n_extra %}
 
-{% block title %}{% t 'Links' 'Links' %} - Caspar Sadenius{% endblock %}
+{% block title %}{% t 'Finde mich hier' 'Find me here' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="page-container">
-    <h1>{% t 'Links' 'Links' %}</h1>
+    <h1>{% t 'Finde mich hier' 'Find me here' %}</h1>
 
-    <div class="link-cards">
-        <div class="link-card">
-            <i class="fa-solid fa-envelope"></i>
-            <span class="link-label">{% t 'E-Mail' 'Email' %}</span>
-            <span class="link-handle">me [at] casparsadenius [dot] de</span>
-        </div>
-    </div>
-
-    <h2 class="links-section-title">{% t 'Finde mich hier' 'Find Me Here' %}</h2>
     <div class="link-cards link-cards-grid">
-        <a href="https://www.linkedin.com/in/caspar-sadenius-a506332ab/" target="_blank" rel="noopener" class="link-card link-card-full" data-track="social:linkedin">
+        <a href="https://www.linkedin.com/in/caspar-sadenius-a506332ab/" target="_blank" rel="noopener" class="link-card" data-track="social:linkedin">
             <i class="fa-brands fa-linkedin-in"></i>
-            <span class="link-label">LinkedIn</span>
             <span class="link-handle">Caspar Sadenius</span>
         </a>
 
-        <a href="https://github.com/spa1teN" target="_blank" rel="noopener" class="link-card link-card-full" data-track="social:github">
+        <a href="https://github.com/spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:github">
             <i class="fa-brands fa-github"></i>
-            <span class="link-label">GitHub</span>
             <span class="link-handle">spa1teN</span>
+        </a>
+
+        <a href="https://open.spotify.com/user/caspar.sadenius" target="_blank" rel="noopener" class="link-card" data-track="social:spotify">
+            <i class="fa-brands fa-spotify"></i>
+            <span class="link-handle">caspar.sadenius</span>
         </a>
 
         <a href="https://www.instagram.com/spa1ten/" target="_blank" rel="noopener" class="link-card" data-track="social:instagram">
             <i class="fa-brands fa-instagram"></i>
-            <span class="link-label">Instagram</span>
             <span class="link-handle">@spa1ten</span>
         </a>
 
         <a href="https://x.com/spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:twitter">
             <i class="fa-brands fa-twitter"></i>
-            <span class="link-label">Twitter</span>
             <span class="link-handle">@spa1teN</span>
         </a>
 
         <a href="https://bsky.app/profile/casparsadenius.de" target="_blank" rel="noopener" class="link-card" data-track="social:bluesky">
             <i class="fa-brands fa-bluesky"></i>
-            <span class="link-label">Bluesky</span>
             <span class="link-handle">@casparsadenius.de</span>
         </a>
 
         <a href="https://www.reddit.com/user/spa1teN/" target="_blank" rel="noopener" class="link-card" data-track="social:reddit">
             <i class="fa-brands fa-reddit-alien"></i>
-            <span class="link-label">Reddit</span>
             <span class="link-handle">u/spa1teN</span>
         </a>
 
         <a href="https://www.twitch.tv/spa1ten" target="_blank" rel="noopener" class="link-card" data-track="social:twitch">
             <i class="fa-brands fa-twitch"></i>
-            <span class="link-label">Twitch</span>
             <span class="link-handle">spa1ten</span>
         </a>
 
         <a href="https://www.youtube.com/@spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:youtube">
             <i class="fa-brands fa-youtube"></i>
-            <span class="link-label">YouTube</span>
             <span class="link-handle">@spa1teN</span>
         </a>
 
         <a href="https://steamcommunity.com/id/spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:steam">
             <i class="fa-brands fa-steam"></i>
-            <span class="link-label">Steam</span>
             <span class="link-handle">spa1teN</span>
         </a>
 
         <a href="https://de.wikipedia.org/wiki/Benutzer:Spa1teN" target="_blank" rel="noopener" class="link-card" data-track="social:wikipedia">
             <i class="fa-brands fa-wikipedia-w"></i>
-            <span class="link-label">Wikipedia</span>
             <span class="link-handle">Spa1teN</span>
         </a>
-    </div>
 
-    {% if discord_user_id %}
-    <div class="discord-status" id="discord-status">
+        {% if discord_user_id %}
         <div class="link-card discord-card">
             <i class="fa-brands fa-discord"></i>
-            <span class="link-label">Discord</span>
             <span class="link-handle" id="discord-handle">{% t 'Lade...' 'Loading...' %}</span>
             <span class="discord-indicator" id="discord-indicator"></span>
         </div>
+        {% endif %}
     </div>
-    {% endif %}
 
     <h2 class="links-section-title">{% t 'Ausbildung' 'Education' %}</h2>
     <div class="link-cards link-cards-grid">
@@ -146,7 +129,7 @@
 }
 
 .link-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .link-card-full {
@@ -158,7 +141,13 @@
     row-gap: 0.15rem;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 768px) {
+    .link-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
     .link-cards-grid {
         grid-template-columns: 1fr;
     }
@@ -183,10 +172,15 @@
 }
 
 .edu-institutions {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
+    position: relative;
+    width: 100%;
+}
+
+.edu-combined .link-card-stack {
+    flex: 1;
 }
 
 .edu-inst-link {
@@ -194,27 +188,44 @@
     color: var(--color-text);
 }
 
+.edu-inst-link:first-child {
+    grid-column: 1;
+}
+
+.edu-inst-link:last-child {
+    grid-column: 2;
+    padding-left: 1.25rem;
+}
+
 .edu-inst-link:hover {
     color: var(--color-accent);
 }
 
 .edu-divider {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
     width: 1px;
-    align-self: stretch;
     background: var(--color-border);
 }
 
 @media (max-width: 560px) {
     .edu-institutions {
-        flex-direction: column;
-        align-items: flex-start;
+        grid-template-columns: 1fr;
         gap: 0.4rem;
     }
 
+    .edu-inst-link:first-child,
+    .edu-inst-link:last-child {
+        grid-column: auto;
+        padding-left: 0;
+    }
+
     .edu-divider {
+        position: static;
         width: 100%;
         height: 1px;
-        align-self: stretch;
     }
 }
 
@@ -238,10 +249,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
-}
-
-.discord-status {
-    margin-top: 0.6rem;
 }
 
 .discord-card {

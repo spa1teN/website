@@ -12,13 +12,20 @@
         <a href="{% url 'about:index' %}" class="link-card">
             <i class="fa-solid fa-map-location-dot"></i>
             <span class="link-label">{% t 'Über mich' 'About Me' %}</span>
-            <span class="link-handle">{% t 'Lebenslauf & interaktive Karte' 'CV & interactive map' %}</span>
+            <span class="link-handle">{% t 'Lebenslauf & interaktive Karte' 'Curriculum vitae & interactive map' %}</span>
         </a>
 
         <a href="{% url 'status:overview' %}" class="link-card">
             <i class="fa-solid fa-heart-pulse"></i>
             <span class="link-label">{% t 'Status' 'Status' %}</span>
             <span class="link-handle">{% t 'Tausendsassa · RoaringBot' 'Tausendsassa · RoaringBot' %}</span>
+        </a>
+
+        <a href="{% url 'stats_page' %}" class="link-card">
+            <i class="fa-solid fa-users"></i>
+            <span class="link-label">{% t 'Besucher' 'Visitors' %}</span>
+            <span class="link-handle">{% t 'Du bist Besucher Nr.' "You're visitor N°" %} {{ visitor_number }}</span>
+            <span class="link-more">{% t 'klick für mehr' 'click for more' %}</span>
         </a>
     </div>
 </div>
@@ -32,6 +39,7 @@
 
 .link-card {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.25rem;
@@ -62,6 +70,13 @@
 .link-handle {
     color: var(--color-text-muted);
     font-size: 0.9rem;
+}
+
+.link-more {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
 }
 </style>
 {% endblock %}

@@ -3,9 +3,12 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from apps.analytics.models import AnalyticsEvent
+
 
 def home(request):
-    return render(request, "core/home.html")
+    visitor_number = AnalyticsEvent.objects.filter(event_type="pageview").count()
+    return render(request, "core/home.html", {"visitor_number": visitor_number})
 
 
 def privacy(request):

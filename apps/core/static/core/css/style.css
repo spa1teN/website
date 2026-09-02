@@ -225,17 +225,36 @@ a:hover {
     color: var(--color-accent);
 }
 
+.footer-contact {
+    position: absolute;
+    left: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
 .footer-admin-btn {
     border: 1px solid var(--color-accent);
     border-radius: 4px;
     padding: 0.2rem 0.7rem;
     font-size: 0.8rem;
     position: absolute;
-    left: 1rem;
+    right: 1rem;
 }
 .footer-admin-btn:hover {
     background: var(--color-accent);
     color: #fff !important;
+}
+
+@media (max-width: 560px) {
+    .site-footer {
+        flex-direction: column;
+        gap: 0.4rem;
+        padding-top: 2rem;
+    }
+    .footer-contact,
+    .footer-admin-btn {
+        position: static;
+    }
 }
 
 .page-container {

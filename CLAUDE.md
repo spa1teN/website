@@ -25,7 +25,7 @@ website/
 │   │   └── production.py            # Aus .env, im Docker verwendet
 │   ├── urls.py                      # Root-URLs
 │   ├── wsgi.py
-│   └── middleware.py                # NginxRemoteUserMiddleware, PersistentRemoteUserMiddleware
+│   └── middleware.py                # NginxRemoteUserMiddleware, PersistentRemoteUserMiddleware, SessionLanguageMiddleware, NoCacheHtmlMiddleware
 ├── apps/
 │   ├── core/                        # Home, Login, Sprache, Admin-Index
 │   │   ├── views.py                 # home, privacy, set_language, admin_index
@@ -38,8 +38,8 @@ website/
 │   │   │   ├── js/analytics.js      # Client-seitiges Analytics (sendBeacon)
 │   │   │   └── favicon.png
 │   │   └── templates/core/
-│   │       ├── base.html            # Basis-Template mit Nav, Footer, Sprache (Footer-Admin-Link immer sichtbar)
-│   │       ├── home.html            # Startseite mit Link-Karten zu /about/ und /status/
+│   │       ├── base.html            # Basis-Template mit Nav, Footer (Kontakt links, Admin rechts, Sprache)
+│   │       ├── home.html            # Startseite mit Link-Karten zu /about/, /status/ und Besucherstatistik
 │   │       ├── login.html, privacy.html
 │   │       ├── admin.html           # Admin-Übersicht
 │   │       └── admin_sidebar.html
@@ -48,7 +48,7 @@ website/
 │   │   ├── urls.py
 │   │   ├── status_urls.py           # /status/ (app_name="status"), /status/roaringbot/, /status/tausendsassa/
 │   │   └── templates/links/
-│   │       ├── links.html           # Social Links + Discord-Status (Lanyard)
+│   │       ├── links.html           # "Finde mich hier": Social-Links (Icons + Username, 3er-Raster), Spotify, Discord-Karte + Lanyard-Status
 │   │       ├── status.html          # Bot-Status-Karten (Tausendsassa, RoaringBot, Match-Previews)
 │   │       └── status_api.html      # API-Doku für die Dashboard-Endpoints
 │   ├── about/                       # Interaktiver Lebenslauf (Karte + integrierte Stations-Karten)
@@ -92,11 +92,13 @@ website/
 │   │       └── dashboard.html       # Admin-Übersicht (Tabelle aller Reisen)
 │   └── analytics/                   # Anonymes Pageview/Click-Tracking
 │       ├── models.py                # AnalyticsEvent
-│       ├── views.py                 # track_event (POST), stats_api (GET)
+│       ├── views.py                 # track_event (POST), stats_api (GET), stats_page (/statistics/)
 │       ├── urls.py                  # /api/analytics/{event,stats}/
 │       ├── admin.py                 # Read-only Django-Admin
 │       ├── geoip.py                 # MaxMind GeoLite2 GeoIP-Auflösung
-│       └── useragent.py             # User-Agent-Parsing (user-agents)
+│       ├── useragent.py             # User-Agent-Parsing (user-agents)
+│       ├── static/analytics/        # stats.css, stats.js (Karte, Heatmap, Breakdowns)
+│       └── templates/analytics/     # stats_page.html
 ├── nginx/                           # Nginx Dockerfile + Config
 │   ├── Dockerfile
 │   ├── nginx.conf                   # Reverse-Proxy für 5 Subdomains
@@ -178,7 +180,8 @@ Alle Volumes sind `external: true` (vom Dashboard-Stack erstellt):
 | Pfad | Beschreibung |
 |---|---|
 | `/` | Home-Seite |
-| `/links/` | Social-Media-Links + Discord-Status |
+| `/links/` | Social-Media-Links (Icons + Username) + Discord-Status |
+| `/statistics/` | Besucherstatistik (Karte, Referrer, Zeit-Heatmap) |
 | `/status/` | Bot-Status (Tausendsassa, RoaringBot, Match-Previews) |
 | `/about/` | Interaktiver Lebenslauf (Karte + Stations-Karten, Deep-Links `#slug`) |
 | `/datenschutz/` | Datenschutzerklärung |
@@ -280,6 +283,7 @@ Anonymes Pageview- und Click-Tracking — keine IP-Adressen, Cookies oder Sessio
 - **GeoIP:** MaxMind GeoLite2-City (optional, Pfad in `.env`)
 - **Client:** `apps/core/static/core/js/analytics.js` — sendet Events per `navigator.sendBeacon()`
 - **Stats API:** `/api/analytics/stats/` mit `X-API-Key`-Header (vom Dashboard konsumiert)
+- **Stats-Seite:** Öffentliche `/statistics/`-Seite (`stats_page` in `views.py`) zeigt KPI-Zeile, MapLibre-Karte, Referrer und Zeit-Heatmap. Aggregat-Berechnung ist via Django-Cache 60s gecached. Der Home-Card „Du bist Besucher Nr. X" nutzt `total_pageviews`.
 - **Ausschluss:** Authentifizierte User, Pfade mit `/admin`/`/staticfiles`/`/media`/`/api`/`/accounts`/`/trips/manage`
 - Daten sind read-only im Django-Admin
 

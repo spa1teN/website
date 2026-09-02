@@ -21,7 +21,7 @@ passed anywhere else.
 Logged-in users (i.e. the site owner) are excluded entirely, both client-side
 (the tracking script isn't even loaded when `user.is_authenticated`) and
 server-side (`track_event` also short-circuits for authenticated requests, as
-defense in depth). Requests to `/admin/`, `/diary/manage/`, `/api/`,
+defense in depth). Requests to `/admin/`, `/trips/manage/`, `/api/`,
 `/accounts/`, `/static/`, `/staticfiles/`, and `/media/` are never logged.
 
 ## Table: `analytics_analyticsevent`
@@ -31,7 +31,7 @@ defense in depth). Requests to `/admin/`, `/diary/manage/`, `/api/`,
 | `id` | int | `1421` | Primary key, no meaning beyond ordering. |
 | `created_at` | datetime (UTC) | `2026-07-09 14:32:01` | When the event was recorded. |
 | `event_type` | `"pageview"` \| `"click"` | `"pageview"` | Whether this is a page load or a tracked click. |
-| `path` | string | `"/diary/"` | The page's path at the time of the event. |
+| `path` | string | `"/trips/"` | The page's path at the time of the event. |
 | `target` | string | `"social:instagram"` | Only set for `click` events - see "Click targets" below. Empty for pageviews. |
 | `referrer_domain` | string | `"google.com"` | Bare domain the visitor came from (from `document.referrer`). Empty string means either a direct visit (no referrer sent) or internal navigation within this site (internal referrers are deliberately blanked out, since they're not meaningful). |
 | `country` | string (ISO 3166-1 alpha-2) | `"DE"` | Resolved from the request IP via GeoIP; empty if GeoIP is not configured or the lookup failed (see "GeoIP setup" below). |
@@ -45,14 +45,13 @@ defense in depth). Requests to `/admin/`, `/diary/manage/`, `/api/`,
 
 ## Click targets currently wired up
 
-Defined via `data-track="..."` attributes in templates. Currently only the
-social/profile links on the "About Me" page
-(`apps/links/templates/links/links.html`) are instrumented:
+Defined via `data-track="..."` attributes in templates. Currently the
+social/profile links on the Links page
+(`/links/`, `apps/links/templates/links/links.html`) are instrumented:
 
-`social:linkedin`, `social:github`, `social:instagram`, `social:twitter`,
-`social:bluesky`, `social:reddit`, `social:twitch`, `social:youtube`,
-`social:steam`, `social:wikipedia`, `social:discord_bot_discovery`,
-`social:tausendsassa_interface`.
+`social:linkedin`, `social:github`, `social:spotify`, `social:instagram`,
+`social:twitter`, `social:bluesky`, `social:reddit`, `social:twitch`,
+`social:youtube`, `social:steam`, `social:wikipedia`.
 
 To track a new element, add `data-track="some:label"` to it in the template -
 no JS changes needed, `apps/core/static/core/js/analytics.js` picks up any
@@ -107,11 +106,13 @@ from django.db.models import Count
 Or export to CSV/pandas via `docker compose exec -T web python manage.py dbshell`
 and `\copy (SELECT * FROM analytics_analyticsevent) TO STDOUT WITH CSV HEADER`.
 
-## Read-only JSON aggregates for external tools (dashboard)
+## Read-only JSON aggregates for external tools
 
 `GET /api/analytics/stats/` (`apps/analytics/views.py:stats_api`) returns a
-single JSON object with pre-aggregated numbers, for external tools like the
-ops dashboard at `~/dashboard/` that shouldn't need direct DB/ORM access.
+single JSON object with pre-aggregated numbers, for external tools/scripts
+that shouldn't need direct DB/ORM access. The public `/statistics/` page
+computes the same aggregates via the shared `_stats_aggregates()` helper but
+reads them directly (no API key needed).
 
 - Auth: header `X-API-Key: <value>` must match `ANALYTICS_DASHBOARD_API_KEY`
   (set in `.env`, read via `settings.ANALYTICS_DASHBOARD_API_KEY`). Missing or
@@ -129,9 +130,9 @@ ops dashboard at `~/dashboard/` that shouldn't need direct DB/ORM access.
   "generated_at": "2026-07-09T14:32:01.123456+00:00",
   "total_pageviews": 4213,
   "total_clicks": 187,
-  "top_pages": [{"value": "/diary/", "label": "/diary/", "count": 812, "pct": 100}],       // top 10
+  "top_pages": [{"value": "/trips/", "label": "/trips/", "count": 812, "pct": 100}],       // top 10
   "top_referrers": [{"value": "google.com", "label": "google.com", "count": 340, "pct": 100}], // top 10, excludes blank (direct/internal)
-  "top_click_targets": [{"value": "social:instagram", "label": "social:instagram", "count": 52, "pct": 100}], // top 15, excludes blank; see "Click targets currently wired up" above for the full list (currently only About-Me social links)
+  "top_click_targets": [{"value": "social:instagram", "label": "social:instagram", "count": 52, "pct": 100}], // top 15, excludes blank; see "Click targets" above for the full list (currently the Links-page social links)
   "countries": [{"value": "DE", "label": "DE", "count": 2100, "pct": 100}],                 // top 15, excludes blank (no GeoIP match)
   "cities": [{"value": "Hamburg", "label": "Hamburg", "count": 400, "pct": 100}],            // top 15, excludes blank
   "city_points": [{"city": "Hamburg", "country": "DE", "lat": 53.55, "lon": 10.0, "count": 400}], // top 50 by count, only rows with resolved coordinates (see latitude/longitude in the table schema above - only populated after that field was added)

@@ -4,9 +4,11 @@ import json
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Count
 from django.db.models.functions import ExtractHour, ExtractWeekDay
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
@@ -192,17 +194,22 @@ def _hourly_pattern(pageviews):
     return [{"weekday": r["weekday"], "hour": r["hour"], "count": r["n"]} for r in rows]
 
 
-@require_GET
-def stats_api(request):
-    """Read-only JSON aggregates for the external ops dashboard. See DATA_INTERFACE.md."""
-    if not _check_api_key(request):
-        return JsonResponse({"detail": "unauthorized"}, status=401)
+def _stats_aggregates() -> dict:
+    """Full aggregate snapshot of all analytics events.
+
+    Shared by the protected JSON API and the public /statistics/ page.
+    The heavy queries are cached for a short window; the value changes with
+    every logged pageview, so a long TTL would make the page feel stale.
+    """
+    cached = cache.get("analytics_stats_page")
+    if cached is not None:
+        return cached
 
     events = AnalyticsEvent.objects.all()
     pageviews = events.filter(event_type="pageview")
     clicks = events.filter(event_type="click")
 
-    return JsonResponse({
+    data = {
         "generated_at": timezone.now().isoformat(),
         "total_pageviews": pageviews.count(),
         "total_clicks": clicks.count(),
@@ -218,4 +225,24 @@ def stats_api(request):
         "os": _breakdown(events, "os", limit=10),
         "languages": _breakdown(events, "language", limit=10),
         "screen_buckets": _breakdown(events, "screen_bucket", limit=10),
+    }
+    cache.set("analytics_stats_page", data, timeout=60)
+    return data
+
+
+@require_GET
+def stats_api(request):
+    """Read-only JSON aggregates for the external ops dashboard. See DATA_INTERFACE.md."""
+    if not _check_api_key(request):
+        return JsonResponse({"detail": "unauthorized"}, status=401)
+
+    return JsonResponse(_stats_aggregates())
+
+
+def stats_page(request):
+    """Public visitor-statistics page (map, referrers, time-heatmap, devices)."""
+    data = _stats_aggregates()
+    return render(request, "analytics/stats_page.html", {
+        "stats": data,
+        "stats_json": json.dumps(data),
     })
