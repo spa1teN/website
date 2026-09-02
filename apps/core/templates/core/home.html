@@ -7,5 +7,47 @@
 <div class="page-container">
     <h1>{% t 'Willkommen' 'Welcome' %}</h1>
     <p>{% t 'Hallo, ich bin Caspar aus Hamburg und studiere aktuell IT-Systems Engineering im Bachelor am Hasso-Plattner-Institut in Potsdam. Diese Website ist noch work in progress.' "Hi, I'm Caspar from Hamburg, currently studying for a Bachelor's in IT-Systems Engineering at the Hasso-Plattner-Institute in Potsdam. This website is still work in progress." %}</p>
+
+    <a href="{% url 'about:index' %}" class="link-card link-card-full">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span class="link-label">{% t 'Über mich' 'About Me' %}</span>
+        <span class="link-handle">{% t 'Lebenslauf & interaktive Karte' 'CV & interactive map' %}</span>
+    </a>
 </div>
+
+<style>
+.link-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text);
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.link-card:hover {
+    border-color: var(--color-accent);
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+}
+
+.link-card i {
+    font-size: 1.5rem;
+    width: 2rem;
+    text-align: center;
+    color: var(--color-accent);
+}
+
+.link-label {
+    font-weight: 600;
+}
+
+.link-handle {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+</style>
 {% endblock %}

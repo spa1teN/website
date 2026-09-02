@@ -76,9 +76,9 @@ STATIONS = [
         "title": {"de": "Praktikum bei DESY", "en": "Internship at DESY"},
         "body": {
             "de": "Juli 2021: Praktikum am Deutschen Elektronen-Synchrotron "
-                  "(DESY) in Hamburg-Bahrenfeld.",
+                  "({DESY|https://www.desy.de}) in Hamburg-Bahrenfeld.",
             "en": "July 2021: internship at Deutsches Elektronen-Synchrotron "
-                  "(DESY) in Hamburg-Bahrenfeld.",
+                  "({DESY|https://www.desy.de}) in Hamburg-Bahrenfeld.",
         },
         "image": {
             "url": "about/img/desy-logo.svg",
@@ -100,8 +100,10 @@ STATIONS = [
         "slug": "abitur",
         "title": {"de": "Abitur", "en": "Abitur"},
         "body": {
-            "de": "2023: Abitur an der Rudolf Steiner Schule Hamburg-Nienstedten.",
-            "en": "2023: Abitur at the Rudolf Steiner School Hamburg-Nienstedten.",
+            "de": "2023: Abitur an der {Rudolf Steiner Schule "
+                  "Hamburg-Nienstedten|https://www.waldorfschule-nienstedten.de/}.",
+            "en": "2023: Abitur at the {Rudolf Steiner School "
+                  "Hamburg-Nienstedten|https://www.waldorfschule-nienstedten.de/}.",
         },
         "image": {
             "url": "about/img/steiner-schule.webp",
@@ -123,8 +125,10 @@ STATIONS = [
         "slug": "hpi",
         "title": {"de": "Studium am HPI", "en": "Studies at HPI"},
         "body": {
-            "de": "Seit 2023: Studium am Hasso-Plattner-Institut in Potsdam.",
-            "en": "Since 2023: studies at the Hasso Plattner Institute in Potsdam.",
+            "de": "Seit 2023: Studium am {Hasso-Plattner-Institut|https://hpi.de} "
+                  "in Potsdam.",
+            "en": "Since 2023: studies at the {Hasso Plattner Institute|https://hpi.de} "
+                  "in Potsdam.",
         },
         "image": {
             "url": "about/img/hpi-logo.svg",

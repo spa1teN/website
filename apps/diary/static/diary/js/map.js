@@ -558,51 +558,6 @@
         if (map.getLayer("visited-countries-outline")) map.setLayoutProperty("visited-countries-outline", "visibility", vis);
     }
 
-    function ensurePhotoHeatmapLayer(geojson) {
-        if (map.getSource("photo-heatmap")) {
-            map.getSource("photo-heatmap").setData(geojson);
-            return;
-        }
-        map.addSource("photo-heatmap", { type: "geojson", data: geojson });
-        map.addLayer({
-            id: "photo-heatmap-layer",
-            type: "heatmap",
-            source: "photo-heatmap",
-            maxzoom: 15,
-            paint: {
-                "heatmap-weight": 1,
-                "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 9, 3],
-                "heatmap-color": [
-                    "interpolate", ["linear"], ["heatmap-density"],
-                    0, "rgba(33,102,172,0)",
-                    0.2, "rgb(103,169,207)",
-                    0.4, "rgb(209,229,240)",
-                    0.6, "rgb(253,219,199)",
-                    0.8, "rgb(239,138,98)",
-                    1, "rgb(178,24,43)"
-                ],
-                "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 12, 9, 24],
-                "heatmap-opacity": 0.85,
-            },
-        }, map.getLayer("trip-circles") ? "trip-circles" : undefined);
-    }
-
-    function setHeatmapLayerVisibility(visible) {
-        var vis = visible ? "visible" : "none";
-        if (map.getLayer("photo-heatmap-layer")) map.setLayoutProperty("photo-heatmap-layer", "visibility", vis);
-    }
-
-    function loadPhotoHeatmap(callback) {
-        if (!config.heatmapUrl) return;
-        var qs = _buildFilterParams().toString();
-        fetch(config.heatmapUrl + (qs ? "?" + qs : ""))
-            .then(function (r) { return r.json(); })
-            .then(function (geojson) {
-                ensurePhotoHeatmapLayer(geojson);
-                if (callback) callback(geojson);
-            });
-    }
-
     function renderVisitedList(geojson) {
         var list = document.getElementById("stats-visited-list");
         if (!list) return;
@@ -708,14 +663,13 @@
             b.classList.toggle("active", b.dataset.mode === mode);
         });
 
-        var isSpecial = mode === "visited" || mode === "heatmap";
+        var isSpecial = mode === "visited";
         ["type-filter-section", "country-filter-section", "entries-section"].forEach(function (id) {
             var el = document.getElementById(id);
             if (el) el.classList.toggle("hidden", isSpecial);
         });
 
         setVisitedLayerVisibility(false);
-        setHeatmapLayerVisibility(false);
 
         if (mode === "visited") {
             selectTrip("");
@@ -725,20 +679,6 @@
                 setVisitedLayerVisibility(true);
             });
             _fitToContentBounds({ padding: 60, maxZoom: 8 });
-        } else if (mode === "heatmap") {
-            selectTrip("");
-            setOverviewLayersVisibility(false);
-            loadPhotoHeatmap(function (geojson) {
-                if (currentMode !== "heatmap") return;
-                setHeatmapLayerVisibility(true);
-                var bounds = new maplibregl.LngLatBounds();
-                if (geojson.features && geojson.features.length) {
-                    geojson.features.forEach(function (f) {
-                        bounds.extend(f.geometry.coordinates);
-                    });
-                    map.fitBounds(bounds, { padding: 60, maxZoom: 10 });
-                }
-            });
         } else {
             hideStatesView();
             setOverviewLayersVisibility(true);

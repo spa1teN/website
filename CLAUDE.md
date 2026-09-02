@@ -38,22 +38,23 @@ website/
 │   │   │   ├── js/analytics.js      # Client-seitiges Analytics (sendBeacon)
 │   │   │   └── favicon.png
 │   │   └── templates/core/
-│   │       ├── base.html            # Basis-Template mit Nav, Footer, Sprache
-│   │       ├── home.html, login.html, privacy.html
+│   │       ├── base.html            # Basis-Template mit Nav, Footer, Sprache (Footer-Admin-Link immer sichtbar)
+│   │       ├── home.html            # Startseite mit Link-Karte zu /about/
+│   │       ├── login.html, privacy.html
 │   │       ├── admin.html           # Admin-Übersicht
 │   │       └── admin_sidebar.html
 │   ├── links/                       # Links-Seite (Social Links + Discord-Status)
 │   │   ├── views.py                 # Übergibt DISCORD_USER_ID ans Template
 │   │   ├── urls.py
 │   │   └── templates/links/links.html
-│   ├── about/                       # Interaktiver Lebenslauf (statische Karte + Stationen)
+│   ├── about/                       # Interaktiver Lebenslauf (Karte + integrierte Stations-Karten)
 │   │   ├── views.py                 # index — lokalisiert STATIONS (DE/EN) und übergibt JSON
 │   │   ├── urls.py                  # /about/ (app_name="about")
-│   │   ├── stations.py              # STATIONS-Daten (Titel/Text pro Sprache, Karten-Konfig)
+│   │   ├── stations.py              # STATIONS-Daten (Titel/Text pro Sprache, Karten-Konfig, {Text|URL}-Links)
 │   │   ├── templates/about/about.html
 │   │   └── static/about/
-│   │       ├── css/about.css        # Split-Layout (Story-Panel links, Karte rechts)
-│   │       ├── js/about.js          # MapLibre (interactive:false), Pfeiltasten-Navigation, Puls-Marker
+│   │       ├── css/about.css        # Integrierte Stations-Karten, Herkunfts-Karte, Mobile-Stacking
+│   │       ├── js/about.js          # MapLibre: Marker-Karten + Verbindungslinien, smoothFly-Übergänge, Links
 │   │       └── data/fi-de.geojson   # FI+DE Polygone (aus diary/data/countries.geojson extrahiert)
 │   ├── diary/                       # Reisetagebuch (Hauptfeature)
 │   │   ├── models.py                # Trip, Journey, JourneySegment, TripImage, TripVideo
@@ -78,9 +79,9 @@ website/
 │   │   │   └── states.geojson       # Admin-1 Subdivisionen
 │   │   ├── static/diary/
 │   │   │   ├── css/map.css          # Karten-Layout + Mobile Slide-Panels
-│   │   │   └── js/map.js            # MapLibre GL JS: Filter, Marker, Lightbox, Stats
+│   │   │   ├── js/map.js            # MapLibre GL JS: Filter, Marker, Lightbox, Stats, Modi Reisen/Besuchte Länder
 │   │   └── templates/diary/
-│   │       ├── map.html             # Interaktive Karte (öffentlich)
+│   │       ├── map.html             # Interaktive Karte (öffentlich, kein Heatmap-Modus mehr)
 │   │       ├── trip_detail.html     # Reise-Detailseite mit Galerie + OG-Metadaten
 │   │       ├── trip_form.html       # Reise anlegen/bearbeiten
 │   │       ├── trip_delete.html     # Lösch-Bestätigung
@@ -174,7 +175,7 @@ Alle Volumes sind `external: true` (vom Dashboard-Stack erstellt):
 |---|---|
 | `/` | Home-Seite |
 | `/links/` | Social-Media-Links + Discord-Status |
-| `/about/` | Interaktiver Lebenslauf (statische Karte + Stationen) |
+| `/about/` | Interaktiver Lebenslauf (Karte + Stations-Karten, Deep-Links `#slug`) |
 | `/datenschutz/` | Datenschutzerklärung |
 | `/set-language/<lang>/` | Sprache setzen (de/en) |
 | `/trips/` | Interaktive Karte (öffentlich) |
@@ -183,7 +184,7 @@ Alle Volumes sind `external: true` (vom Dashboard-Stack erstellt):
 ### Geschützt (nginx basic auth)
 | Pfad | Beschreibung |
 |---|---|
-| `/manage/` | Admin-Übersicht |
+| `/manage/` | Admin-Übersicht (Footer-Link immer sichtbar, per Basic Auth geschützt) |
 | `/trips/manage/` | Reise-Dashboard (Tabelle) |
 | `/trips/manage/trip/new/` | Neue Reise anlegen |
 | `/trips/manage/trip/<id>/edit/` | Reise bearbeiten |
@@ -205,6 +206,7 @@ Alle Volumes sind `external: true` (vom Dashboard-Stack erstellt):
 | `/api/diary/stats/` | Aggregierte Statistiken |
 | `/api/diary/visited-countries/` | GeoJSON der besuchten Länder |
 | `/api/diary/states/` | GeoJSON der Bundesländer/Regionen |
+| `/api/diary/photo-heatmap/` | GeoJSON der Bildpunkte (Heatmap-API, kein Frontend mehr) |
 | `/api/analytics/event/` | Analytics-Event empfangen (POST, CSRF-exempt) |
 | `/api/analytics/stats/` | Aggregierte Analytics-Daten (GET, X-API-Key) |
 
@@ -244,6 +246,17 @@ Generiert statische 630×630 PNG-Karten für OG/Discord-Embeds. Nutzt die `stati
 - **Flug:** IATA-Codes für Start/Ziel (z.B. `TXL`, `LIS`), Autovervollständigung aus `airports.json`
 - **Zug/Auto/Fähre:** Wegpunkte per Textsuche (Photon-API) oder Kartenklick
 - **Bild-Upload:** EXIF-Extraktion automatisch; manuelles Setzen via Pin-Button
+
+## About-Seite (`apps/about/`)
+
+Interaktiver Lebenslauf auf einer statischen (nicht pannbaren) dunklen Karte. Jede Station ist eine Karte, die an einem MapLibre-Marker verankert und mit einer Linie zum Stations-Ort verbunden wird.
+
+- **Stations-Karten:** 50/50 Bild/Text, via `Marker` mit `offset:[0,-gap]` über dem Ort verankert (`anchor:"bottom"` bei einem, `"center"` bei mehreren Ankern). Mehrfach-Anker-Stationen (Herkunft: DE+FI) sind halb so breit (`.about-station-card.no-image`).
+- **Verbindungslinien:** `updateLine` verbindet Marker mit der nächsten Kartenecke (Klemmen auf Container-Kanten) — Herkunft: DE nach unten, FI nach oben.
+- **Herkunfts-Kamera:** Länder-Überblick wird **synchron** berechnet (`computeFitCameraSettled`, Cache in `getFitCamera`), damit Navigation ohne Korrektur-Sprünge abläuft.
+- **Übergänge:** `smoothFly` — Flugdauer zoom-relativ (`flyDuration` = 700 + 260·Δz), Zoom hinkt beim Reinzoomen hinterher / führt beim Rauszoomen (pan-then-zoom-Gefühl), Apex-Bump nur wenn nötig.
+- **Navigation:** Pfeiltasten + Kartenklick, Deep-Links `/about/#<slug>` starten direkt bei einer Station, Start-Puls-Marker.
+- **Links im Fließtext:** `{Text|URL}`-Marker in `stations.py` werden serverseitig geliefert und clientseitig zu `<a target="_blank" rel="noopener">` (kein HTML aus Daten, DOM-basiert).
 
 ## Analytics (`apps/analytics/`)
 
