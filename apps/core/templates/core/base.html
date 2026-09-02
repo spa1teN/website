@@ -47,7 +47,6 @@
     {% if request.resolver_match.app_name != 'diary' and request.resolver_match.app_name != 'about' %}
     <footer class="site-footer">
         <a href="{% url 'core:admin_index' %}" class="footer-admin-btn">{% t 'Admin' 'Admin' %}</a>
-        <a href="{% url 'status:overview' %}">{% t 'Status' 'Status' %}</a>
         <a href="{% url 'core:privacy' %}">{% t 'Datenschutzerklärung' 'Privacy Policy' %}</a>
     </footer>
     {% endif %}

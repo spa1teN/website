@@ -160,7 +160,7 @@ def _get_tausendsassa_public() -> dict:
             ),
         },
         "bot": {
-            "loaded_cogs": bot.get("loaded_cogs", []),
+            "loaded_cogs": [c.capitalize() for c in bot.get("loaded_cogs", [])],
             "latency_ms": bot.get("latency_ms"),
             "gateway_status": bot.get("gateway_status"),
         },
@@ -211,7 +211,11 @@ def _get_roaringbot_public() -> dict:
             "member_count": bot.get("member_count", 0),
             "latency_ms": bot.get("latency_ms"),
             "gateway_status": bot.get("gateway_status"),
-            "loaded_cogs": [c for c in bot.get("loaded_cogs", []) if c not in ("FinanceCog", "finance")],
+            "loaded_cogs": [
+                c[:-3] if c.endswith("Cog") else c
+                for c in bot.get("loaded_cogs", [])
+                if c not in ("FinanceCog", "finance", "BirthdayCog", "birthday")
+            ],
         },
         "esports": {
             "monitoring_enabled": esports.get("monitoring_enabled", False),

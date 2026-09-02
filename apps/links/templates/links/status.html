@@ -31,7 +31,7 @@
         {% if tausendsassa.bot.loaded_cogs %}
         <div class="cog-row">
             {% for cog in tausendsassa.bot.loaded_cogs %}
-            <span class="cog-chip ok">{{ cog }}</span>
+            <span class="cog-chip ok"><span class="dot ok"></span>{{ cog }}</span>
             {% endfor %}
         </div>
         {% endif %}
@@ -109,7 +109,7 @@
         {% if roaringbot.bot.loaded_cogs %}
         <div class="cog-row">
             {% for cog in roaringbot.bot.loaded_cogs %}
-            <span class="cog-chip ok">{{ cog }}</span>
+            <span class="cog-chip ok"><span class="dot ok"></span>{{ cog }}</span>
             {% endfor %}
             <span class="cog-chip {% if preview_healthy %}ok{% else %}bad{% endif %}" title="bot.wannspieltbig.de — Match-Previews"><span class="dot {% if preview_healthy %}ok{% else %}bad{% endif %}"></span>{% t 'Previews' 'Previews' %}</span>
         </div>

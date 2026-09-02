@@ -39,14 +39,18 @@ website/
 │   │   │   └── favicon.png
 │   │   └── templates/core/
 │   │       ├── base.html            # Basis-Template mit Nav, Footer, Sprache (Footer-Admin-Link immer sichtbar)
-│   │       ├── home.html            # Startseite mit Link-Karte zu /about/
+│   │       ├── home.html            # Startseite mit Link-Karten zu /about/ und /status/
 │   │       ├── login.html, privacy.html
 │   │       ├── admin.html           # Admin-Übersicht
 │   │       └── admin_sidebar.html
-│   ├── links/                       # Links-Seite (Social Links + Discord-Status)
-│   │   ├── views.py                 # Übergibt DISCORD_USER_ID ans Template
+│   ├── links/                       # Links-Seite + Bot-Status (Social Links, Discord, Tausendsassa/RoaringBot)
+│   │   ├── views.py                 # links, status_overview/status_roaringbot/status_tausendsassa (Dashboard-API)
 │   │   ├── urls.py
-│   │   └── templates/links/links.html
+│   │   ├── status_urls.py           # /status/ (app_name="status"), /status/roaringbot/, /status/tausendsassa/
+│   │   └── templates/links/
+│   │       ├── links.html           # Social Links + Discord-Status (Lanyard)
+│   │       ├── status.html          # Bot-Status-Karten (Tausendsassa, RoaringBot, Match-Previews)
+│   │       └── status_api.html      # API-Doku für die Dashboard-Endpoints
 │   ├── about/                       # Interaktiver Lebenslauf (Karte + integrierte Stations-Karten)
 │   │   ├── views.py                 # index — lokalisiert STATIONS (DE/EN) und übergibt JSON
 │   │   ├── urls.py                  # /about/ (app_name="about")
@@ -175,6 +179,7 @@ Alle Volumes sind `external: true` (vom Dashboard-Stack erstellt):
 |---|---|
 | `/` | Home-Seite |
 | `/links/` | Social-Media-Links + Discord-Status |
+| `/status/` | Bot-Status (Tausendsassa, RoaringBot, Match-Previews) |
 | `/about/` | Interaktiver Lebenslauf (Karte + Stations-Karten, Deep-Links `#slug`) |
 | `/datenschutz/` | Datenschutzerklärung |
 | `/set-language/<lang>/` | Sprache setzen (de/en) |
@@ -257,6 +262,15 @@ Interaktiver Lebenslauf auf einer statischen (nicht pannbaren) dunklen Karte. Je
 - **Übergänge:** `smoothFly` — Flugdauer zoom-relativ (`flyDuration` = 700 + 260·Δz), Zoom hinkt beim Reinzoomen hinterher / führt beim Rauszoomen (pan-then-zoom-Gefühl), Apex-Bump nur wenn nötig.
 - **Navigation:** Pfeiltasten + Kartenklick, Deep-Links `/about/#<slug>` starten direkt bei einer Station, Start-Puls-Marker.
 - **Links im Fließtext:** `{Text|URL}`-Marker in `stations.py` werden serverseitig geliefert und clientseitig zu `<a target="_blank" rel="noopener">` (kein HTML aus Daten, DOM-basiert).
+
+## Status-Seite (`apps/links/status*`)
+
+Bot-Status-Seite unter `/status/` (Details unter `/status/roaringbot/` und `/status/tausendsassa/`). Die Views fetchen vom internen Dashboard (`http://dashboard:8090`, 60s Cache via `_cached_fetch`) die Public-Status-Endpoints `/api/tausendsassa/status`, `/api/roaringbot/status` und `/api/social-preview/status`.
+
+- **Cog-Chips:** geladene Cogs der Bots. Tausendsassa-Cogs werden capitalisiert (z.B. `feeds` → `Feeds`); RoaringBot-Cogs bekommen das `Cog`-Suffix entfernt (z.B. `ModerationCog` → `Moderation`) und interne Cogs (`FinanceCog`, `BirthdayCog`) werden ausgefiltert. Alle Chips haben einen Status-Dot; der `Previews`-Chip spiegelt die Health von `bot.wannspieltbig.de`.
+- **Match-Cards:** RoaringBot `next_matches` werden clientseitig gerendert (LIVE-Badge, Score, Status-Dots für Discord-Event/Reminder/Tracker, Preview-Bilder via `bot.wannspieltbig.de/<match_id>/image.jpg`).
+- **Sparklines:** duale Verlaufsdiagramme (Messages/Errors) aus `/api/history` auf Canvas.
+- **API-Doku:** `/status/api/` (`status_api.html`) beschreibt die vier Dashboard-Status-Endpoints.
 
 ## Analytics (`apps/analytics/`)
 
