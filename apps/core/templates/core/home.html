@@ -25,7 +25,7 @@
             <i class="fa-solid fa-users"></i>
             <span class="link-label">{% t 'Besucher' 'Visitors' %}</span>
             <span class="link-handle">{% t 'Du bist Besucher Nr.' "You're visitor N°" %} {{ visitor_number }}</span>
-            <span class="link-more">{% t 'klick für mehr' 'click for more' %}</span>
+            <span class="link-more"><i class="fa-solid fa-arrow-pointer" title="{% t 'klick für mehr' 'click for more' %}" aria-label="{% t 'klick für mehr' 'click for more' %}"></i></span>
         </a>
     </div>
 </div>
@@ -74,9 +74,8 @@
 
 .link-more {
     margin-left: auto;
-    font-size: 0.78rem;
+    font-size: 1.05rem;
     color: var(--color-text-muted);
-    white-space: nowrap;
 }
 </style>
 {% endblock %}

@@ -213,6 +213,14 @@
         overflow-y: auto;
     }
 
+    .about-station-card-centered {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+    }
+
     .about-station-card.no-image {
         width: min(94vw, 640px);
         max-width: none;

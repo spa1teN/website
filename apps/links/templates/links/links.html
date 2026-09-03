@@ -143,12 +143,6 @@
 
 @media (max-width: 768px) {
     .link-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 480px) {
-    .link-cards-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -212,20 +206,26 @@
 
 @media (max-width: 560px) {
     .edu-institutions {
-        grid-template-columns: 1fr;
-        gap: 0.4rem;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 0.75rem;
     }
 
     .edu-inst-link:first-child,
     .edu-inst-link:last-child {
         grid-column: auto;
+    }
+
+    .edu-inst-link:last-child {
         padding-left: 0;
     }
 
     .edu-divider {
-        position: static;
-        width: 100%;
-        height: 1px;
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        height: auto;
     }
 }
 

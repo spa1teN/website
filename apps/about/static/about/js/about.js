@@ -226,10 +226,13 @@
     // (Länder-Stationen wie "Herkunft" hängen an mehreren Ankern).
     var domMarkers = [];
     var CARD_GAP = 120;   // Abstand Karten-Unterkante → Anker (Linienlänge)
+    var MOBILE_GAP = 24;  // Linienlänge unter der zentrierten Mobile-Karte
+    var mobileCardHeight = 0;   // gemessene Kartenhöhe (Mobile-Zentrierung)
 
     function clearDomMarkers() {
         domMarkers.forEach(function (m) { m.remove(); });
         domMarkers = [];
+        if (cardEl) cardEl.remove();
         cardEl = null;
     }
 
@@ -343,8 +346,21 @@
         var anchors = stationAnchors(station);
         if (!anchors.length) return;   // z.B. Herkunft vor Laden der Länder
 
+        // Mobile: Karte füllt den Viewport, die Stations-Karte wird in der
+        // Mitte des Containers zentriert. Die Kamera bekommt Top-Padding
+        // (moveCamera), damit der Anker-Punkt unterhalb der Karte sichtbar
+        // bleibt und die Verbindungslinie weiterhin läuft.
+        if (isMobile) {
+            card.classList.add("about-station-card-centered");
+            mapWrap.appendChild(card);
+            cardEl = card;
+            mobileCardHeight = card.offsetHeight || 0;
+            showLines(anchors);
+            return;
+        }
+
         var single = anchors.length === 1;
-        var gap = isMobile ? 70 : CARD_GAP;
+        var gap = CARD_GAP;
         domMarkers.push(
             new maplibregl.Marker({
                 element: card,
@@ -622,6 +638,21 @@
     function moveCamera(station, animate) {
         navSeq++;
         if (flightRAF) cancelAnimationFrame(flightRAF);
+        // Mobile: Bei Single-Anker-Stationen wird die Kamera per Top-Padding
+        // nach unten versetzt, sodass der Anker unter der zentrierten Karte
+        // liegt und die Verbindungslinie sichtbar bleibt. Länder-Stationen
+        // (fit_bounds) bleiben ohne Padding — dort zentriert die Karte über
+        // dem hervorgehobenen Gebiet.
+        if (isMobile) {
+            var mAnchors = stationAnchors(station);
+            var mSingle = mAnchors.length === 1;
+            var mH = mobileCardHeight || Math.round(map.getContainer().clientHeight * 0.45);
+            map.setPadding(mSingle
+                ? { top: mH + 2 * MOBILE_GAP, left: 0, right: 0, bottom: 0 }
+                : { top: 0, left: 0, right: 0, bottom: 0 });
+        } else {
+            map.setPadding({ top: 0, left: 0, right: 0, bottom: 0 });
+        }
         var start = { center: map.getCenter(), zoom: map.getZoom() };
         var fit = station.map.fit_bounds;
         var bounds = fit ? computeBounds(station.map.highlight_countries) : null;
