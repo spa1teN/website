@@ -103,7 +103,7 @@ website/
 │   ├── Dockerfile
 │   ├── nginx.conf                   # Reverse-Proxy für 5 Subdomains
 │   └── .htpasswd
-├── docker-compose.yml               # Nginx + Certbot (web/db sind im Dashboard-Stack)
+├── docker-compose.yml               # Nginx + Certbot + Trilium (web/db sind im Dashboard-Stack)
 ├── Dockerfile
 ├── requirements.txt
 ├── manage.py
@@ -114,14 +114,23 @@ website/
 
 ## Docker Compose
 
-Das Website-Repository definiert **zwei** Services:
+Das Website-Repository definiert **drei** Services:
 
 | Service | Rolle |
 |---|---|
 | `nginx` | TLS-Terminierung + Reverse Proxy für alle Domains |
 | `certbot` | Let's Encrypt Zertifikate (auto-renew alle 12h) |
+| `trilium` | TriliumNext Notes (Markdown + KaTeX-LaTeX), unter `notes.casparsadenius.de` |
 
 Die Services `web` (Django/Gunicorn) und `db` (PostGIS) werden vom **Dashboard-Stack** (`/root/dashboard/docker-compose.yml`) verwaltet, da sie dort im selben internen Netzwerk mit dem Dashboard liegen.
+
+### Trilium Notes
+
+- Image `triliumnext/trilium:stable` (Port 8080, kein Host-Port-Mapping — nur über nginx)
+- Daten im Docker-Volume `website_trilium_data` (external, `/home/node/trilium-data`)
+- Einzel-User mit Passwort (Setup-Page beim ersten Aufruf), LaTeX via KaTeX (`$...$`)
+- nginx-config ist **im Image gebacken** → nach Änderungen an `nginx/nginx.conf`: `docker compose up -d --build nginx`
+- Neues Let's Encrypt Zertifikat: erst HTTP-Serverblock (ACME) in nginx.conf, dann `docker compose run --rm --entrypoint "certbot certonly --webroot --webroot-path=/var/www/certbot -d <sub>.casparsadenius.de" certbot`, dann HTTPS-Serverblock + `--build nginx`
 
 ### Networks (nginx)
 

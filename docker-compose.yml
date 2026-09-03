@@ -29,6 +29,18 @@ services:
                     sleep 12h & wait $${!};
                   done"
 
+  # TriliumNext Notes — Markdown-/Hierarchie-Notizen mit KaTeX-LaTeX (notes.casparsadenius.de)
+  trilium:
+    image: triliumnext/trilium:stable
+    restart: unless-stopped
+    environment:
+      - TRILIUM_DATA_DIR=/home/node/trilium-data
+      - TZ=Europe/Berlin
+    volumes:
+      - website_trilium_data:/home/node/trilium-data
+    networks:
+      - default
+
 volumes:
   website_static_volume:
     external: true
@@ -37,6 +49,8 @@ volumes:
   website_certbot_certs:
     external: true
   website_certbot_www:
+    external: true
+  website_trilium_data:
     external: true
 
 networks:
