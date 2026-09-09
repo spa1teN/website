@@ -131,6 +131,7 @@ Die Services `web` (Django/Gunicorn) und `db` (PostGIS) werden vom **Dashboard-S
 - Einzel-User mit Passwort (Setup-Page beim ersten Aufruf), LaTeX via KaTeX (`$...$`)
 - nginx-config ist **im Image gebacken** → nach Änderungen an `nginx/nginx.conf`: `docker compose up -d --build nginx`
 - Neues Let's Encrypt Zertifikat: erst HTTP-Serverblock (ACME) in nginx.conf, dann `docker compose run --rm --entrypoint "certbot certonly --webroot --webroot-path=/var/www/certbot -d <sub>.casparsadenius.de" certbot`, dann HTTPS-Serverblock + `--build nginx`
+- **Share-Proxy-Cache:** `bot.wannspieltbig.de` wird via `proxy_cache share_cache` gecacht (`X-Proxy-Cache`-Header: `MISS`/`HIT`). Wiederholte Social-Crawls (WhatsApp/X/…) werden von nginx bedient, ohne den `wannspieltbig-social-preview`-Container zu berühren. Requests mit Cache-Buster-Query (`?v=…`) sind neue Cache-Keys und laufen immer am Cache vorbei. Cache-Zone: `proxy_cache_path … keys_zone=share_cache:10m` (oben in nginx.conf).
 
 ### Networks (nginx)
 
