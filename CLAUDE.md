@@ -269,7 +269,8 @@ Generiert statische 630×630 PNG-Karten für OG/Discord-Embeds. Nutzt die `stati
 
 Interaktiver Lebenslauf auf einer statischen (nicht pannbaren) dunklen Karte. Jede Station ist eine Karte, die an einem MapLibre-Marker verankert und mit einer Linie zum Stations-Ort verbunden wird.
 
-- **Stations-Karten:** 50/50 Bild/Text, via `Marker` mit `offset:[0,-gap]` über dem Ort verankert (`anchor:"bottom"` bei einem, `"center"` bei mehreren Ankern). Mehrfach-Anker-Stationen (Herkunft: DE+FI) sind halb so breit (`.about-station-card.no-image`).
+- **Stations-Karten:** 50/50 Bild/Text, via `Marker` mit `offset:[0,-gap]` über dem Ort verankert (`anchor:"bottom"` bei einem, `"center"` bei mehreren Ankern). Mehrfach-Anker-Stationen (Herkunft: DE+FI) sind halb so breit (`.about-station-card.no-image`). Stations-Bilder sind statisch (nicht klickbar — kein Popup/neuer Tab mehr).
+- **Karten-Popup:** Klick auf einen Marker öffnet ein Popup mit dem Stations-Bild (`openStationPopup`) — nur über den Marker, nicht über das Bild der Stations-Karte.
 - **Verbindungslinien:** `updateLine` verbindet Marker mit der nächsten Kartenecke (Klemmen auf Container-Kanten) — Herkunft: DE nach unten, FI nach oben.
 - **Herkunfts-Kamera:** Länder-Überblick wird **synchron** berechnet (`computeFitCameraSettled`, Cache in `getFitCamera`), damit Navigation ohne Korrektur-Sprünge abläuft.
 - **Übergänge:** `smoothFly` — Flugdauer zoom-relativ (`flyDuration` = 700 + 260·Δz), Zoom hinkt beim Reinzoomen hinterher / führt beim Rauszoomen (pan-then-zoom-Gefühl), Apex-Bump nur wenn nötig.
@@ -293,7 +294,7 @@ Anonymes Pageview- und Click-Tracking — keine IP-Adressen, Cookies oder Sessio
 - **GeoIP:** MaxMind GeoLite2-City (optional, Pfad in `.env`)
 - **Client:** `apps/core/static/core/js/analytics.js` — sendet Events per `navigator.sendBeacon()`
 - **Stats API:** `/api/analytics/stats/` mit `X-API-Key`-Header (vom Dashboard konsumiert)
-- **Stats-Seite:** Öffentliche `/statistics/`-Seite (`stats_page` in `views.py`) zeigt KPI-Zeile, MapLibre-Karte, Referrer und Zeit-Heatmap. Aggregat-Berechnung ist via Django-Cache 60s gecached. Der Home-Card „Du bist Besucher Nr. X" nutzt `total_pageviews`.
+- **Stats-Seite:** Öffentliche `/statistics/`-Seite (`stats_page` in `views.py`) zeigt KPI-Zeile, MapLibre-Karte, Referrer und Zeit-Heatmap. Aggregat-Berechnung ist via Django-Cache 60s gecached. Der Home-Card „Du bist Besucher Nr. X" nutzt `total_pageviews`. Der Karten-Popup ist per `stats.css` auf das Dark-Theme gemappt (`.maplibregl-popup-content`-Overrides — sonst wäre der Default-Popup weiß).
 - **Ausschluss:** Authentifizierte User, Pfade mit `/admin`/`/staticfiles`/`/media`/`/api`/`/accounts`/`/trips/manage`
 - Daten sind read-only im Django-Admin
 

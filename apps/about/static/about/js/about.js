@@ -269,10 +269,6 @@
             img.src = station.image.url;
             img.alt = station.image.alt;
             imgWrap.appendChild(img);
-            imgWrap.addEventListener("click", function (e) {
-                e.stopPropagation();
-                openStationPopup(station, firstAnchor());
-            });
             card.appendChild(imgWrap);
         }
 

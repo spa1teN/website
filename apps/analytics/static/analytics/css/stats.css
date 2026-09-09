@@ -36,6 +36,23 @@
     margin-bottom: 1.5rem;
 }
 
+/* MapLibre popup: dark theme (default popup is bright white) */
+.maplibregl-popup-content {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.maplibregl-popup-tip {
+    border-top-color: var(--color-surface);
+}
+
+.maplibregl-popup-close-button {
+    color: var(--color-text-muted);
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
