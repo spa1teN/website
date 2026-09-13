@@ -101,9 +101,9 @@ website/
 │       └── templates/analytics/     # stats_page.html
 ├── nginx/                           # Nginx Dockerfile + Config
 │   ├── Dockerfile
-│   ├── nginx.conf                   # Reverse-Proxy für 7 Subdomains
+│   ├── nginx.conf                   # Reverse-Proxy für 8 Subdomains
 │   └── .htpasswd
-├── docker-compose.yml               # Einheitlicher Stack: nginx, certbot, trilium, open-webui, dashboard, dawarich, web, db
+├── docker-compose.yml               # Einheitlicher Stack: nginx, certbot, trilium, open-webui, dashboard, dawarich, immich, web, db
 ├── Dockerfile
 ├── requirements.txt
 ├── manage.py
@@ -125,6 +125,7 @@ Selfhosted-Dienste in einem einzigen Compose-Projekt (Netzwerk `website_default`
 | `open-webui` | Chat-Interface (Open WebUI), unter `chat.casparsadenius.de` |
 | `dashboard` | Ops-Dashboard (FastAPI), unter `dash.casparsadenius.de` (Basic Auth) |
 | `dawarich_app` / `dawarich_sidekiq` / `dawarich_db` / `dawarich_redis` | Dawarich (Zeitstrahl/Location-Tracking), unter `timeline.casparsadenius.de` |
+| `immich-server` / `immich-machine-learning` / `immich-redis` / `immich-database` | Immich (Foto-/Video-Bibliothek), unter `immich.casparsadenius.de` |
 | `web` | Django/Gunicorn Website |
 | `db` | PostGIS 16 Datenbank |
 
@@ -149,6 +150,7 @@ Dashboard-Compose** mehr (gelöscht), der Dashboard-Code liegt in
 networks:
   website_default:     # intern — nginx ↔ web:8000, dashboard:8090, trilium:8080, open-webui:8080
   website_dawarich:    # Dawarich intern — nginx ↔ dawarich_app:3000, DB/Redis nicht exponiert
+  website_immich:      # Immich intern — nginx ↔ immich-server:2283, DB/Redis nicht exponiert
   tausendsassa:        # external — Tausendsassa Webapp
   nextcloud:           # external — Nextcloud
   dashboard-network:   # bridge — Dashboard :8090 + social-preview (bot.wannspieltbig.de)
@@ -163,6 +165,16 @@ networks:
 - **Wichtig — Healthcheck:** Wegen `APPLICATION_PROTOCOL=https` erzwingt Rails `force_ssl` und redirectet interne http-Requests → https (Puma macht kein SSL). Der Healthcheck sendet daher `X-Forwarded-Proto: https` (sonst hängt `health: starting`).
 - Volumes: `dawarich_db_data`, `dawarich_shared`, `dawarich_public`, `dawarich_watched`, `dawarich_storage` (alle im website-Projekt)
 - Update: `docker compose pull dawarich_app dawarich_sidekiq && docker compose up -d dawarich_app dawarich_sidekiq`
+
+### Immich (immich.casparsadenius.de)
+
+- 4 Container: `immich-server` (Node/NestJS, Port 2283, kein Host-Port-Mapping — nur über nginx), `immich-machine-learning` (Port 3003, Modell-Cache im `immich_model_cache`-Volume), `immich-redis` (Valkey 9), `immich-database` (Postgres 14 + vectorchord, `ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0`)
+- Eigene DB/Redis im isolierten Netz `website_immich`. Secret in `.env`: `IMMICH_DB_PASSWORD`
+- **Wichtig:** `DB_HOSTNAME: immich-database` und `REDIS_HOSTNAME: immich-redis` müssen gesetzt sein — Immich erwartet standardmäßig `database`/`redis` als Hostnamen, unsere Service-Namen heißen anders (sonst Crash mit `ENOTFOUND`)
+- nginx: `client_max_body_size 50000M`, `proxy_request_buffering off`, WebSocket-Upgrade-Header, 600s Timeouts
+- Volumes: `immich_library` (Uploads, `/data`), `immich_postgres`, `immich_model_cache` (alle im website-Projekt)
+- Setup: erster Aufruf von `https://immich.casparsadenius.de` → Admin-Konto anlegen
+- Update: `docker compose pull immich-server immich-machine-learning && docker compose up -d immich-server immich-machine-learning`
 
 ### Open WebUI — Web-Loader (Playwright)
 
@@ -183,6 +195,7 @@ Alle Volumes sind `external: true`:
 - `dashboard_history` — SQLite-History des Dashboards (name: `dashboard_dashboard_history`)
 - `open-webui` — Open-WebUI-Daten
 - `dawarich_db_data`, `dawarich_shared`, `dawarich_public`, `dawarich_watched`, `dawarich_storage` — Dawarich-Daten
+- `immich_library` — Immich-Uploads (`/data`), `immich_postgres`, `immich_model_cache`
 
 **Wichtig:** `media_volume` ist ein Docker Named Volume — Bilder gehen NICHT nach `~/website/media/` auf dem Host, sondern nach `/var/lib/docker/volumes/website_media_volume/_data/`. Für Sync zwischen Umgebungen immer `tar` via Container verwenden.
 
@@ -376,11 +389,12 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 - `ANALYTICS_DASHBOARD_API_KEY` — Shared Secret für die Stats-API
 - `OPEN_WEBUI_SECRET_KEY` — Secret für den Open-WebUI-Container
 - `DAWARICH_DB_PASSWORD`, `DAWARICH_SECRET_KEY_BASE` — Secrets für Dawarich (eigene DB im `website_dawarich`-Netz)
+- `IMMICH_DB_PASSWORD` — Secret für Immich (eigene DB im `website_immich`-Netz)
 
 ## Wichtige Hinweise
 
-- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `timeline.casparsadenius.de`)
-- Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `dashboard`, `dawarich_*`, `web`, `db`) werden von **diesem** Compose-File gestartet
+- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `timeline.casparsadenius.de`, `immich.casparsadenius.de`)
+- Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `dashboard`, `dawarich_*`, `immich-*`, `web`, `db`) werden von **diesem** Compose-File gestartet
 - `web`-Container hat Volume-Mount `/root/website:/app` (Live-Code, kein Image-Rebuild nötig bei Code-Änderungen)
 - `LOCALE_PATHS` ist nicht gesetzt → Django nutzt `USE_L10N=True` mit deutschem Locale. Bei Zahlenformatierung in Templates `|stringformat:'.6f'` nutzen (z.B. für GPS-Koordinaten), da `{{ value }}` im deutschen Locale Kommas statt Punkte rendert
 - `TripImage.save()` macht EXIF-Extraktion + Thumbnail-Generierung nur beim ersten Speichern (`is_new = pk is None`)

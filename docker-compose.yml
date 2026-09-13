@@ -1,5 +1,5 @@
 # Einheitlicher Stack — bündelt alle Selfhosted-Dienste unter dem website-Projekt:
-# nginx (Reverse Proxy), certbot, trilium, open-webui, dashboard, dawarich, web, db.
+# nginx (Reverse Proxy), certbot, trilium, open-webui, dashboard, dawarich, immich, web, db.
 # Netzwerkname bleibt `website_default`; der Dashboard-Header zeigt nur diesen
 # einen Stack (plus separate Pills für Nextcloud/RoaringBot/Tausendsassa).
 services:
@@ -20,6 +20,7 @@ services:
       - nextcloud
       - dashboard-network
       - dawarich
+      - immich
 
   certbot:
     image: certbot/certbot
@@ -218,6 +219,75 @@ services:
     networks:
       - dawarich
 
+  # Immich — Self-hosted Foto-/Video-Bibliothek (immich.casparsadenius.de), eigener DB/Redis-Stack
+  immich-server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    restart: always
+    volumes:
+      - immich_library:/data
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      DB_USERNAME: ${IMMICH_DB_USERNAME:-postgres}
+      DB_PASSWORD: ${IMMICH_DB_PASSWORD}
+      DB_DATABASE_NAME: ${IMMICH_DB_NAME:-immich}
+      DB_HOSTNAME: immich-database
+      REDIS_HOSTNAME: immich-redis
+      TZ: Europe/Berlin
+      IMMICH_VERSION: ${IMMICH_VERSION:-release}
+    depends_on:
+      immich-redis:
+        condition: service_healthy
+      immich-database:
+        condition: service_healthy
+    networks:
+      - immich
+
+  immich-machine-learning:
+    container_name: immich_machine_learning
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    restart: always
+    volumes:
+      - immich_model_cache:/cache
+    environment:
+      TZ: Europe/Berlin
+    networks:
+      - immich
+
+  immich-redis:
+    container_name: immich_redis
+    image: docker.io/valkey/valkey:9
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - immich
+
+  immich-database:
+    container_name: immich_postgres
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
+      POSTGRES_USER: ${IMMICH_DB_USERNAME:-postgres}
+      POSTGRES_DB: ${IMMICH_DB_NAME:-immich}
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+    shm_size: 128mb
+    volumes:
+      - immich_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${IMMICH_DB_USERNAME:-postgres} -d ${IMMICH_DB_NAME:-immich}" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - immich
+
   # Ops-Dashboard (FastAPI) — dash.casparsadenius.de, Basic Auth via nginx
   dashboard:
     build: /root/dashboard
@@ -300,6 +370,9 @@ networks:
   dawarich:
     name: website_dawarich
     driver: bridge
+  immich:
+    name: website_immich
+    driver: bridge
 
 volumes:
   website_static_volume:
@@ -325,3 +398,6 @@ volumes:
   dawarich_public:
   dawarich_watched:
   dawarich_storage:
+  immich_library:
+  immich_postgres:
+  immich_model_cache:
