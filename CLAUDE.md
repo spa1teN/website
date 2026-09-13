@@ -165,6 +165,7 @@ networks:
 - **Wichtig — Healthcheck:** Wegen `APPLICATION_PROTOCOL=https` erzwingt Rails `force_ssl` und redirectet interne http-Requests → https (Puma macht kein SSL). Der Healthcheck sendet daher `X-Forwarded-Proto: https` (sonst hängt `health: starting`).
 - Volumes: `dawarich_db_data`, `dawarich_shared`, `dawarich_public`, `dawarich_watched`, `dawarich_storage` (alle im website-Projekt)
 - **Backup:** DB-Dump + `dawarich_app:/var/app/storage` + `/var/app/public`-Tars → Nextcloud `Backups/dawarich/`, Retention 14 Tage (via Dashboard `backup.py`)
+- **RAM:** Nach einem kompletten Neustart (oder langem Ausfall) rechnet Dawarich das Reverse-Geocoding für die komplette Timeline nach — das drückt den RAM mehrere Stunden/Wochen lang hoch (Ursache für den VPS-Reboot am 13.09.2026). Nach Abschluss entspannt sich die Last wieder. Ggf. währenddessen die Alert-Schwelle für Swap/RAM im Dashboard beachten (Mails sind zu erwarten).
 - Update: `docker compose pull dawarich_app dawarich_sidekiq && docker compose up -d dawarich_app dawarich_sidekiq`
 
 ### Immich (immich.casparsadenius.de)
