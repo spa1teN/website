@@ -251,6 +251,7 @@ services:
       - immich_model_cache:/cache
     environment:
       TZ: Europe/Berlin
+      MACHINE_LEARNING_WORKERS: "1"
     networks:
       - immich
 

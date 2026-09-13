@@ -164,6 +164,7 @@ networks:
 - Default-Zugang: `privat@casparsadenius.de` / `safepassword` (bei Erst-Login ändern)
 - **Wichtig — Healthcheck:** Wegen `APPLICATION_PROTOCOL=https` erzwingt Rails `force_ssl` und redirectet interne http-Requests → https (Puma macht kein SSL). Der Healthcheck sendet daher `X-Forwarded-Proto: https` (sonst hängt `health: starting`).
 - Volumes: `dawarich_db_data`, `dawarich_shared`, `dawarich_public`, `dawarich_watched`, `dawarich_storage` (alle im website-Projekt)
+- **Backup:** DB-Dump + `dawarich_app:/var/app/storage` + `/var/app/public`-Tars → Nextcloud `Backups/dawarich/`, Retention 14 Tage (via Dashboard `backup.py`)
 - Update: `docker compose pull dawarich_app dawarich_sidekiq && docker compose up -d dawarich_app dawarich_sidekiq`
 
 ### Immich (immich.casparsadenius.de)
@@ -172,7 +173,9 @@ networks:
 - Eigene DB/Redis im isolierten Netz `website_immich`. Secret in `.env`: `IMMICH_DB_PASSWORD`
 - **Wichtig:** `DB_HOSTNAME: immich-database` und `REDIS_HOSTNAME: immich-redis` müssen gesetzt sein — Immich erwartet standardmäßig `database`/`redis` als Hostnamen, unsere Service-Namen heißen anders (sonst Crash mit `ENOTFOUND`)
 - nginx: `client_max_body_size 50000M`, `proxy_request_buffering off`, WebSocket-Upgrade-Header, 600s Timeouts
+- **RAM:** `MACHINE_LEARNING_WORKERS: "1"` gesetzt (sonst Default = alle CPUs, drückt das 7.7-GiB-System in Memory-Pressure → VPS-Reboot). Bei ML-Workloads beobachten: Faces/Smart-Search stoßen den Worker kurz auf ~1.5 GiB hoch
 - Volumes: `immich_library` (Uploads, `/data`), `immich_postgres`, `immich_model_cache` (alle im website-Projekt)
+- **Backup:** DB-Dump + `immich_server:/data`-Volume-Tar → Nextcloud `Backups/immich/`, Retention 2 Tage (via Dashboard `backup.py`)
 - Setup: erster Aufruf von `https://immich.casparsadenius.de` → Admin-Konto anlegen
 - Update: `docker compose pull immich-server immich-machine-learning && docker compose up -d immich-server immich-machine-learning`
 
