@@ -103,7 +103,7 @@ website/
 │   ├── Dockerfile
 │   ├── nginx.conf                   # Reverse-Proxy für 5 Subdomains
 │   └── .htpasswd
-├── docker-compose.yml               # Nginx + Certbot + Trilium (web/db sind im Dashboard-Stack)
+├── docker-compose.yml               # Einheitlicher Stack: nginx, certbot, trilium, open-webui, dashboard, web, db
 ├── Dockerfile
 ├── requirements.txt
 ├── manage.py
@@ -114,15 +114,25 @@ website/
 
 ## Docker Compose
 
-Das Website-Repository definiert **drei** Services:
+Das Website-Repository definiert den **einheitlichen Stack** — alle
+Selfhosted-Dienste in einem einzigen Compose-Projekt (Netzwerk `website_default`):
 
 | Service | Rolle |
 |---|---|
 | `nginx` | TLS-Terminierung + Reverse Proxy für alle Domains |
 | `certbot` | Let's Encrypt Zertifikate (auto-renew alle 12h) |
 | `trilium` | TriliumNext Notes (Markdown + KaTeX-LaTeX), unter `notes.casparsadenius.de` |
+| `open-webui` | Chat-Interface (Open WebUI), unter `chat.casparsadenius.de` |
+| `snappymail` | Webmail-Client, unter `mail.sadenius.eu` |
+| `dashboard` | Ops-Dashboard (FastAPI), unter `dash.casparsadenius.de` (Basic Auth) |
+| `web` | Django/Gunicorn Website |
+| `db` | PostGIS 16 Datenbank |
 
-Die Services `web` (Django/Gunicorn) und `db` (PostGIS) werden vom **Dashboard-Stack** (`/root/dashboard/docker-compose.yml`) verwaltet, da sie dort im selben internen Netzwerk mit dem Dashboard liegen.
+Der Dashboard-Header zeigt nur **einen** Stack-Pill ("Stack") plus separate Pills
+für Nextcloud/RoaringBot/Tausendsassa — alle Stack-Container tragen das gleiche
+`com.docker.compose.project=website`-Label. Es gibt **kein separates
+Dashboard-Compose** mehr (gelöscht), der Dashboard-Code liegt in
+`/root/dashboard/`.
 
 ### Trilium Notes
 
@@ -133,24 +143,38 @@ Die Services `web` (Django/Gunicorn) und `db` (PostGIS) werden vom **Dashboard-S
 - Neues Let's Encrypt Zertifikat: erst HTTP-Serverblock (ACME) in nginx.conf, dann `docker compose run --rm --entrypoint "certbot certonly --webroot --webroot-path=/var/www/certbot -d <sub>.casparsadenius.de" certbot`, dann HTTPS-Serverblock + `--build nginx`
 - **Share-Proxy-Cache:** `bot.wannspieltbig.de` wird via `proxy_cache share_cache` gecacht (`X-Proxy-Cache`-Header: `MISS`/`HIT`). Wiederholte Social-Crawls (WhatsApp/X/…) werden von nginx bedient, ohne den `wannspieltbig-social-preview`-Container zu berühren. Requests mit Cache-Buster-Query (`?v=…`) sind neue Cache-Keys und laufen immer am Cache vorbei. Cache-Zone: `proxy_cache_path … keys_zone=share_cache:10m` (oben in nginx.conf).
 
+### SnappyMail
+
+- Image `ajanvier/snappymail` (Alpine, nginx intern auf 8888, kein Host-Port — nur über nginx)
+- Daten im Volume `snappymail_data` (external, `/snappymail/data`)
+- Admin-Panel: `https://mail.sadenius.eu/?admin` — Passwort in `/snappymail/data/_data_/_default_/admin_password.txt` im Container
+- `UID`/`GID` 991 (Container chownt `/snappymail` selbst), `UPLOAD_MAX_SIZE=50M`
+- **Hinweis:** Der im Image eingebaute Admin-Passwort-Loop wartet auf `nc 127.0.0.1:9000`, doch php-fpm lauscht auf dem Unix-Socket → Passwort-File wird nicht automatisch erzeugt. Nach dem ersten Start einmal manuell auslösen:
+  `docker exec snappymail sh -c 'wget -qO- "http://127.0.0.1:8888/?/AdminAppData/0/12345/" >/dev/null'`
+
 ### Networks (nginx)
 
 ```yaml
 networks:
-  website_default:     # intern — nginx ↔ web:8000
+  website_default:     # intern — nginx ↔ web:8000, dashboard:8090, trilium:8080, open-webui:8080
   tausendsassa:        # external — Tausendsassa Webapp
   nextcloud:           # external — Nextcloud
-  dashboard:           # external — Dashboard :8090
+  dashboard-network:   # bridge — Dashboard :8090 + social-preview (bot.wannspieltbig.de)
 ```
 
 ### Volumes
 
-Alle Volumes sind `external: true` (vom Dashboard-Stack erstellt):
+Alle Volumes sind `external: true`:
 
 - `website_static_volume` — collectstatic Output (`/app/staticfiles`)
 - `website_media_volume` — Hochgeladene Bilder/Videos (`/app/media`)
 - `website_certbot_certs` — Let's Encrypt Zertifikate
 - `website_certbot_www` — Certbot Challenge-Dateien
+- `website_trilium_data` — Trilium-Daten
+- `website_postgres_data` — PostGIS-Daten
+- `dashboard_history` — SQLite-History des Dashboards (name: `dashboard_dashboard_history`)
+- `open-webui` — Open-WebUI-Daten
+- `snappymail_data` — SnappyMail-Daten
 
 **Wichtig:** `media_volume` ist ein Docker Named Volume — Bilder gehen NICHT nach `~/website/media/` auf dem Host, sondern nach `/var/lib/docker/volumes/website_media_volume/_data/`. Für Sync zwischen Umgebungen immer `tar` via Container verwenden.
 
@@ -315,7 +339,7 @@ Zwei Sprachen: DE (default), EN. Sprache wird per Session (`request.session["lan
 
 ```bash
 # Lokal entwickeln (docker-compose v1)
-docker-compose up -d                    # Nur nginx + certbot
+docker-compose up -d                    # Kompletter Stack
 docker-compose exec -T web python manage.py migrate
 docker-compose exec -T web python manage.py makemigrations
 
@@ -342,11 +366,12 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 - `ALLOWED_HOSTS` — Kommagetrennte Liste
 - `ANALYTICS_GEOIP_DB_PATH` — Pfad zur MaxMind GeoLite2-City.mmdb (optional)
 - `ANALYTICS_DASHBOARD_API_KEY` — Shared Secret für die Stats-API
+- `OPEN_WEBUI_SECRET_KEY` — Secret für den Open-WebUI-Container
 
 ## Wichtige Hinweise
 
-- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dashboard.casparsadenius.de`)
-- Die `web`- und `db`-Container werden vom Dashboard-Stack gestartet (nicht von diesem Compose-File)
+- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `mail.sadenius.eu`)
+- Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `snappymail`, `dashboard`, `web`, `db`) werden von **diesem** Compose-File gestartet
 - `web`-Container hat Volume-Mount `/root/website:/app` (Live-Code, kein Image-Rebuild nötig bei Code-Änderungen)
 - `LOCALE_PATHS` ist nicht gesetzt → Django nutzt `USE_L10N=True` mit deutschem Locale. Bei Zahlenformatierung in Templates `|stringformat:'.6f'` nutzen (z.B. für GPS-Koordinaten), da `{{ value }}` im deutschen Locale Kommas statt Punkte rendert
 - `TripImage.save()` macht EXIF-Extraktion + Thumbnail-Generierung nur beim ersten Speichern (`is_new = pk is None`)

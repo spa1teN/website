@@ -1,3 +1,7 @@
+# Einheitlicher Stack — bündelt alle Selfhosted-Dienste unter dem website-Projekt:
+# nginx (Reverse Proxy), certbot, trilium, open-webui, dashboard, web, db.
+# Netzwerkname bleibt `website_default`; der Dashboard-Header zeigt nur diesen
+# einen Stack (plus separate Pills für Nextcloud/RoaringBot/Tausendsassa).
 services:
   nginx:
     build: ./nginx
@@ -14,7 +18,7 @@ services:
       - default
       - tausendsassa
       - nextcloud
-      - dashboard
+      - dashboard-network
 
   certbot:
     image: certbot/certbot
@@ -41,6 +45,123 @@ services:
     networks:
       - default
 
+  # Open WebUI — Chat-Interface (chat.casparsadenius.de), Daten im Volume `open-webui`
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    environment:
+      RAG_EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
+      AUXILIARY_EMBEDDING_MODEL: TaylorAI/bge-micro-v2
+      WEBUI_SECRET_KEY: ${OPEN_WEBUI_SECRET_KEY}
+      WEBUI_URL: https://chat.casparsadenius.de
+      SCARF_NO_ANALYTICS: "true"
+      DO_NOT_TRACK: "true"
+      ANONYMIZED_TELEMETRY: "false"
+      WHISPER_MODEL: base
+      OLLAMA_BASE_URL: /ollama
+    volumes:
+      - open-webui:/app/backend/data
+    networks:
+      - default
+
+  # SnappyMail — Webmail-Client (mail.sadenius.eu), Daten im Volume `snappymail_data`
+  snappymail:
+    image: ajanvier/snappymail
+    container_name: snappymail
+    restart: unless-stopped
+    environment:
+      UID: "991"
+      GID: "991"
+      UPLOAD_MAX_SIZE: 50M
+      MEMORY_LIMIT: 256M
+      LOG_TO_STDOUT: "true"
+      SECURE_COOKIES: "true"
+    volumes:
+      - snappymail_data:/snappymail/data
+    networks:
+      - default
+
+  # Ops-Dashboard (FastAPI) — dash.casparsadenius.de, Basic Auth via nginx
+  dashboard:
+    build: /root/dashboard
+    container_name: dashboard
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /root/roaringbot/data:/data/roaringbot:ro
+      - /root/Tausendsassa/data:/data/tausendsassa:ro
+      - /etc/os-release:/host/os-release:ro
+      - /root/dashboard-data:/data/dashboard-host:ro
+      - dashboard_history:/data/dashboard
+    env_file:
+      - /root/dashboard/.env
+    networks:
+      - default
+      - tausendsassa
+      - roaringbot
+      - dashboard-network
+
+  # Website-Datenbank (PostGIS)
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: website-db
+    restart: unless-stopped
+    volumes:
+      - website_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: travelsite
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+  # Website (Django)
+  web:
+    build:
+      context: /root/website
+    container_name: website-web
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    volumes:
+      - /root/website:/app
+      - website_static_volume:/app/staticfiles
+      - website_media_volume:/app/media
+    env_file:
+      - /root/website/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default
+
+networks:
+  default:
+    name: website_default
+  tausendsassa:
+    name: tausendsassa-network
+    external: true
+  roaringbot:
+    name: roaringbot-network
+    external: true
+  nextcloud:
+    name: nextcloud_default
+    external: true
+  # Von der Website-Struktur übernommen: bleibt für den social-preview-Container erhalten
+  dashboard-network:
+    name: dashboard-network
+    driver: bridge
+
 volumes:
   website_static_volume:
     external: true
@@ -52,16 +173,14 @@ volumes:
     external: true
   website_trilium_data:
     external: true
-
-networks:
-  default:
-    name: website_default
-  tausendsassa:
-    name: tausendsassa-network
+  website_postgres_data:
     external: true
-  nextcloud:
-    name: nextcloud_default
+  dashboard_history:
     external: true
-  dashboard:
-    name: dashboard-network
+    name: dashboard_dashboard_history
+  open-webui:
     external: true
+    name: open-webui
+  snappymail_data:
+    external: true
+    name: snappymail_data

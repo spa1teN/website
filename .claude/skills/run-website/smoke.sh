@@ -1,9 +1,9 @@
 #!/bin/bash
 # Read-only smoke test for casparsadenius.de (Django 5.2 + PostGIS).
 #
-# IMPORTANT: the web+db containers belong to the DASHBOARD stack
-# (/root/dashboard/docker-compose.yml) — ~/website's own compose file only
-# runs nginx + certbot. Nothing is restarted here; safe to run anytime.
+# All containers (web, db, nginx, certbot, trilium, open-webui, dashboard)
+# belong to the UNIFIED website stack (/root/website/docker-compose.yml).
+# Nothing is restarted here; safe to run anytime.
 #
 #   .claude/skills/run-website/smoke.sh            # full run (~45 s)
 #   SKIP_UI=1 .claude/skills/run-website/smoke.sh  # no screenshots (~10 s)
@@ -15,8 +15,8 @@ FAIL=0
 pass() { echo "PASS  $1"; }
 fail() { echo "FAIL  $1"; FAIL=1; }
 
-# 1. containers (web/db live in the dashboard stack; nginx in the website stack)
-for c in website-web website-db website-nginx-1; do
+# 1. containers (all in the unified website stack)
+for c in website-web website-db website-nginx-1 website-trilium-1 dashboard open-webui; do
   [ "$(docker inspect -f '{{.State.Running}}' "$c" 2>/dev/null)" = true ] \
     && pass "container $c running" || fail "container $c running"
 done

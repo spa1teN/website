@@ -5,11 +5,11 @@ description: Run, smoke-test, screenshot, and deploy the casparsadenius.de websi
 
 # Run: Website (casparsadenius.de)
 
-Django 5.2 + PostGIS travel-diary site. **The `web` and `db` containers are
-managed by the dashboard stack** (`/root/dashboard/docker-compose.yml`);
-`~/website/docker-compose.yml` only runs nginx + certbot. Code is live-mounted
-into the container (`/root/website:/app`) — no image rebuild for code changes.
-Paths below are relative to `/root/website/`.
+Django 5.2 + PostGIS travel-diary site. Everything runs in the **unified
+website stack** (`/root/website/docker-compose.yml`): nginx, certbot, trilium,
+open-webui, dashboard, web and db — all in one compose project. Code is
+live-mounted into the container (`/root/website:/app`) — no image rebuild for
+code changes. Paths below are relative to `/root/website/`.
 
 ## Smoke test (agent path — run this first)
 
@@ -43,7 +43,7 @@ Documented path (from CLAUDE.md + compose ownership; restart not re-run in the
 authoring session — it briefly interrupts the live site):
 
 ```bash
-cd /root/dashboard && docker compose restart web     # note: dashboard dir, not ~/website
+cd /root/website && docker compose restart web
 ```
 
 - Needed for: any `.py` change (Gunicorn), any template change (cached loader
@@ -51,16 +51,14 @@ cd /root/dashboard && docker compose restart web     # note: dashboard dir, not 
 - Migrations + `collectstatic` run automatically on container start (compose
   `command`).
 - What IS verified from the authoring session: recreating `web` via the
-  dashboard stack brings the site back healthy (HTTP 200) within seconds.
+  unified stack brings the site back healthy (HTTP 200) within seconds.
 
 ## Gotchas
 
-- **`cd ~/website && docker compose restart web` does not work** — `web` is not
-  in that compose file (its own CLAUDE.md deployment section predates the move
-  to the dashboard stack). Use `/root/dashboard`.
-- A plain `docker compose up -d --build` in `/root/dashboard` rebuilds the
-  website image and recreates the live `web` container whenever
-  `/root/website` changed. Scope compose commands to one service.
+- `web`/`db`/`dashboard` live in the same compose file as nginx — scope compose
+  commands to one service. A plain `docker compose up -d --build` rebuilds
+  everything and recreates the live `web` container whenever `/root/website`
+  changed.
 - Media files live in the named volume `website_media_volume`, not in
   `~/website/media/`.
 - `/tmp/shots` must be `chmod 777` (Chrome runs as uid 1000).
