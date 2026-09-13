@@ -101,9 +101,9 @@ website/
 │       └── templates/analytics/     # stats_page.html
 ├── nginx/                           # Nginx Dockerfile + Config
 │   ├── Dockerfile
-│   ├── nginx.conf                   # Reverse-Proxy für 5 Subdomains
+│   ├── nginx.conf                   # Reverse-Proxy für 7 Subdomains
 │   └── .htpasswd
-├── docker-compose.yml               # Einheitlicher Stack: nginx, certbot, trilium, open-webui, dashboard, web, db
+├── docker-compose.yml               # Einheitlicher Stack: nginx, certbot, trilium, open-webui, dashboard, dawarich, web, db
 ├── Dockerfile
 ├── requirements.txt
 ├── manage.py
@@ -124,6 +124,7 @@ Selfhosted-Dienste in einem einzigen Compose-Projekt (Netzwerk `website_default`
 | `trilium` | TriliumNext Notes (Markdown + KaTeX-LaTeX), unter `notes.casparsadenius.de` |
 | `open-webui` | Chat-Interface (Open WebUI), unter `chat.casparsadenius.de` |
 | `dashboard` | Ops-Dashboard (FastAPI), unter `dash.casparsadenius.de` (Basic Auth) |
+| `dawarich_app` / `dawarich_sidekiq` / `dawarich_db` / `dawarich_redis` | Dawarich (Zeitstrahl/Location-Tracking), unter `timeline.casparsadenius.de` |
 | `web` | Django/Gunicorn Website |
 | `db` | PostGIS 16 Datenbank |
 
@@ -147,10 +148,27 @@ Dashboard-Compose** mehr (gelöscht), der Dashboard-Code liegt in
 ```yaml
 networks:
   website_default:     # intern — nginx ↔ web:8000, dashboard:8090, trilium:8080, open-webui:8080
+  website_dawarich:    # Dawarich intern — nginx ↔ dawarich_app:3000, DB/Redis nicht exponiert
   tausendsassa:        # external — Tausendsassa Webapp
   nextcloud:           # external — Nextcloud
   dashboard-network:   # bridge — Dashboard :8090 + social-preview (bot.wannspieltbig.de)
 ```
+
+### Dawarich (timeline.casparsadenius.de)
+
+- 4 Container: `dawarich_app` (Rails/Puma, Port 3000, kein Host-Port-Mapping — nur über nginx), `dawarich_sidekiq` (Background-Jobs), `dawarich_db` (PostGIS 17, `postgis/postgis:17-3.5-alpine`), `dawarich_redis` (Redis 7.4, Persistenz im `dawarich_shared`-Volume)
+- Eigene Datenbank/Redis im isolierten Netz `website_dawarich` — getrennt von der Website-DB (`db`). Secrets in `.env`: `DAWARICH_DB_PASSWORD`, `DAWARICH_SECRET_KEY_BASE`
+- `APPLICATION_HOSTS: timeline.casparsadenius.de,...`, `APPLICATION_PROTOCOL: https`, `DOMAIN: timeline.casparsadenius.de`
+- Default-Zugang: `privat@casparsadenius.de` / `safepassword` (bei Erst-Login ändern)
+- **Wichtig — Healthcheck:** Wegen `APPLICATION_PROTOCOL=https` erzwingt Rails `force_ssl` und redirectet interne http-Requests → https (Puma macht kein SSL). Der Healthcheck sendet daher `X-Forwarded-Proto: https` (sonst hängt `health: starting`).
+- Volumes: `dawarich_db_data`, `dawarich_shared`, `dawarich_public`, `dawarich_watched`, `dawarich_storage` (alle im website-Projekt)
+- Update: `docker compose pull dawarich_app dawarich_sidekiq && docker compose up -d dawarich_app dawarich_sidekiq`
+
+### Open WebUI — Web-Loader (Playwright)
+
+- `WEB_LOADER_ENGINE: playwright` + `PLAYWRIGHT_BROWSERS_PATH: /app/backend/data/cache/playwright` im Compose. `start.sh` installiert Chromium nur, wenn die **Env-Variable** `WEB_LOADER_ENGINE=playwright` gesetzt ist (die DB-Einstellung `web.loader.engine` allein genügt nicht).
+- Browser liegt im persistenten `open-webui`-Volume → überlebt Container-Rebuilds.
+- Neue Container-Recreation lädt Chromium beim Start herunter (dauert ~1–2 min, dann `health: starting` bis fertig).
 
 ### Volumes
 
@@ -164,6 +182,7 @@ Alle Volumes sind `external: true`:
 - `website_postgres_data` — PostGIS-Daten
 - `dashboard_history` — SQLite-History des Dashboards (name: `dashboard_dashboard_history`)
 - `open-webui` — Open-WebUI-Daten
+- `dawarich_db_data`, `dawarich_shared`, `dawarich_public`, `dawarich_watched`, `dawarich_storage` — Dawarich-Daten
 
 **Wichtig:** `media_volume` ist ein Docker Named Volume — Bilder gehen NICHT nach `~/website/media/` auf dem Host, sondern nach `/var/lib/docker/volumes/website_media_volume/_data/`. Für Sync zwischen Umgebungen immer `tar` via Container verwenden.
 
@@ -356,11 +375,12 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 - `ANALYTICS_GEOIP_DB_PATH` — Pfad zur MaxMind GeoLite2-City.mmdb (optional)
 - `ANALYTICS_DASHBOARD_API_KEY` — Shared Secret für die Stats-API
 - `OPEN_WEBUI_SECRET_KEY` — Secret für den Open-WebUI-Container
+- `DAWARICH_DB_PASSWORD`, `DAWARICH_SECRET_KEY_BASE` — Secrets für Dawarich (eigene DB im `website_dawarich`-Netz)
 
 ## Wichtige Hinweise
 
-- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`)
-- Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `dashboard`, `web`, `db`) werden von **diesem** Compose-File gestartet
+- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `timeline.casparsadenius.de`)
+- Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `dashboard`, `dawarich_*`, `web`, `db`) werden von **diesem** Compose-File gestartet
 - `web`-Container hat Volume-Mount `/root/website:/app` (Live-Code, kein Image-Rebuild nötig bei Code-Änderungen)
 - `LOCALE_PATHS` ist nicht gesetzt → Django nutzt `USE_L10N=True` mit deutschem Locale. Bei Zahlenformatierung in Templates `|stringformat:'.6f'` nutzen (z.B. für GPS-Koordinaten), da `{{ value }}` im deutschen Locale Kommas statt Punkte rendert
 - `TripImage.save()` macht EXIF-Extraktion + Thumbnail-Generierung nur beim ersten Speichern (`is_new = pk is None`)

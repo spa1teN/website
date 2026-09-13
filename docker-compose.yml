@@ -1,5 +1,5 @@
 # Einheitlicher Stack — bündelt alle Selfhosted-Dienste unter dem website-Projekt:
-# nginx (Reverse Proxy), certbot, trilium, open-webui, dashboard, web, db.
+# nginx (Reverse Proxy), certbot, trilium, open-webui, dashboard, dawarich, web, db.
 # Netzwerkname bleibt `website_default`; der Dashboard-Header zeigt nur diesen
 # einen Stack (plus separate Pills für Nextcloud/RoaringBot/Tausendsassa).
 services:
@@ -19,6 +19,7 @@ services:
       - tausendsassa
       - nextcloud
       - dashboard-network
+      - dawarich
 
   certbot:
     image: certbot/certbot
@@ -60,10 +61,162 @@ services:
       ANONYMIZED_TELEMETRY: "false"
       WHISPER_MODEL: base
       OLLAMA_BASE_URL: /ollama
+      WEB_LOADER_ENGINE: playwright
+      PLAYWRIGHT_BROWSERS_PATH: /app/backend/data/cache/playwright
     volumes:
       - open-webui:/app/backend/data
     networks:
       - default
+
+  # Dawarich — Zeitstrahl/Location-Tracking (timeline.casparsadenius.de), eigener DB/Redis-Stack
+  dawarich_redis:
+    image: redis:7.4-alpine
+    container_name: dawarich_redis
+    command: >
+      redis-server
+      --save 900 1
+      --save 300 10
+      --appendonly no
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - dawarich_shared:/data
+    networks:
+      - dawarich
+
+  dawarich_db:
+    image: postgis/postgis:17-3.5-alpine
+    shm_size: 1G
+    container_name: dawarich_db
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DAWARICH_DB_USER:-postgres} -d ${DAWARICH_DB_NAME:-dawarich_development}" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    environment:
+      POSTGRES_USER: ${DAWARICH_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DAWARICH_DB_PASSWORD}
+      POSTGRES_DB: ${DAWARICH_DB_NAME:-dawarich_development}
+    volumes:
+      - dawarich_db_data:/var/lib/postgresql/data
+      - dawarich_shared:/var/shared
+    networks:
+      - dawarich
+
+  dawarich_app:
+    image: freikin/dawarich:latest
+    container_name: dawarich_app
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    entrypoint: web-entrypoint.sh
+    command: [ 'bin/rails', 'server', '-p', '3000', '-b', '::' ]
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO - --header='X-Forwarded-Proto: https' http://127.0.0.1:3000/api/v1/health | grep -q '\"status\"\\s*:\\s*\"ok\"'" ]
+      interval: 10s
+      retries: 30
+      start_period: 30s
+      timeout: 10s
+    depends_on:
+      dawarich_db:
+        condition: service_healthy
+        restart: true
+      dawarich_redis:
+        condition: service_healthy
+        restart: true
+    environment:
+      RAILS_ENV: production
+      REDIS_URL: redis://dawarich_redis:6379
+      DATABASE_HOST: dawarich_db
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${DAWARICH_DB_USER:-postgres}
+      DATABASE_PASSWORD: ${DAWARICH_DB_PASSWORD}
+      DATABASE_NAME: ${DAWARICH_DB_NAME:-dawarich_development}
+      APPLICATION_HOSTS: timeline.casparsadenius.de,127.0.0.1,::1,localhost
+      APPLICATION_PROTOCOL: https
+      DOMAIN: timeline.casparsadenius.de
+      TIME_ZONE: Europe/Berlin
+      DISTANCE_UNIT: km
+      PROMETHEUS_EXPORTER_ENABLED: "false"
+      SECRET_KEY_BASE: ${DAWARICH_SECRET_KEY_BASE}
+      RAILS_LOG_TO_STDOUT: "true"
+      SELF_HOSTED: "true"
+      STORE_GEODATA: "true"
+      WEB_CONCURRENCY: 1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+        max-file: 5
+    volumes:
+      - dawarich_public:/var/app/public
+      - dawarich_watched:/var/app/tmp/imports/watched
+      - dawarich_storage:/var/app/storage
+      - dawarich_db_data:/dawarich_db_data
+    networks:
+      - dawarich
+
+  dawarich_sidekiq:
+    image: freikin/dawarich:latest
+    container_name: dawarich_sidekiq
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    entrypoint: sidekiq-entrypoint.sh
+    command: [ 'sidekiq' ]
+    healthcheck:
+      test: [ "CMD-SHELL", "pgrep -f sidekiq" ]
+      interval: 10s
+      retries: 30
+      start_period: 30s
+      timeout: 10s
+    depends_on:
+      dawarich_db:
+        condition: service_healthy
+        restart: true
+      dawarich_redis:
+        condition: service_healthy
+        restart: true
+      dawarich_app:
+        condition: service_healthy
+        restart: true
+    environment:
+      RAILS_ENV: production
+      REDIS_URL: redis://dawarich_redis:6379
+      DATABASE_HOST: dawarich_db
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${DAWARICH_DB_USER:-postgres}
+      DATABASE_PASSWORD: ${DAWARICH_DB_PASSWORD}
+      DATABASE_NAME: ${DAWARICH_DB_NAME:-dawarich_development}
+      APPLICATION_HOSTS: timeline.casparsadenius.de,127.0.0.1,::1,localhost
+      APPLICATION_PROTOCOL: https
+      DOMAIN: timeline.casparsadenius.de
+      TIME_ZONE: Europe/Berlin
+      DISTANCE_UNIT: km
+      PROMETHEUS_EXPORTER_ENABLED: "false"
+      SECRET_KEY_BASE: ${DAWARICH_SECRET_KEY_BASE}
+      RAILS_LOG_TO_STDOUT: "true"
+      SELF_HOSTED: "true"
+      STORE_GEODATA: "true"
+      BACKGROUND_PROCESSING_CONCURRENCY: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+        max-file: 5
+    volumes:
+      - dawarich_public:/var/app/public
+      - dawarich_watched:/var/app/tmp/imports/watched
+      - dawarich_storage:/var/app/storage
+    networks:
+      - dawarich
 
   # Ops-Dashboard (FastAPI) — dash.casparsadenius.de, Basic Auth via nginx
   dashboard:
@@ -144,6 +297,9 @@ networks:
   dashboard-network:
     name: dashboard-network
     driver: bridge
+  dawarich:
+    name: website_dawarich
+    driver: bridge
 
 volumes:
   website_static_volume:
@@ -164,3 +320,8 @@ volumes:
   open-webui:
     external: true
     name: open-webui
+  dawarich_db_data:
+  dawarich_shared:
+  dawarich_public:
+  dawarich_watched:
+  dawarich_storage:
