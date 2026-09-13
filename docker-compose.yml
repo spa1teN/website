@@ -65,23 +65,6 @@ services:
     networks:
       - default
 
-  # SnappyMail — Webmail-Client (mail.sadenius.eu), Daten im Volume `snappymail_data`
-  snappymail:
-    image: ajanvier/snappymail
-    container_name: snappymail
-    restart: unless-stopped
-    environment:
-      UID: "991"
-      GID: "991"
-      UPLOAD_MAX_SIZE: 50M
-      MEMORY_LIMIT: 256M
-      LOG_TO_STDOUT: "true"
-      SECURE_COOKIES: "true"
-    volumes:
-      - snappymail_data:/snappymail/data
-    networks:
-      - default
-
   # Ops-Dashboard (FastAPI) — dash.casparsadenius.de, Basic Auth via nginx
   dashboard:
     build: /root/dashboard
@@ -89,9 +72,9 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/host:ro
       - /root/roaringbot/data:/data/roaringbot:ro
       - /root/Tausendsassa/data:/data/tausendsassa:ro
-      - /etc/os-release:/host/os-release:ro
       - /root/dashboard-data:/data/dashboard-host:ro
       - dashboard_history:/data/dashboard
     env_file:
@@ -181,6 +164,3 @@ volumes:
   open-webui:
     external: true
     name: open-webui
-  snappymail_data:
-    external: true
-    name: snappymail_data

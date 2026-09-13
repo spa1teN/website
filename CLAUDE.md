@@ -123,7 +123,6 @@ Selfhosted-Dienste in einem einzigen Compose-Projekt (Netzwerk `website_default`
 | `certbot` | Let's Encrypt Zertifikate (auto-renew alle 12h) |
 | `trilium` | TriliumNext Notes (Markdown + KaTeX-LaTeX), unter `notes.casparsadenius.de` |
 | `open-webui` | Chat-Interface (Open WebUI), unter `chat.casparsadenius.de` |
-| `snappymail` | Webmail-Client, unter `mail.sadenius.eu` |
 | `dashboard` | Ops-Dashboard (FastAPI), unter `dash.casparsadenius.de` (Basic Auth) |
 | `web` | Django/Gunicorn Website |
 | `db` | PostGIS 16 Datenbank |
@@ -142,15 +141,6 @@ Dashboard-Compose** mehr (gelöscht), der Dashboard-Code liegt in
 - nginx-config ist **im Image gebacken** → nach Änderungen an `nginx/nginx.conf`: `docker compose up -d --build nginx`
 - Neues Let's Encrypt Zertifikat: erst HTTP-Serverblock (ACME) in nginx.conf, dann `docker compose run --rm --entrypoint "certbot certonly --webroot --webroot-path=/var/www/certbot -d <sub>.casparsadenius.de" certbot`, dann HTTPS-Serverblock + `--build nginx`
 - **Share-Proxy-Cache:** `bot.wannspieltbig.de` wird via `proxy_cache share_cache` gecacht (`X-Proxy-Cache`-Header: `MISS`/`HIT`). Wiederholte Social-Crawls (WhatsApp/X/…) werden von nginx bedient, ohne den `wannspieltbig-social-preview`-Container zu berühren. Requests mit Cache-Buster-Query (`?v=…`) sind neue Cache-Keys und laufen immer am Cache vorbei. Cache-Zone: `proxy_cache_path … keys_zone=share_cache:10m` (oben in nginx.conf).
-
-### SnappyMail
-
-- Image `ajanvier/snappymail` (Alpine, nginx intern auf 8888, kein Host-Port — nur über nginx)
-- Daten im Volume `snappymail_data` (external, `/snappymail/data`)
-- Admin-Panel: `https://mail.sadenius.eu/?admin` — Passwort in `/snappymail/data/_data_/_default_/admin_password.txt` im Container
-- `UID`/`GID` 991 (Container chownt `/snappymail` selbst), `UPLOAD_MAX_SIZE=50M`
-- **Hinweis:** Der im Image eingebaute Admin-Passwort-Loop wartet auf `nc 127.0.0.1:9000`, doch php-fpm lauscht auf dem Unix-Socket → Passwort-File wird nicht automatisch erzeugt. Nach dem ersten Start einmal manuell auslösen:
-  `docker exec snappymail sh -c 'wget -qO- "http://127.0.0.1:8888/?/AdminAppData/0/12345/" >/dev/null'`
 
 ### Networks (nginx)
 
@@ -174,7 +164,6 @@ Alle Volumes sind `external: true`:
 - `website_postgres_data` — PostGIS-Daten
 - `dashboard_history` — SQLite-History des Dashboards (name: `dashboard_dashboard_history`)
 - `open-webui` — Open-WebUI-Daten
-- `snappymail_data` — SnappyMail-Daten
 
 **Wichtig:** `media_volume` ist ein Docker Named Volume — Bilder gehen NICHT nach `~/website/media/` auf dem Host, sondern nach `/var/lib/docker/volumes/website_media_volume/_data/`. Für Sync zwischen Umgebungen immer `tar` via Container verwenden.
 
@@ -370,8 +359,8 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 
 ## Wichtige Hinweise
 
-- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `mail.sadenius.eu`)
-- Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `snappymail`, `dashboard`, `web`, `db`) werden von **diesem** Compose-File gestartet
+- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`)
+- Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `dashboard`, `web`, `db`) werden von **diesem** Compose-File gestartet
 - `web`-Container hat Volume-Mount `/root/website:/app` (Live-Code, kein Image-Rebuild nötig bei Code-Änderungen)
 - `LOCALE_PATHS` ist nicht gesetzt → Django nutzt `USE_L10N=True` mit deutschem Locale. Bei Zahlenformatierung in Templates `|stringformat:'.6f'` nutzen (z.B. für GPS-Koordinaten), da `{{ value }}` im deutschen Locale Kommas statt Punkte rendert
 - `TripImage.save()` macht EXIF-Extraktion + Thumbnail-Generierung nur beim ersten Speichern (`is_new = pk is None`)
