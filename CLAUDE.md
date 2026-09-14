@@ -57,8 +57,8 @@ website/
 │   │   ├── stations.py              # STATIONS-Daten (Titel/Text pro Sprache, Karten-Konfig, {Text|URL}-Links)
 │   │   ├── templates/about/about.html
 │   │   └── static/about/
-│   │       ├── css/about.css        # Integrierte Stations-Karten, Herkunfts-Karte, Mobile-Stacking
-│   │       ├── js/about.js          # MapLibre: Marker-Karten + Verbindungslinien, smoothFly-Übergänge, Links
+│   │       ├── css/about.css        # Textbox unten fixiert, Bild-Marker am Ort, Herkunfts-Kamera, Mobile
+│   │       ├── js/about.js          # MapLibre: Bild-Marker am Ort, Textbox unten, smoothFly-Übergänge, Links
 │   │       └── data/fi-de.geojson   # FI+DE Polygone (aus diary/data/countries.geojson extrahiert)
 │   ├── diary/                       # Reisetagebuch (Hauptfeature)
 │   │   ├── models.py                # Trip, Journey, JourneySegment, TripImage, TripVideo
@@ -316,12 +316,12 @@ Generiert statische 630×630 PNG-Karten für OG/Discord-Embeds. Nutzt die `stati
 
 ## About-Seite (`apps/about/`)
 
-Interaktiver Lebenslauf auf einer statischen (nicht pannbaren) dunklen Karte. Jede Station ist eine Karte, die an einem MapLibre-Marker verankert und mit einer Linie zum Stations-Ort verbunden wird.
+Interaktiver Lebenslauf auf einer statischen (nicht pannbaren) dunklen Karte. Jede Station hat eine Textbox am unteren Rand; das Stations-Bild (falls vorhanden) liegt als kleine Karte direkt am geografischen Ort.
 
-- **Stations-Karten:** 50/50 Bild/Text, via `Marker` mit `offset:[0,-gap]` über dem Ort verankert (`anchor:"bottom"` bei einem, `"center"` bei mehreren Ankern). Mehrfach-Anker-Stationen (Herkunft: DE+FI) sind halb so breit (`.about-station-card.no-image`). Stations-Bilder sind statisch (nicht klickbar — kein Popup/neuer Tab mehr).
-- **Karten-Popup:** Klick auf einen Marker öffnet ein Popup mit dem Stations-Bild (`openStationPopup`) — nur über den Marker, nicht über das Bild der Stations-Karte.
-- **Verbindungslinien:** `updateLine` verbindet Marker mit der nächsten Kartenecke (Klemmen auf Container-Kanten) — Herkunft: DE nach unten, FI nach oben.
-- **Herkunfts-Kamera:** Länder-Überblick wird **synchron** berechnet (`computeFitCameraSettled`, Cache in `getFitCamera`), damit Navigation ohne Korrektur-Sprünge abläuft.
+- **Stations-Textbox:** Titel + Text + Navigation (Pfeile + Dots) in einer Box, `position:absolute` unten fixiert (`.about-station-card-bottom`, zentriert, 640px bzw. 320px für Text-only). Die Kamera bekommt Bottom-Padding (Textbox-Höhe + `BOTTOM_GAP`), damit Ort/Bild oberhalb der Textbox sichtbar bleiben.
+- **Bild am Ort:** Bei Stationen mit Bild liegt das Bild als kleiner Marker direkt am geografischen Punkt (`.station-map-img`, anchor bottom + `CARD_GAP`, 150×110px; Logos mit `object-fit:contain`). Mehrfach-Anker-Stationen (Herkunft: DE+FI) haben kein Bild.
+- **Karten-Popup:** Klick auf den Punkt-Marker öffnet ein Popup mit dem Stations-Bild (`openStationPopup`).
+- **Herkunfts-Kamera:** Länder-Überblick wird **synchron** berechnet (`computeFitCameraSettled`, Cache in `getFitCamera`, Key inkl. Textbox-Höhe). Das Bottom-Padding räumt die Bounds automatisch über die Textbox — DE+FI bleiben frei sichtbar, die Textbox liegt darunter im Nordsee-Gebiet (Schottland/Norwegen).
 - **Übergänge:** `smoothFly` — Flugdauer zoom-relativ (`flyDuration` = 700 + 260·Δz), Zoom hinkt beim Reinzoomen hinterher / führt beim Rauszoomen (pan-then-zoom-Gefühl), Apex-Bump nur wenn nötig.
 - **Navigation:** Pfeiltasten + Kartenklick, Deep-Links `/about/#<slug>` starten direkt bei einer Station, Start-Puls-Marker.
 - **Links im Fließtext:** `{Text|URL}`-Marker in `stations.py` werden serverseitig geliefert und clientseitig zu `<a target="_blank" rel="noopener">` (kein HTML aus Daten, DOM-basiert).

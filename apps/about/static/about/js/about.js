@@ -53,10 +53,6 @@
         try { map.setSky({ "atmosphere-blend": 0.85 }); } catch (e) {}
     });
 
-    // Verbindungslinie bei jeder Kamerabewegung mitziehen
-    map.on("move", updateLine);
-    map.on("render", updateLine);
-
     map.on("load", function () {
         map.addSource("station-countries", {
             type: "geojson",
@@ -221,13 +217,13 @@
         return { lng: lng / anchors.length, lat: lat / anchors.length };
     }
 
-    // Stations-Karte: Bild + Text + Navigation in EINER Box, über den
-    // Anker-Punkten schwebend und per gestrichelter Linie verbunden
-    // (Länder-Stationen wie "Herkunft" hängen an mehreren Ankern).
+    // Stations-Textbox: Titel + Text + Navigation in EINER Box am unteren
+    // Rand. Das Bild (falls vorhanden) liegt als kleine Karte direkt am
+    // geografischen Ort (eigener Marker), nicht mehr in der Textbox.
     var domMarkers = [];
-    var CARD_GAP = 120;   // Abstand Karten-Unterkante → Anker (Linienlänge)
-    var MOBILE_GAP = 24;  // Linienlänge unter der zentrierten Mobile-Karte
-    var mobileCardHeight = 0;   // gemessene Kartenhöhe (Mobile-Zentrierung)
+    var CARD_GAP = 16;   // Abstand Bild-Unterkante → Anker (Bild steht über dem Ort)
+    var BOTTOM_GAP = 24; // Abstand Textbox → Karten-Unterkante (Kamera-Padding)
+    var mobileCardHeight = 0;   // gemessene Textbox-Höhe (Kamera-Padding)
 
     function clearDomMarkers() {
         domMarkers.forEach(function (m) { m.remove(); });
@@ -260,17 +256,6 @@
         var card = document.createElement("section");
         card.className = "about-station-card" + (station.image ? "" : " no-image");
         card.setAttribute("aria-label", counterLabel + " " + (i + 1));
-
-        if (station.image) {
-            var isLogo = station.image.kind === "logo";
-            var imgWrap = document.createElement("div");
-            imgWrap.className = "station-card-img" + (isLogo ? " logo" : "");
-            var img = document.createElement("img");
-            img.src = station.image.url;
-            img.alt = station.image.alt;
-            imgWrap.appendChild(img);
-            card.appendChild(imgWrap);
-        }
 
         var content = document.createElement("div");
         content.className = "station-card-content";
@@ -330,110 +315,42 @@
 
     function renderStationCard(station) {
         clearDomMarkers();
-        hideLine();
         var card = buildStationCard(station, currentIndex);
         cardEl = card;
 
-        // Mobile und Desktop identisch: die Karte schwebt an den Anker-Punkten
-        // und ist per gestrichelter Linie mit ihnen verbunden. Bei EINEM Anker
-        // schwebt sie über dem Punkt (Linie sichtbar), bei mehreren Ankern
-        // (Länder-Stationen) zentriert sie den Mittelpunkt, damit kein Anker
-        // hinter der Karte verschwindet.
         var anchors = stationAnchors(station);
         if (!anchors.length) return;   // z.B. Herkunft vor Laden der Länder
 
-        // Mobile: Karte füllt den Viewport, die Stations-Karte wird in der
-        // Mitte des Containers zentriert. Die Kamera bekommt Top-Padding
-        // (moveCamera), damit der Anker-Punkt unterhalb der Karte sichtbar
-        // bleibt und die Verbindungslinie weiterhin läuft.
-        if (isMobile) {
-            card.classList.add("about-station-card-centered");
-            mapWrap.appendChild(card);
-            cardEl = card;
-            mobileCardHeight = card.offsetHeight || 0;
-            showLines(anchors);
-            return;
+        // Textbox am unteren Rand des Viewports fixiert (Desktop + Mobile).
+        card.classList.add("about-station-card-bottom");
+        mapWrap.appendChild(card);
+        cardEl = card;
+        mobileCardHeight = card.offsetHeight || 0;
+
+        // Bild (falls vorhanden) als kleine Karte direkt am geografischen
+        // Ort verankert — anchor bottom + CARD_GAP: das Bild "steht" auf dem
+        // Punkt und überdeckt ihn nicht. Mehrfach-Anker-Stationen (Herkunft:
+        // DE+FI) haben kein Bild.
+        if (station.image && anchors.length) {
+            var isLogo = station.image.kind === "logo";
+            var img = document.createElement("img");
+            img.className = "station-map-img" + (isLogo ? " logo" : "");
+            img.src = station.image.url;
+            img.alt = station.image.alt;
+            domMarkers.push(
+                new maplibregl.Marker({
+                    element: img,
+                    anchor: "bottom",
+                    offset: [0, -CARD_GAP],
+                })
+                    .setLngLat([midPoint(anchors).lng, midPoint(anchors).lat])
+                    .addTo(map)
+            );
         }
-
-        var single = anchors.length === 1;
-        var gap = CARD_GAP;
-        domMarkers.push(
-            new maplibregl.Marker({
-                element: card,
-                anchor: single ? "bottom" : "center",
-                offset: single ? [0, -gap] : [0, 0],
-            })
-                .setLngLat([midPoint(anchors).lng, midPoint(anchors).lat])
-                .addTo(map)
-        );
-        showLines(anchors);
     }
 
-    // Verbindungslinien Karte ↔ Anker-Punkte (SVG-Overlay über der Karte)
-    var lineSvg = null;
-    var lineAnchors = null;
-
-    function ensureLine() {
-        if (lineSvg) return;
-        lineSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        lineSvg.setAttribute("class", "about-marker-line");
-        map.getContainer().appendChild(lineSvg);
-    }
-
-    function showLines(anchors) {
-        ensureLine();
-        lineAnchors = anchors;
-        lineSvg.style.display = "";
-        updateLine();
-    }
-
-    function hideLine() {
-        lineAnchors = null;
-        if (lineSvg) lineSvg.style.display = "none";
-    }
-
-    function firstAnchor() {
-        var a = stationAnchors(stations[currentIndex]);
-        return a.length ? [a[0].lng, a[0].lat] : null;
-    }
-
-    function updateLine() {
-        if (!lineSvg || !lineAnchors || !cardEl) return;
-        while (lineSvg.firstChild) lineSvg.removeChild(lineSvg.firstChild);
-        var cardRect = cardEl.getBoundingClientRect();
-        var cRect = map.getContainer().getBoundingClientRect();
-        var top = cardRect.top - cRect.top;
-        var bottom = cardRect.bottom - cRect.top;
-        var left = cardRect.left - cRect.left;
-        var right = cardRect.right - cRect.left;
-        lineAnchors.forEach(function (a) {
-            var p = map.project([a.lng, a.lat]);
-            // Nächster Punkt auf dem Karten-Rand (oben/unten/links/rechts).
-            // Liegt ein Anker hinter der Karte, wird die nächstgelegene Kante
-            // genommen statt einer Null-Linie.
-            var x2, y2;
-            if (p.x >= left && p.x <= right && p.y >= top && p.y <= bottom) {
-                var dL = p.x - left, dR = right - p.x, dT = p.y - top, dB = bottom - p.y;
-                var m = Math.min(dL, dR, dT, dB);
-                if (m === dL) { x2 = left; y2 = p.y; }
-                else if (m === dR) { x2 = right; y2 = p.y; }
-                else if (m === dT) { x2 = p.x; y2 = top; }
-                else { x2 = p.x; y2 = bottom; }
-            } else {
-                x2 = Math.max(left, Math.min(right, p.x));
-                y2 = Math.max(top, Math.min(bottom, p.y));
-            }
-            var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("stroke", "#FF9800");
-            line.setAttribute("stroke-width", 2);
-            line.setAttribute("stroke-dasharray", "5 5");
-            line.setAttribute("x1", p.x);
-            line.setAttribute("y1", p.y);
-            line.setAttribute("x2", x2);
-            line.setAttribute("y2", y2);
-            lineSvg.appendChild(line);
-        });
-    }
+    // Verbindungslinien wurden entfernt: Das Bild liegt direkt am geografischen
+    // Ort (eigener Marker), eine gestrichelte Linie ist nicht mehr nötig.
 
     function openStationPopup(station, lngLat) {
         if (!station.image) return;
@@ -560,7 +477,7 @@
     }
 
     function getFitCamera(station, margin) {
-        var key = station.map.highlight_countries.join("+");
+        var key = station.map.highlight_countries.join("+") + "|" + (mobileCardHeight || 0);
         if (fitCameraCache[key]) return fitCameraCache[key];
         var bounds = computeBounds(station.map.highlight_countries);
         if (!bounds) return null;
@@ -634,21 +551,13 @@
     function moveCamera(station, animate) {
         navSeq++;
         if (flightRAF) cancelAnimationFrame(flightRAF);
-        // Mobile: Bei Single-Anker-Stationen wird die Kamera per Top-Padding
-        // nach unten versetzt, sodass der Anker unter der zentrierten Karte
-        // liegt und die Verbindungslinie sichtbar bleibt. Länder-Stationen
-        // (fit_bounds) bleiben ohne Padding — dort zentriert die Karte über
-        // dem hervorgehobenen Gebiet.
-        if (isMobile) {
-            var mAnchors = stationAnchors(station);
-            var mSingle = mAnchors.length === 1;
-            var mH = mobileCardHeight || Math.round(map.getContainer().clientHeight * 0.45);
-            map.setPadding(mSingle
-                ? { top: mH + 2 * MOBILE_GAP, left: 0, right: 0, bottom: 0 }
-                : { top: 0, left: 0, right: 0, bottom: 0 });
-        } else {
-            map.setPadding({ top: 0, left: 0, right: 0, bottom: 0 });
-        }
+        // Textbox unten fixiert → die Kamera bekommt Bottom-Padding, damit
+        // Anker/Bild (und bei Länder-Stationen DE+FI) oberhalb der Textbox
+        // sichtbar bleiben. Länder-Stationen (fit_bounds) nutzen dasselbe
+        // Padding, der Fit räumt die Bounds dann automatisch über die
+        // Textbox.
+        var cardH = mobileCardHeight || Math.round(map.getContainer().clientHeight * 0.35);
+        map.setPadding({ top: 0, left: 0, right: 0, bottom: cardH + BOTTOM_GAP });
         var start = { center: map.getCenter(), zoom: map.getZoom() };
         var fit = station.map.fit_bounds;
         var bounds = fit ? computeBounds(station.map.highlight_countries) : null;

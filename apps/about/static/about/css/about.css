@@ -6,54 +6,51 @@
     overflow: hidden;
 }
 
-/* Stations-Karte: Bild + Text + Navigation in einer Box, über den
-   Anker-Punkten schwebend und per gestrichelter Linie verbunden. */
+/* Karte (rechts) */
+#about-map-wrap {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+}
+
+#about-map {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 42%, #131c34 0%, #070b16 68%);
+}
+
+/* Statische Karte: kein Grab-Cursor */
+#about-map .maplibregl-canvas {
+    cursor: default;
+}
+
+/* Stations-Textbox: Titel + Text + Navigation in EINER Box, am unteren
+   Rand des Viewports fixiert. Das Bild liegt als kleine Karte direkt am
+   geografischen Ort (eigener Marker), nicht in der Textbox. */
 .about-station-card {
-    display: flex;
     width: 640px;
     max-width: 66vw;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 14px;
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.45);
     overflow: hidden;
 }
 
-/* Text-only Stationen (z.B. Herkunft) brauchen keine halbe Bildbreite */
+/* Text-only Stationen (z.B. Herkunft) sind schmaler */
 .about-station-card.no-image {
     width: 320px;
 }
 
-.station-card-img {
-    flex: 1 1 50%;
-    min-width: 0;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.station-card-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-/* Logos (DESY, HPI): transparent einpassen — die DESY-Grafik hat keinen
-   eigenen Hintergrund, weiße Boxen bleiben nur, wo das SVG selbst weiß ist. */
-.station-card-img.logo {
-    background: transparent;
-}
-
-.station-card-img.logo img {
-    object-fit: contain;
-    padding: 16px;
+.about-station-card-bottom {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    z-index: 3;
 }
 
 .station-card-content {
-    flex: 1 1 50%;
-    min-width: 0;
     padding: 1rem 1.25rem;
     display: flex;
     flex-direction: column;
@@ -134,22 +131,22 @@
     border-color: var(--color-accent);
 }
 
-/* Karte (rechts) */
-#about-map-wrap {
-    flex: 1;
-    position: relative;
-    min-width: 0;
+/* Kleines Bild direkt am geografischen Ort (Marker-Element) */
+.station-map-img {
+    display: block;
+    width: 150px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid var(--color-surface);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-#about-map {
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 50% 42%, #131c34 0%, #070b16 68%);
-}
-
-/* Statische Karte: kein Grab-Cursor */
-#about-map .maplibregl-canvas {
-    cursor: default;
+/* Logos (DESY, HPI): transparent einpassen */
+.station-map-img.logo {
+    object-fit: contain;
+    background: var(--color-surface);
+    padding: 8px;
 }
 
 .station-popup-img {
@@ -166,16 +163,6 @@
     padding: 16px;
 }
 
-/* Verbindungslinie Bild ↔ Marker-Punkt */
-.about-marker-line {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1;
-}
-
 .about-map-credit {
     position: absolute;
     right: 0.5rem;
@@ -188,9 +175,7 @@
     z-index: 5;
 }
 
-/* Mobile: Karte füllt den Viewport, Stations-Karte schwebt gestapelt
-   (Bild oben, Text darunter) über dem Anker-Punkt und bleibt per Linie
-   mit dem Ort verbunden. */
+/* Mobile: Karte füllt den Viewport, Textbox unten fixiert, Bild am Ort */
 @media (max-width: 768px) {
     #about-page {
         position: relative;
@@ -207,31 +192,13 @@
     .about-station-card {
         width: min(94vw, 640px);
         max-width: none;
-        max-height: 58dvh;
-        flex-direction: column;
+        max-height: 55dvh;
         overflow-y: auto;
-    }
-
-    .about-station-card-centered {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 2;
     }
 
     .about-station-card.no-image {
         width: min(94vw, 640px);
         max-width: none;
-    }
-
-    .about-station-card .station-card-img {
-        flex: none;
-        height: 180px;
-    }
-
-    .about-station-card .station-card-img.logo img {
-        padding: 12px;
     }
 
     .station-title {
@@ -241,6 +208,11 @@
 
     .station-body {
         margin-top: 0.6rem;
+    }
+
+    .station-map-img {
+        width: 110px;
+        height: 82px;
     }
 
     .about-map-credit {
