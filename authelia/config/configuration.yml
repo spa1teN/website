@@ -35,6 +35,7 @@ access_control:
       resources:
         - '^/portal/?$'
         - '^/portal/.+$'
+        - '^/authenticated/?$'
       policy: one_factor
 
 session:

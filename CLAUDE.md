@@ -104,6 +104,7 @@ website/
 │   ├── nginx.conf                   # Reverse-Proxy für 8 Subdomains
 │   ├── .htpasswd
 │   └── portal/                      # SSO-Menü-Seite (sadenius.eu/portal/)
+│   └── sso/                         # bar.css + bar.js — SSO-Leiste (User+Portal-Link) für NC/Dawarich/Immich
 ├── authelia/                        # Zentraler SSO-Login (sadenius.eu)
 │   ├── config/configuration.yml     # Authelia-Config (OIDC-Clients, Session, Secrets via template)
 │   ├── config/users.yml             # User (gitignored — Passwort-Hashes)
@@ -153,15 +154,28 @@ als Provider.
   (Menü-Seite mit Karten für Dawarich/Nextcloud/Immich).
 - **Menü-Seite** `/portal/`: statisches HTML im nginx-Image (`nginx/portal/index.html`),
   per `auth_request` gegen Authelia (`/api/authz/auth-request`) geschützt — nur nach
-  Login sichtbar. Zeigt oben den SSO-User (nginx-SSI: `<!--#echo var="sso_name|sso_user" -->`,
-  aus den `Remote-Name`/`Remote-User`-Headers des auth_request) plus Links zu
-  `sadenius.eu/settings` (Passwort ändern) und `/logout`.
+  Login sichtbar. Zeigt oben links Benutzername + Anzeigename + E-Mail
+  (nginx-SSI: `sso_user|sso_name|sso_email` aus den `Remote-User`/`Remote-Name`/
+  `Remote-Email`-Headern des auth_request) plus oben rechts Links zu
+  `sadenius.eu/settings` (Passwort ändern) und `/logout` (nur dieser eine Abmelden-Link).
 - **nginx (sadenius.eu):** `location /` → authelia:9091 (Portal + OIDC-Endpoints);
   `location = /api/authz/auth-request` (internal) für die Menü-Absicherung.
   **Wichtig:** `location = /` injiziert fehlendes `?rd=https://sadenius.eu/portal/`
-  (sonst landet man nach Login auf der `/authenticated`-Sackgasse — Authelia wertet
-  `default_redirection_url` in v4.39 bei direktem Portal-Besuch nicht aus, Bug #12853).
-  `location = /authenticated` → 302 auf `/portal/`.
+  **nur bei komplett leerer Query** (`if ($args = "")`) — Authelia wertet das
+  `default_redirection_url` in v4.39 bei direktem Portal-Besuch nicht aus (Bug #12853).
+  OIDC-Flows kommen als `/?flow=openid_connect&flow_id=…` (ohne `rd`) an und dürfen
+  NICHT umgebogen werden, sonst landet man nach dem Login auf `/portal/` statt in der App.
+  `location = /authenticated` liefert eine eigene Seite mit Link + Meta-Refresh auf
+  `/portal/` (auth_request + SSI); `/authenticated` ist in der Authelia-`access_control`
+  als `one_factor` freigegeben.
+- **SSO-Leiste in den Apps:** `nginx/sso/bar.css` + `bar.js` werden per `sub_filter`
+  in die HTML-Antworten von Nextcloud (`cloud.`), Dawarich (`map.`) und Immich
+  (`fotos.`) injiziert — eine fixe 28px-Leiste oben mit Benutzer (links) und
+  „← Portal"-Link (rechts), plus `body{padding-top:28px}` (NC zusätzlich
+  `#header{top:28px}`). Benutzername kommt per App-Quelle: NC `OC.currentUser`,
+  Immich `GET /api/users/me`, Dawarich `/users/edit`-Scrape. `bar.js` läuft
+  `defer`, `Accept-Encoding ""` muss gesetzt sein (sub_filter braucht unkomprimierte
+  Antworten). Statische Dateien unter `/__sso/bar.{css,js}` (same-origin).
 - **OIDC-Clients:** `dawarich`, `immich`, `nextcloud` — konfiguriert in
   `authelia/config/configuration.yml`. `pre_configured_consent_duration: 1 week`
   (Consent wird nach 1× Bestätigen erinnert). **Wichtig:** Dawarich+Immich nutzen
@@ -185,6 +199,12 @@ als Provider.
   cached zur Laufzeit) — das Dashboard zeigt dafür einen „Neustart nötig"-Hinweis.
   Fallback-CLI: `authelia/authelia-user.sh` (`add`/`del`/`list`).
   Passwort-Änderung durch den User selbst: nach Login auf `https://sadenius.eu/settings`.
+  **Nextcloud-Gruppen:** Beim Anlegen kann man NC-Gruppen mitgeben (Checkboxen aus
+  `/api/nextcloud/groups`). Das Dashboard legt den NC-Account dann parallel an
+  (`occ user:add --password-from-env` mit **starkem Zufallspasswort** — NC-Policy
+  lehnt bekannte/geschwächte Passwörter ab; SSO-User loggen eh über OIDC ein) und
+  weist die Gruppen zu (`occ group:adduser`). `user_oidc` mappt per
+  `preferred_username` auf den vorab angelegten Account.
 - **Apps:** Dawarich via Env (`OIDC_*` in compose), Nextcloud via App `user_oidc`
   (`occ user_oidc:provider`), Immich via `system_metadata`-DB-Eintrag (OAuth-Settings).
   Alle drei legen den SSO-User beim ersten Login automatisch an (`OIDC_AUTO_REGISTER`/

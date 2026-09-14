@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="2;url=https://sadenius.eu/portal/">
+<title>Angemeldet — sadenius.eu</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #14161a;
+    color: #e8eaed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+  .check {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    color: #4caf50;
+  }
+  h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 6px; }
+  .sub { color: #9aa0a6; margin-bottom: 24px; font-size: 0.95rem; }
+  .sub .uid { color: #6b7280; font-size: 0.85rem; }
+  a.btn {
+    display: inline-block;
+    background: #1e2126;
+    border: 1px solid #2c3036;
+    color: #7aa2f7;
+    text-decoration: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  a.btn:hover { border-color: #7aa2f7; }
+  .hint { margin-top: 16px; color: #6b7280; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+  <div class="check">&#10003;</div>
+  <h1>Du bist angemeldet</h1>
+  <p class="sub">
+    <span><!--#echo var="sso_name" default="---" --></span>
+    <span class="uid"><!--#echo var="sso_user" default="---" --></span>
+  </p>
+  <a class="btn" href="https://sadenius.eu/portal/">Zum Portal</a>
+  <p class="hint">Du wirst automatisch weitergeleitet&hellip;</p>
+</body>
+</html>

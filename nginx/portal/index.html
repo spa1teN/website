@@ -65,9 +65,10 @@
   .topbar .user {
     display: flex;
     flex-direction: column;
-    line-height: 1.3;
+    line-height: 1.35;
   }
-  .topbar .user .uid { color: #6b7280; font-size: 0.78rem; }
+  .topbar .user .uid { color: #e8eaed; font-size: 0.85rem; font-weight: 600; }
+  .topbar .user .email { color: #6b7280; font-size: 0.78rem; }
   .topbar .links { display: flex; gap: 16px; align-items: center; }
   .topbar a {
     color: #7aa2f7;
@@ -79,8 +80,9 @@
 <body>
   <header class="topbar">
     <div class="user">
-      <span class="name"><!--#echo var="sso_name" default="---" --></span>
       <span class="uid"><!--#echo var="sso_user" default="---" --></span>
+      <span class="name"><!--#echo var="sso_name" default="---" --></span>
+      <span class="email"><!--#echo var="sso_email" default="---" --></span>
     </div>
     <nav class="links">
       <a href="https://sadenius.eu/settings">Passwort ändern</a>
@@ -106,6 +108,6 @@
       <div class="desc">Foto- &amp; Videobibliothek</div>
     </a>
   </div>
-  <p class="foot"><a href="https://sadenius.eu/logout">Abmelden</a> · <a href="https://casparsadenius.de">casparsadenius.de</a></p>
+  <p class="foot"><a href="https://casparsadenius.de">casparsadenius.de</a></p>
 </body>
 </html>
