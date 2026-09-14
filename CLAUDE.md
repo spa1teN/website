@@ -167,6 +167,12 @@ als Provider.
   (`AUTHELIA_CLIENT_DAWARICH/IMMICH/NEXTCLOUD_SECRET`).
 - **Config-Filter:** Authelia nutzt den `template`-Filter (`X_AUTHELIA_CONFIG_FILTERS=template`)
   um Secrets aus Dateien einzulesen (`{{ secret "/config/secrets/..." }}`).
+- **Notifier (E-Mails):** SMTP über `smtp.strato.de:465` (`submissions://`), Absender
+  `noreply@casparsadenius.de` (gleiche Zugangsdaten wie die Dashboard-Alerts),
+  Passwort in `authelia/config/secrets/smtp_password` (gitignored). One-Time-Codes
+  für Passwort-Änderung (`/settings`) kommen damit wirklich per Mail an
+  (`privat@casparsadenius.de`). Schema v4.39: `notifier.smtp.address`
+  (`host`/`port` sind deprecated) + `startup_check_address` (String, kein Block).
 - **User verwalten (GUI):** Im Dashboard unter dem Tab **SSO** (`dash.casparsadenius.de`)
   — User anlegen/bearbeiten/Passwort setzen/löschen + „Authelia neu starten".
   Änderungen an `users.yml` brauchen **immer einen Authelia-Neustart** (File-Backend

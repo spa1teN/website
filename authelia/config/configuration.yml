@@ -55,8 +55,14 @@ storage:
     path: /config/db.sqlite3
 
 notifier:
-  filesystem:
-    filename: /config/notification.txt
+  smtp:
+    address: 'submissions://smtp.strato.de:465'
+    timeout: '5s'
+    username: noreply@casparsadenius.de
+    password: '{{ secret "/config/secrets/smtp_password" }}'
+    sender: "Authelia <noreply@casparsadenius.de>"
+    subject: '[Authelia] {title}'
+    startup_check_address: 'test@casparsadenius.de'
 
 identity_providers:
   oidc:
