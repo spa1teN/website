@@ -153,9 +153,15 @@ als Provider.
   (Menü-Seite mit Karten für Dawarich/Nextcloud/Immich).
 - **Menü-Seite** `/portal/`: statisches HTML im nginx-Image (`nginx/portal/index.html`),
   per `auth_request` gegen Authelia (`/api/authz/auth-request`) geschützt — nur nach
-  Login sichtbar.
+  Login sichtbar. Zeigt oben den SSO-User (nginx-SSI: `<!--#echo var="sso_name|sso_user" -->`,
+  aus den `Remote-Name`/`Remote-User`-Headers des auth_request) plus Links zu
+  `sadenius.eu/settings` (Passwort ändern) und `/logout`.
 - **nginx (sadenius.eu):** `location /` → authelia:9091 (Portal + OIDC-Endpoints);
   `location = /api/authz/auth-request` (internal) für die Menü-Absicherung.
+  **Wichtig:** `location = /` injiziert fehlendes `?rd=https://sadenius.eu/portal/`
+  (sonst landet man nach Login auf der `/authenticated`-Sackgasse — Authelia wertet
+  `default_redirection_url` in v4.39 bei direktem Portal-Besuch nicht aus, Bug #12853).
+  `location = /authenticated` → 302 auf `/portal/`.
 - **OIDC-Clients:** `dawarich`, `immich`, `nextcloud` — konfiguriert in
   `authelia/config/configuration.yml`. `pre_configured_consent_duration: 1 week`
   (Consent wird nach 1× Bestätigen erinnert). **Wichtig:** Dawarich+Immich nutzen
@@ -186,6 +192,12 @@ als Provider.
   `docker compose restart authelia`; der OIDC-`sub`-Claim ändert sich, wenn der
   Authelia-Username geändert wird (dann Dawarich `users.uid` + Immich
   `user.oauthId` anpassen, sonst „OAuth conflict").
+- **Nextcloud-Passwort:** NC-Admin-Aktionen (sudo/Re-Auth) brauchen das **NC-Account-Passwort**
+  — das ist von Authelia getrennt. Für „ein Passwort überall" via
+  `occ user:resetpassword --password-from-env` auf das Authelia-Passwort gesetzt.
+  **Achtung:** Wenn der NC-User 2FA (TOTP/backup_codes) registriert hat, ist Passwort-Login
+  (Basic-Auth/DAV/App-Passwörter) gesperrt — dann `occ twofactorauth:disable <user> <provider>`
+  (hier deaktiviert, da Login eh über SSO läuft).
 
 ### Trilium Notes
 
