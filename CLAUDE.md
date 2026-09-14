@@ -169,7 +169,10 @@ als Provider.
   `/portal/` (auth_request + SSI); `/authenticated` ist in der Authelia-`access_control`
   als `one_factor` freigegeben. `error_page 401 403 =302 $redirection_url` fängt
   BEIDES ab (auch 403 für angemeldete User, wenn eine Regel fehlt) — nur 401 wäre
-  sonst eine harte Forbidden-Sackgasse.
+  sonst eine harte Forbidden-Sackgasse. **Wichtig:** der Endpoint braucht
+  `default_type text/html` — die URI hat keinen `.html`-Suffix, ohne das liefert
+  nginx `application/octet-stream` und der Browser lädt die Seite als Download
+  statt sie zu rendern (Meta-Refresh läuft dann nie = Dead End).
 - **SSO-Leiste in den Apps:** `nginx/sso/bar.css` + `bar.js` werden per `sub_filter`
   in die HTML-Antworten von Nextcloud (`cloud.`), Dawarich (`map.`) und Immich
   (`fotos.`) injiziert — eine fixe 28px-Leiste oben mit Benutzer (links) und
