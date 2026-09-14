@@ -14,7 +14,7 @@ set -euo pipefail
 
 CONFIG_DIR="${AUTHELIA_CONFIG_DIR:-/root/website/authelia/config}"
 USERS_FILE="$CONFIG_DIR/users.yml"
-EMAIL_DOMAIN="${AUTHELIA_EMAIL_DOMAIN:-sadenius.eu}"
+EMAIL_DOMAIN="${AUTHELIA_EMAIL_DOMAIN:-casparsadenius.de}"
 IMAGE="authelia/authelia:4.39"
 
 usage() {

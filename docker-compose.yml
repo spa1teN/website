@@ -323,7 +323,7 @@ services:
       - X_AUTHELIA_CONFIG_FILTERS=template
       - TZ=Europe/Berlin
     healthcheck:
-      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:9091/api/health | grep -q '\"status\"\\s*:\\s*\"ok\"'" ]
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:9091/api/health | grep -qi '\"status\"\\s*:\\s*\"ok\"'" ]
       interval: 30s
       timeout: 5s
       retries: 5

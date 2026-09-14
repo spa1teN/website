@@ -148,8 +148,9 @@ Dashboard-Compose** mehr (gelöscht), der Dashboard-Code liegt in
 (`authelia/config/users.yml`, File-Backend), alle Apps nutzen natives OIDC mit Authelia
 als Provider.
 
-- **Portal:** `https://sadenius.eu` → Authelia-Login; nach Login Redirect auf
-  `https://sadenius.eu/portal/` (Menü-Seite mit Karten für Dawarich/Nextcloud/Immich).
+- **Portal:** `https://sadenius.eu` → Authelia-Login (User `spa1teN`, E-Mail
+  `privat@casparsadenius.de`); nach Login Redirect auf `https://sadenius.eu/portal/`
+  (Menü-Seite mit Karten für Dawarich/Nextcloud/Immich).
 - **Menü-Seite** `/portal/`: statisches HTML im nginx-Image (`nginx/portal/index.html`),
   per `auth_request` gegen Authelia (`/api/authz/auth-request`) geschützt — nur nach
   Login sichtbar.
@@ -166,13 +167,19 @@ als Provider.
   (`AUTHELIA_CLIENT_DAWARICH/IMMICH/NEXTCLOUD_SECRET`).
 - **Config-Filter:** Authelia nutzt den `template`-Filter (`X_AUTHELIA_CONFIG_FILTERS=template`)
   um Secrets aus Dateien einzulesen (`{{ secret "/config/secrets/..." }}`).
-- **User verwalten:** Kein UI — per Script `authelia/authelia-user.sh`
-  (`add <user> <pw>` / `del <user>` / `list`), danach `docker compose restart authelia`.
+- **User verwalten (GUI):** Im Dashboard unter dem Tab **SSO** (`dash.casparsadenius.de`)
+  — User anlegen/bearbeiten/Passwort setzen/löschen + „Authelia neu starten".
+  Änderungen an `users.yml` brauchen **immer einen Authelia-Neustart** (File-Backend
+  cached zur Laufzeit) — das Dashboard zeigt dafür einen „Neustart nötig"-Hinweis.
+  Fallback-CLI: `authelia/authelia-user.sh` (`add`/`del`/`list`).
   Passwort-Änderung durch den User selbst: nach Login auf `https://sadenius.eu/settings`.
 - **Apps:** Dawarich via Env (`OIDC_*` in compose), Nextcloud via App `user_oidc`
   (`occ user_oidc:provider`), Immich via `system_metadata`-DB-Eintrag (OAuth-Settings).
   Alle drei legen den SSO-User beim ersten Login automatisch an (`OIDC_AUTO_REGISTER`/
-  Auto-Register).
+  Auto-Register). **Achtung:** `users.yml`-Änderungen wirken erst nach
+  `docker compose restart authelia`; der OIDC-`sub`-Claim ändert sich, wenn der
+  Authelia-Username geändert wird (dann Dawarich `users.uid` + Immich
+  `user.oauthId` anpassen, sonst „OAuth conflict").
 
 ### Trilium Notes
 
@@ -440,7 +447,7 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 
 ## Wichtige Hinweise
 
-- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `cloud.sadenius.eu`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `map.sadenius.eu`, `fotos.sadenius.eu`)
+- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa-bot.eu`, `cloud.sadenius.eu`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `map.sadenius.eu`, `fotos.sadenius.eu`)
 - Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `dashboard`, `dawarich_*`, `immich-*`, `web`, `db`) werden von **diesem** Compose-File gestartet
 - `web`-Container hat Volume-Mount `/root/website:/app` (Live-Code, kein Image-Rebuild nötig bei Code-Änderungen)
 - `LOCALE_PATHS` ist nicht gesetzt → Django nutzt `USE_L10N=True` mit deutschem Locale. Bei Zahlenformatierung in Templates `|stringformat:'.6f'` nutzen (z.B. für GPS-Koordinaten), da `{{ value }}` im deutschen Locale Kommas statt Punkte rendert
