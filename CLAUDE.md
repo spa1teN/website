@@ -320,6 +320,7 @@ Interaktiver Lebenslauf auf einer statischen (nicht pannbaren) dunklen Karte. Je
 
 - **Stations-Textbox:** Titel + Text + Navigation (Pfeile + Dots) in einer Box, `position:absolute` unten fixiert (`.about-station-card-bottom`, zentriert, 640px bzw. 320px für Text-only). Die Kamera bekommt Bottom-Padding (Textbox-Höhe + `BOTTOM_GAP`), damit Ort/Bild oberhalb der Textbox sichtbar bleiben.
 - **Bild am Ort:** Bei Stationen mit Bild liegt das Bild als kleiner Marker direkt am geografischen Punkt (`.station-map-img`, anchor bottom + `CARD_GAP`, 150×110px; Logos mit `object-fit:contain`). Mehrfach-Anker-Stationen (Herkunft: DE+FI) haben kein Bild.
+- **Punkt-Marker:** Der orangene Puls-/Kern-Marker (Source `station-markers`) erscheint **nur** bei Stationen mit explizitem Ort (`map.markers`), nicht bei reinen Länder-Stationen — DE+FI zeigen nur die Länder-Hervorhebung ohne Punkte.
 - **Karten-Popup:** Klick auf den Punkt-Marker öffnet ein Popup mit dem Stations-Bild (`openStationPopup`).
 - **Herkunfts-Kamera:** Länder-Überblick wird **synchron** berechnet (`computeFitCameraSettled`, Cache in `getFitCamera`, Key inkl. Textbox-Höhe). Das Bottom-Padding räumt die Bounds automatisch über die Textbox — DE+FI bleiben frei sichtbar, die Textbox liegt darunter im Nordsee-Gebiet (Schottland/Norwegen).
 - **Übergänge:** `smoothFly` — Flugdauer zoom-relativ (`flyDuration` = 700 + 260·Δz), Zoom hinkt beim Reinzoomen hinterher / führt beim Rauszoomen (pan-then-zoom-Gefühl), Apex-Bump nur wenn nötig.

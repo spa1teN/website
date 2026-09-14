@@ -149,7 +149,11 @@
                         moveCamera(station, false);
                     }
                     renderStationCard(station);
-                    setMarkers(stationAnchors(station));
+                    if (station.map.markers && station.map.markers.length) {
+                        setMarkers(stationAnchors(station));
+                    } else {
+                        setMarkers([]);
+                    }
                     // Länder-Überblicks-Kamera im Hintergrund vorberechnen
                     // (nur Herkunft), damit die animierte Navigation dorthin
                     // ohne Korrektur-Sprünge abläuft.
@@ -594,15 +598,25 @@
     // Karten-Zustand einer Station (Karte, Marker, Highlights, Kamera, Puls)
     function applyMapState(station, animate) {
         renderStationCard(station);
-        setMarkers(stationAnchors(station));
-        map.setLayoutProperty("station-marker-pulse", "visibility", "visible");
-        map.setLayoutProperty("station-marker-core", "visibility", "visible");
+        // Orangene Punkt-Marker nur bei Stationen mit explizitem Ort
+        // (map.markers). Reine Länder-Stationen (z.B. Herkunft DE+FI) haben
+        // keine Punkte — dort reicht die Länder-Hervorhebung.
+        var hasPointMarkers = !!(station.map.markers && station.map.markers.length);
+        if (hasPointMarkers) {
+            setMarkers(stationAnchors(station));
+            map.setLayoutProperty("station-marker-pulse", "visibility", "visible");
+            map.setLayoutProperty("station-marker-core", "visibility", "visible");
+        } else {
+            setMarkers([]);
+            map.setLayoutProperty("station-marker-pulse", "visibility", "none");
+            map.setLayoutProperty("station-marker-core", "visibility", "none");
+        }
         setHighlightCountries(station.map.highlight_countries);
         var visible = station.map.highlight_countries.length > 0 ? "visible" : "none";
         map.setLayoutProperty("station-highlight-fill", "visibility", visible);
         map.setLayoutProperty("station-highlight-outline", "visibility", visible);
         moveCamera(station, animate);
-        if (animate && stationAnchors(station).length > 0) {
+        if (animate && hasPointMarkers) {
             startPulse();
         }
     }
