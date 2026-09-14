@@ -167,15 +167,24 @@ als Provider.
   NICHT umgebogen werden, sonst landet man nach dem Login auf `/portal/` statt in der App.
   `location = /authenticated` liefert eine eigene Seite mit Link + Meta-Refresh auf
   `/portal/` (auth_request + SSI); `/authenticated` ist in der Authelia-`access_control`
-  als `one_factor` freigegeben.
+  als `one_factor` freigegeben. `error_page 401 403 =302 $redirection_url` fängt
+  BEIDES ab (auch 403 für angemeldete User, wenn eine Regel fehlt) — nur 401 wäre
+  sonst eine harte Forbidden-Sackgasse.
 - **SSO-Leiste in den Apps:** `nginx/sso/bar.css` + `bar.js` werden per `sub_filter`
   in die HTML-Antworten von Nextcloud (`cloud.`), Dawarich (`map.`) und Immich
   (`fotos.`) injiziert — eine fixe 28px-Leiste oben mit Benutzer (links) und
-  „← Portal"-Link (rechts), plus `body{padding-top:28px}` (NC zusätzlich
-  `#header{top:28px}`). Benutzername kommt per App-Quelle: NC `OC.currentUser`,
-  Immich `GET /api/users/me`, Dawarich `/users/edit`-Scrape. `bar.js` läuft
-  `defer`, `Accept-Encoding ""` muss gesetzt sein (sub_filter braucht unkomprimierte
-  Antworten). Statische Dateien unter `/__sso/bar.{css,js}` (same-origin).
+  „← Portal"-Link (rechts), plus `body{padding-top:28px}`.
+  **Nextcloud:** User kommt serverseitig aus dem `nc_username`-Cookie
+  (`$cookie_nc_username`), KEIN `bar.js` — NCs CSP nutzt eine per-Response-Nonce +
+  `strict-dynamic` (script-src ohne 'self'), die injizierte Scripte blockt.
+  **Immich:** `GET /api/users/me` → `name`. **Dawarich:** `/users/edit`-Scrape
+  (`value="…" name="user[email]"` — Regex order-unabhängig, Rails rendert value
+  vor name). `Accept-Encoding ""` muss gesetzt sein (sub_filter braucht
+  unkomprimierte Antworten). Statische Dateien unter `/__sso/bar.{css,js}` mit
+  `?v=N`-Cache-Busting. Dawarich-Map-Layout (Overlay): `header{top:28px}` plus
+  `body>div.fixed[class*=z-50]` und `body>div.absolute[class*=z-20]` werden um
+  28px nach unten geschoben (fixed navbar sitzt dank body-padding sonst über
+  Flash/Map).
 - **OIDC-Clients:** `dawarich`, `immich`, `nextcloud` — konfiguriert in
   `authelia/config/configuration.yml`. `pre_configured_consent_duration: 1 week`
   (Consent wird nach 1× Bestätigen erinnert). **Wichtig:** Dawarich+Immich nutzen
