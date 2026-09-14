@@ -16,5 +16,11 @@ osrm-data/
 tasks.txt
 nginx/.htpasswd
 
+# Authelia — User-Passwort-Hashes und alle Secrets (nur auf dem Server)
+authelia/config/users.yml
+authelia/config/secrets/
+authelia/config/db.sqlite3
+authelia/config/notification.txt
+
 # GeoIP databases (MaxMind GeoLite2 — licensed, downloaded separately)
 geoip/

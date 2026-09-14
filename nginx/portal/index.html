@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sadenius.eu — Dienste</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #14161a;
+    color: #e8eaed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 6px; }
+  .sub { color: #9aa0a6; margin-bottom: 32px; font-size: 0.95rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 780px;
+  }
+  a.card {
+    text-decoration: none;
+    color: inherit;
+    background: #1e2126;
+    border: 1px solid #2c3036;
+    border-radius: 12px;
+    padding: 22px;
+    transition: border-color 0.15s, transform 0.15s;
+    display: block;
+  }
+  a.card:hover { border-color: #7aa2f7; transform: translateY(-2px); }
+  .ico {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .name { font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; }
+  .desc { color: #9aa0a6; font-size: 0.85rem; }
+  .foot {
+    margin-top: 32px;
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+  .foot a { color: #7aa2f7; text-decoration: none; }
+</style>
+</head>
+<body>
+  <h1>Meine Dienste</h1>
+  <p class="sub">Wähle einen Dienst, um fortzufahren</p>
+  <div class="grid">
+    <a class="card" href="https://map.sadenius.eu">
+      <span class="ico">🗺️</span>
+      <div class="name">Dawarich</div>
+      <div class="desc">Zeitstrahl &amp; Standortverlauf</div>
+    </a>
+    <a class="card" href="https://cloud.sadenius.eu">
+      <span class="ico">☁️</span>
+      <div class="name">Nextcloud</div>
+      <div class="desc">Cloud, Dateien &amp; Kalender</div>
+    </a>
+    <a class="card" href="https://fotos.sadenius.eu">
+      <span class="ico">📸</span>
+      <div class="name">Immich</div>
+      <div class="desc">Foto- &amp; Videobibliothek</div>
+    </a>
+  </div>
+  <p class="foot"><a href="https://sadenius.eu/logout">Abmelden</a> · <a href="https://casparsadenius.de">casparsadenius.de</a></p>
+</body>
+</html>

@@ -102,8 +102,14 @@ website/
 ├── nginx/                           # Nginx Dockerfile + Config
 │   ├── Dockerfile
 │   ├── nginx.conf                   # Reverse-Proxy für 8 Subdomains
-│   └── .htpasswd
-├── docker-compose.yml               # Einheitlicher Stack: nginx, certbot, trilium, open-webui, dashboard, dawarich, immich, web, db
+│   ├── .htpasswd
+│   └── portal/                      # SSO-Menü-Seite (sadenius.eu/portal/)
+├── authelia/                        # Zentraler SSO-Login (sadenius.eu)
+│   ├── config/configuration.yml     # Authelia-Config (OIDC-Clients, Session, Secrets via template)
+│   ├── config/users.yml             # User (gitignored — Passwort-Hashes)
+│   ├── config/secrets/              # Gitignored Secrets (session, hmac, jwks, client_*)
+│   └── authelia-user.sh             # User verwalten (add/del/list)
+├── docker-compose.yml               # Einheitlicher Stack: nginx, certbot, trilium, open-webui, dashboard, dawarich, immich, authelia, web, db
 ├── Dockerfile
 ├── requirements.txt
 ├── manage.py
@@ -126,6 +132,7 @@ Selfhosted-Dienste in einem einzigen Compose-Projekt (Netzwerk `website_default`
 | `dashboard` | Ops-Dashboard (FastAPI), unter `dash.casparsadenius.de` (Basic Auth) |
 | `dawarich_app` / `dawarich_sidekiq` / `dawarich_db` / `dawarich_redis` | Dawarich (Zeitstrahl/Location-Tracking), unter `map.sadenius.eu` |
 | `immich-server` / `immich-machine-learning` / `immich-redis` / `immich-database` | Immich (Foto-/Video-Bibliothek), unter `fotos.sadenius.eu` |
+| `authelia` | Zentraler SSO-Login (OIDC-Provider + Portal) für map/cloud/fotos.sadenius.eu |
 | `web` | Django/Gunicorn Website |
 | `db` | PostGIS 16 Datenbank |
 
@@ -134,6 +141,38 @@ für Nextcloud/RoaringBot/Tausendsassa — alle Stack-Container tragen das gleic
 `com.docker.compose.project=website`-Label. Es gibt **kein separates
 Dashboard-Compose** mehr (gelöscht), der Dashboard-Code liegt in
 `/root/dashboard/`.
+
+### Authelia SSO (sadenius.eu)
+
+**Zentraler Login** für alle sadenius.eu-Dienste (map/cloud/fotos). Ein Benutzerkonto
+(`authelia/config/users.yml`, File-Backend), alle Apps nutzen natives OIDC mit Authelia
+als Provider.
+
+- **Portal:** `https://sadenius.eu` → Authelia-Login; nach Login Redirect auf
+  `https://sadenius.eu/portal/` (Menü-Seite mit Karten für Dawarich/Nextcloud/Immich).
+- **Menü-Seite** `/portal/`: statisches HTML im nginx-Image (`nginx/portal/index.html`),
+  per `auth_request` gegen Authelia (`/api/authz/auth-request`) geschützt — nur nach
+  Login sichtbar.
+- **nginx (sadenius.eu):** `location /` → authelia:9091 (Portal + OIDC-Endpoints);
+  `location = /api/authz/auth-request` (internal) für die Menü-Absicherung.
+- **OIDC-Clients:** `dawarich`, `immich`, `nextcloud` — konfiguriert in
+  `authelia/config/configuration.yml`. `pre_configured_consent_duration: 1 week`
+  (Consent wird nach 1× Bestätigen erinnert). **Wichtig:** Dawarich+Immich nutzen
+  `token_endpoint_auth_method: client_secret_post`, Nextcloud auch; **kein PKCE
+  erzwungen** (Dawarich sendet kein `code_challenge`) — `require_pkce: false`.
+- **Secrets** liegen gitignored in `authelia/config/secrets/` (`session_secret`,
+  `storage_encryption_key`, `oidc_hmac_secret`, `reset_password_jwt_secret`,
+  `jwks_rsa.key`, `client_*`). Die Client-Secrets stehen zusätzlich in `.env`
+  (`AUTHELIA_CLIENT_DAWARICH/IMMICH/NEXTCLOUD_SECRET`).
+- **Config-Filter:** Authelia nutzt den `template`-Filter (`X_AUTHELIA_CONFIG_FILTERS=template`)
+  um Secrets aus Dateien einzulesen (`{{ secret "/config/secrets/..." }}`).
+- **User verwalten:** Kein UI — per Script `authelia/authelia-user.sh`
+  (`add <user> <pw>` / `del <user>` / `list`), danach `docker compose restart authelia`.
+  Passwort-Änderung durch den User selbst: nach Login auf `https://sadenius.eu/settings`.
+- **Apps:** Dawarich via Env (`OIDC_*` in compose), Nextcloud via App `user_oidc`
+  (`occ user_oidc:provider`), Immich via `system_metadata`-DB-Eintrag (OAuth-Settings).
+  Alle drei legen den SSO-User beim ersten Login automatisch an (`OIDC_AUTO_REGISTER`/
+  Auto-Register).
 
 ### Trilium Notes
 
@@ -161,6 +200,7 @@ networks:
 - 4 Container: `dawarich_app` (Rails/Puma, Port 3000, kein Host-Port-Mapping — nur über nginx), `dawarich_sidekiq` (Background-Jobs), `dawarich_db` (PostGIS 17, `postgis/postgis:17-3.5-alpine`), `dawarich_redis` (Redis 7.4, Persistenz im `dawarich_shared`-Volume)
 - Eigene Datenbank/Redis im isolierten Netz `website_dawarich` — getrennt von der Website-DB (`db`). Secrets in `.env`: `DAWARICH_DB_PASSWORD`, `DAWARICH_SECRET_KEY_BASE`
 - `APPLICATION_HOSTS: map.sadenius.eu,...`, `APPLICATION_PROTOCOL: https`, `DOMAIN: map.sadenius.eu`
+- **SSO:** Login via Authelia OIDC (`OIDC_ISSUER: https://sadenius.eu`, `OIDC_AUTO_REGISTER`), Email/Passwort-Login deaktiviert (`ALLOW_EMAIL_PASSWORD_LOGIN: "false"`). Client-Secret in `.env` (`AUTHELIA_CLIENT_DAWARICH_SECRET`). Der OIDC-Button erscheint auf `/users/sign_in` ("Sign in with Openid Connect").
 - Default-Zugang: `privat@casparsadenius.de` / `safepassword` (bei Erst-Login ändern)
 - **Wichtig — Healthcheck:** Wegen `APPLICATION_PROTOCOL=https` erzwingt Rails `force_ssl` und redirectet interne http-Requests → https (Puma macht kein SSL). Der Healthcheck sendet daher `X-Forwarded-Proto: https` (sonst hängt `health: starting`).
 - Volumes: `dawarich_db_data`, `dawarich_shared`, `dawarich_public`, `dawarich_watched`, `dawarich_storage` (alle im website-Projekt)
@@ -177,6 +217,7 @@ networks:
 - **RAM:** `MACHINE_LEARNING_WORKERS: "1"` gesetzt (sonst Default = alle CPUs, drückt das 7.7-GiB-System in Memory-Pressure → VPS-Reboot). Bei ML-Workloads beobachten: Faces/Smart-Search stoßen den Worker kurz auf ~1.5 GiB hoch
 - Volumes: `immich_library` (Uploads, `/data`), `immich_postgres`, `immich_model_cache` (alle im website-Projekt)
 - **Backup:** DB-Dump + `immich_server:/data`-Volume-Tar → Nextcloud `Backups/immich/`, Retention 2 Tage (via Dashboard `backup.py`)
+- **SSO:** Login via Authelia OIDC. Die OAuth-Settings liegen in der Immich-DB (`system_metadata` key `system-config` → `oauth`-Objekt) — **nicht** per Env-Var (Immich liest OIDC nicht aus Env). Issuer `https://sadenius.eu`, Client-Secret in `.env` (`AUTHELIA_CLIENT_IMMICH_SECRET`), `autoRegister: true`. Der OAuth-Button ("Login mit Sadenius") erscheint auf der Login-Seite.
 - Setup: erster Aufruf von `https://fotos.sadenius.eu` → Admin-Konto anlegen
 - Update: `docker compose pull immich-server immich-machine-learning && docker compose up -d immich-server immich-machine-learning`
 
@@ -395,6 +436,7 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 - `OPEN_WEBUI_SECRET_KEY` — Secret für den Open-WebUI-Container
 - `DAWARICH_DB_PASSWORD`, `DAWARICH_SECRET_KEY_BASE` — Secrets für Dawarich (eigene DB im `website_dawarich`-Netz)
 - `IMMICH_DB_PASSWORD` — Secret für Immich (eigene DB im `website_immich`-Netz)
+- `AUTHELIA_CLIENT_DAWARICH_SECRET`, `AUTHELIA_CLIENT_IMMICH_SECRET`, `AUTHELIA_CLIENT_NEXTCLOUD_SECRET` — OIDC-Client-Secrets (müssen zu `authelia/config/secrets/client_*` passen)
 
 ## Wichtige Hinweise
 

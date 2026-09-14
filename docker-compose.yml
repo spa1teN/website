@@ -151,6 +151,13 @@ services:
       SELF_HOSTED: "true"
       STORE_GEODATA: "true"
       WEB_CONCURRENCY: 1
+      OIDC_CLIENT_ID: dawarich
+      OIDC_CLIENT_SECRET: ${AUTHELIA_CLIENT_DAWARICH_SECRET}
+      OIDC_ISSUER: https://sadenius.eu
+      OIDC_REDIRECT_URI: https://map.sadenius.eu/users/auth/openid_connect/callback
+      OIDC_AUTO_REGISTER: "true"
+      ALLOW_EMAIL_PASSWORD_LOGIN: "false"
+      ALLOW_EMAIL_PASSWORD_REGISTRATION: "false"
     logging:
       driver: "json-file"
       options:
@@ -207,6 +214,13 @@ services:
       SELF_HOSTED: "true"
       STORE_GEODATA: "true"
       BACKGROUND_PROCESSING_CONCURRENCY: 3
+      OIDC_CLIENT_ID: dawarich
+      OIDC_CLIENT_SECRET: ${AUTHELIA_CLIENT_DAWARICH_SECRET}
+      OIDC_ISSUER: https://sadenius.eu
+      OIDC_REDIRECT_URI: https://map.sadenius.eu/users/auth/openid_connect/callback
+      OIDC_AUTO_REGISTER: "true"
+      ALLOW_EMAIL_PASSWORD_LOGIN: "false"
+      ALLOW_EMAIL_PASSWORD_REGISTRATION: "false"
     logging:
       driver: "json-file"
       options:
@@ -235,6 +249,14 @@ services:
       REDIS_HOSTNAME: immich-redis
       TZ: Europe/Berlin
       IMMICH_VERSION: ${IMMICH_VERSION:-release}
+      OIDC_ISSUER: https://sadenius.eu
+      OIDC_CLIENT_ID: immich
+      OIDC_CLIENT_SECRET: ${AUTHELIA_CLIENT_IMMICH_SECRET}
+      OIDC_AUTO_REGISTER: "true"
+      OIDC_AUTO_LAUNCH: "false"
+      OIDC_SCOPE: openid profile email
+      OIDC_STORAGE_LABEL_CLAIM: preferred_username
+      OIDC_BUTTON_TEXT: "Login mit Sadenius"
     depends_on:
       immich-redis:
         condition: service_healthy
@@ -288,6 +310,26 @@ services:
       timeout: 10s
     networks:
       - immich
+
+  # Authelia — zentraler SSO-Login für map/cloud/fotos.sadenius.eu
+  # Portal: https://sadenius.eu (nginx → authelia:9091), OIDC-Provider + Portal
+  authelia:
+    image: authelia/authelia:4.39
+    container_name: authelia
+    restart: unless-stopped
+    volumes:
+      - ./authelia/config:/config
+    environment:
+      - X_AUTHELIA_CONFIG_FILTERS=template
+      - TZ=Europe/Berlin
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:9091/api/health | grep -q '\"status\"\\s*:\\s*\"ok\"'" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - default
 
   # Ops-Dashboard (FastAPI) — dash.casparsadenius.de, Basic Auth via nginx
   dashboard:
