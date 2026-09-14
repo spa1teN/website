@@ -1,10 +1,12 @@
 {% extends "core/base.html" %}
 {% load i18n_extra %}
+{% load static %}
 
 {% block title %}{% t 'Home' 'Home' %} - Caspar Sadenius{% endblock %}
 
 {% block content %}
 <div class="page-container">
+    <img src="{% static 'core/img/famsadeniusperhe.png' %}" alt="Fam Sadenius Perhe" class="home-banner">
     <h1>{% t 'Willkommen' 'Welcome' %}</h1>
     <p>{% t 'Hallo, ich bin Caspar aus Hamburg und studiere aktuell IT-Systems Engineering im Bachelor am Hasso-Plattner-Institut in Potsdam. Diese Website ist noch work in progress.' "Hi, I'm Caspar from Hamburg, currently studying for a Bachelor's in IT-Systems Engineering at the Hasso-Plattner-Institute in Potsdam. This website is still work in progress." %}</p>
 
@@ -31,6 +33,14 @@
 </div>
 
 <style>
+.home-banner {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+}
+
 .link-cards {
     display: grid;
     gap: 0.6rem;
