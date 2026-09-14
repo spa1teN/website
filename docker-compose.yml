@@ -219,7 +219,7 @@ services:
     networks:
       - dawarich
 
-  # Immich — Self-hosted Foto-/Video-Bibliothek (immich.casparsadenius.de), eigener DB/Redis-Stack
+  # Immich — Self-hosted Foto-/Video-Bibliothek (fotos.sadenius.eu), eigener DB/Redis-Stack
   immich-server:
     container_name: immich_server
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
