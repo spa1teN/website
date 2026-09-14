@@ -69,7 +69,7 @@ services:
     networks:
       - default
 
-  # Dawarich — Zeitstrahl/Location-Tracking (timeline.casparsadenius.de), eigener DB/Redis-Stack
+  # Dawarich — Zeitstrahl/Location-Tracking (map.sadenius.eu), eigener DB/Redis-Stack
   dawarich_redis:
     image: redis:7.4-alpine
     container_name: dawarich_redis
@@ -140,9 +140,9 @@ services:
       DATABASE_USERNAME: ${DAWARICH_DB_USER:-postgres}
       DATABASE_PASSWORD: ${DAWARICH_DB_PASSWORD}
       DATABASE_NAME: ${DAWARICH_DB_NAME:-dawarich_development}
-      APPLICATION_HOSTS: timeline.casparsadenius.de,127.0.0.1,::1,localhost
+      APPLICATION_HOSTS: map.sadenius.eu,127.0.0.1,::1,localhost
       APPLICATION_PROTOCOL: https
-      DOMAIN: timeline.casparsadenius.de
+      DOMAIN: map.sadenius.eu
       TIME_ZONE: Europe/Berlin
       DISTANCE_UNIT: km
       PROMETHEUS_EXPORTER_ENABLED: "false"
@@ -196,9 +196,9 @@ services:
       DATABASE_USERNAME: ${DAWARICH_DB_USER:-postgres}
       DATABASE_PASSWORD: ${DAWARICH_DB_PASSWORD}
       DATABASE_NAME: ${DAWARICH_DB_NAME:-dawarich_development}
-      APPLICATION_HOSTS: timeline.casparsadenius.de,127.0.0.1,::1,localhost
+      APPLICATION_HOSTS: map.sadenius.eu,127.0.0.1,::1,localhost
       APPLICATION_PROTOCOL: https
-      DOMAIN: timeline.casparsadenius.de
+      DOMAIN: map.sadenius.eu
       TIME_ZONE: Europe/Berlin
       DISTANCE_UNIT: km
       PROMETHEUS_EXPORTER_ENABLED: "false"

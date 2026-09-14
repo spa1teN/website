@@ -124,7 +124,7 @@ Selfhosted-Dienste in einem einzigen Compose-Projekt (Netzwerk `website_default`
 | `trilium` | TriliumNext Notes (Markdown + KaTeX-LaTeX), unter `notes.casparsadenius.de` |
 | `open-webui` | Chat-Interface (Open WebUI), unter `chat.casparsadenius.de` |
 | `dashboard` | Ops-Dashboard (FastAPI), unter `dash.casparsadenius.de` (Basic Auth) |
-| `dawarich_app` / `dawarich_sidekiq` / `dawarich_db` / `dawarich_redis` | Dawarich (Zeitstrahl/Location-Tracking), unter `timeline.casparsadenius.de` |
+| `dawarich_app` / `dawarich_sidekiq` / `dawarich_db` / `dawarich_redis` | Dawarich (Zeitstrahl/Location-Tracking), unter `map.sadenius.eu` |
 | `immich-server` / `immich-machine-learning` / `immich-redis` / `immich-database` | Immich (Foto-/Video-Bibliothek), unter `immich.casparsadenius.de` |
 | `web` | Django/Gunicorn Website |
 | `db` | PostGIS 16 Datenbank |
@@ -156,11 +156,11 @@ networks:
   dashboard-network:   # bridge — Dashboard :8090 + social-preview (bot.wannspieltbig.de)
 ```
 
-### Dawarich (timeline.casparsadenius.de)
+### Dawarich (map.sadenius.eu)
 
 - 4 Container: `dawarich_app` (Rails/Puma, Port 3000, kein Host-Port-Mapping — nur über nginx), `dawarich_sidekiq` (Background-Jobs), `dawarich_db` (PostGIS 17, `postgis/postgis:17-3.5-alpine`), `dawarich_redis` (Redis 7.4, Persistenz im `dawarich_shared`-Volume)
 - Eigene Datenbank/Redis im isolierten Netz `website_dawarich` — getrennt von der Website-DB (`db`). Secrets in `.env`: `DAWARICH_DB_PASSWORD`, `DAWARICH_SECRET_KEY_BASE`
-- `APPLICATION_HOSTS: timeline.casparsadenius.de,...`, `APPLICATION_PROTOCOL: https`, `DOMAIN: timeline.casparsadenius.de`
+- `APPLICATION_HOSTS: map.sadenius.eu,...`, `APPLICATION_PROTOCOL: https`, `DOMAIN: map.sadenius.eu`
 - Default-Zugang: `privat@casparsadenius.de` / `safepassword` (bei Erst-Login ändern)
 - **Wichtig — Healthcheck:** Wegen `APPLICATION_PROTOCOL=https` erzwingt Rails `force_ssl` und redirectet interne http-Requests → https (Puma macht kein SSL). Der Healthcheck sendet daher `X-Forwarded-Proto: https` (sonst hängt `health: starting`).
 - Volumes: `dawarich_db_data`, `dawarich_shared`, `dawarich_public`, `dawarich_watched`, `dawarich_storage` (alle im website-Projekt)
@@ -397,7 +397,7 @@ ssh root@87.106.242.207 "cd ~/website && git pull && docker compose exec -T web 
 
 ## Wichtige Hinweise
 
-- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `nextcloud.casparsadenius.de`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `timeline.casparsadenius.de`, `immich.casparsadenius.de`)
+- Nginx ist der **einzige** Reverse Proxy für alle Domains (`casparsadenius.de`, `tausendsassa.casparsadenius.de`, `cloud.sadenius.eu`, `dash.casparsadenius.de`, `notes.casparsadenius.de`, `chat.casparsadenius.de`, `map.sadenius.eu`, `immich.casparsadenius.de`)
 - Alle Stack-Services (`nginx`, `certbot`, `trilium`, `open-webui`, `dashboard`, `dawarich_*`, `immich-*`, `web`, `db`) werden von **diesem** Compose-File gestartet
 - `web`-Container hat Volume-Mount `/root/website:/app` (Live-Code, kein Image-Rebuild nötig bei Code-Änderungen)
 - `LOCALE_PATHS` ist nicht gesetzt → Django nutzt `USE_L10N=True` mit deutschem Locale. Bei Zahlenformatierung in Templates `|stringformat:'.6f'` nutzen (z.B. für GPS-Koordinaten), da `{{ value }}` im deutschen Locale Kommas statt Punkte rendert
