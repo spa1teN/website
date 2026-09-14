@@ -60,9 +60,9 @@ notifier:
     timeout: '5s'
     username: noreply@casparsadenius.de
     password: '{{ secret "/config/secrets/smtp_password" }}'
-    sender: "Authelia <noreply@casparsadenius.de>"
+    sender: "Authelia <noreply@sadenius.eu>"
     subject: '[Authelia] {title}'
-    startup_check_address: 'test@casparsadenius.de'
+    startup_check_address: 'test@sadenius.eu'
 
 identity_providers:
   oidc:
